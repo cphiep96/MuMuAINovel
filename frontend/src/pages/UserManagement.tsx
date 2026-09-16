@@ -103,7 +103,7 @@ export default function UserManagement() {
       if (b == null) return -1;
 
       if (typeof a === 'string' && typeof b === 'string') {
-        return a.localeCompare(b, 'zh-CN');
+        return a.localeCompare(b, 'vi-VN');
       }
 
       if (typeof a === 'boolean' && typeof b === 'boolean') {
@@ -149,8 +149,8 @@ export default function UserManagement() {
       const res = await adminApi.getUsers();
       setUsers(res.users);
     } catch (error) {
-      console.error('加载用户列表失败:', error);
-      message.error('加载用户列表失败');
+      console.error('Tải danh sách người dùng thất bại:', error);
+      message.error('Tải danh sách người dùng thất bại');
     } finally {
       setLoading(false);
     }
@@ -173,18 +173,18 @@ export default function UserManagement() {
   const handleCreate = async (values: CreateUserValues) => {
     try {
       const res = await adminApi.createUser(values);
-      message.success('用户创建成功');
+      message.success('Tạo người dùng thành công');
 
       // 如果有默认密码，显示给管理员
       if (res.default_password) {
         modal.info({
-          title: '用户创建成功',
+          title: 'Tạo người dùng thành công',
           content: (
             <div>
-              <p>用户名：<Text strong>{values.username}</Text></p>
-              <p>初始密码：<Text strong copyable>{res.default_password}</Text></p>
+              <p>Tên đăng nhập: <Text strong>{values.username}</Text></p>
+              <p>Mật khẩu ban đầu: <Text strong copyable>{res.default_password}</Text></p>
               <p style={{ color: token.colorError, marginTop: 16 }}>
-                ⚠️ 请复制密码并告知用户，此密码仅显示一次！
+                ⚠️ Vui lòng sao chép mật khẩu và thông báo cho người dùng, mật khẩu này chỉ hiển thị một lần!
               </p>
             </div>
           ),
@@ -197,8 +197,8 @@ export default function UserManagement() {
       form.resetFields();
       loadUsers();
     } catch (error) {
-      console.error('创建用户失败:', error);
-      message.error('创建用户失败');
+      console.error('Tạo người dùng thất bại:', error);
+      message.error('Tạo người dùng thất bại');
     }
   };
 
@@ -226,28 +226,28 @@ export default function UserManagement() {
 
     try {
       await adminApi.updateUser(currentUser.user_id, values);
-      message.success('用户信息更新成功');
+      message.success('Cập nhật thông tin người dùng thành công');
       setEditModalVisible(false);
       editForm.resetFields();
       loadUsers();
     } catch (error) {
-      console.error('更新用户失败:', error);
-      message.error('更新用户失败');
+      console.error('Cập nhật người dùng thất bại:', error);
+      message.error('Cập nhật người dùng thất bại');
     }
   };
 
   // 切换用户状态
   const handleToggleStatus = async (user: UserWithStatus) => {
     const isActive = user.is_active !== false;
-    const action = isActive ? '禁用' : '启用';
+    const action = isActive ? 'vô hiệu hóa' : 'kích hoạt';
 
     try {
       await adminApi.toggleUserStatus(user.user_id, !isActive);
-      message.success(`用户已${action}`);
+      message.success(`Người dùng đã ${action}`);
       loadUsers();
     } catch (error) {
-      console.error(`${action}用户失败:`, error);
-      message.error(`${action}用户失败`);
+      console.error(`${action} người dùng thất bại:`, error);
+      message.error(`${action} người dùng thất bại`);
     }
   };
 
@@ -268,13 +268,13 @@ export default function UserManagement() {
       );
 
       modal.info({
-        title: '密码重置成功',
+        title: 'Đặt lại mật khẩu thành công',
         content: (
           <div>
-            <p>用户：<Text strong>{currentUser.username}</Text></p>
-            <p>新密码：<Text strong copyable>{res.new_password}</Text></p>
+            <p>Người dùng: <Text strong>{currentUser.username}</Text></p>
+            <p>Mật khẩu mới: <Text strong copyable>{res.new_password}</Text></p>
             <p style={{ color: token.colorError, marginTop: 16 }}>
-              ⚠️ 请复制密码并告知用户！
+              ⚠️ Vui lòng sao chép mật khẩu và thông báo cho người dùng!
             </p>
           </div>
         ),
@@ -285,8 +285,8 @@ export default function UserManagement() {
       setResetPasswordModalVisible(false);
       setNewPassword('');
     } catch (error) {
-      console.error('重置密码失败:', error);
-      message.error('重置密码失败');
+      console.error('Đặt lại mật khẩu thất bại:', error);
+      message.error('Đặt lại mật khẩu thất bại');
     }
   };
 
@@ -294,11 +294,11 @@ export default function UserManagement() {
   const handleDelete = async (user: UserWithStatus) => {
     try {
       await adminApi.deleteUser(user.user_id);
-      message.success('用户已删除');
+      message.success('Đã xóa người dùng');
       loadUsers();
     } catch (error) {
-      console.error('删除用户失败:', error);
-      message.error('删除用户失败');
+      console.error('Xóa người dùng thất bại:', error);
+      message.error('Xóa người dùng thất bại');
     }
   };
 
@@ -307,7 +307,7 @@ export default function UserManagement() {
   // 表格列定义
   const columns = [
     {
-      title: '用户名',
+      title: 'Tên đăng nhập',
       dataIndex: 'username',
       key: 'username',
       width: 150,
@@ -321,7 +321,7 @@ export default function UserManagement() {
       ),
     },
     {
-      title: '显示名称',
+      title: 'Tên hiển thị',
       dataIndex: 'display_name',
       key: 'display_name',
       width: 150,
@@ -329,7 +329,7 @@ export default function UserManagement() {
       sortOrder: sortField === 'display_name' ? sortOrder : null,
     },
     {
-      title: '状态',
+      title: 'Trạng thái',
       dataIndex: 'is_active',
       key: 'is_active',
       width: 100,
@@ -338,12 +338,12 @@ export default function UserManagement() {
       render: (isActive: boolean) => (
         <Badge
           status={isActive !== false ? 'success' : 'error'}
-          text={isActive !== false ? '正常' : '已禁用'}
+          text={isActive !== false ? 'Bình thường' : 'Đã vô hiệu hóa'}
         />
       ),
     },
     {
-      title: '角色',
+      title: 'Vai trò',
       dataIndex: 'is_admin',
       key: 'is_admin',
       width: 100,
@@ -351,12 +351,12 @@ export default function UserManagement() {
       sortOrder: sortField === 'is_admin' ? sortOrder : null,
       render: (isAdmin: boolean) => (
         <Tag color={isAdmin ? 'gold' : 'blue'}>
-          {isAdmin ? '👑 管理员' : '普通用户'}
+          {isAdmin ? '👑 Quản trị viên' : 'Người dùng thường'}
         </Tag>
       ),
     },
     {
-      title: '信任等级',
+      title: 'Cấp độ tin cậy',
       dataIndex: 'trust_level',
       key: 'trust_level',
       width: 100,
@@ -364,30 +364,30 @@ export default function UserManagement() {
       sortOrder: sortField === 'trust_level' ? sortOrder : null,
       render: (level: number) => (
         <Tag color={level === -1 ? 'default' : level >= 5 ? 'green' : 'blue'}>
-          {level === -1 ? '已禁用' : `Level ${level}`}
+          {level === -1 ? 'Đã vô hiệu hóa' : `Level ${level}`}
         </Tag>
       ),
     },
     {
-      title: '创建时间',
+      title: 'Thời gian tạo',
       dataIndex: 'created_at',
       key: 'created_at',
       width: 180,
       sorter: true,
       sortOrder: sortField === 'created_at' ? sortOrder : null,
-      render: (date: string) => date ? new Date(date).toLocaleString('zh-CN') : '-',
+      render: (date: string) => date ? new Date(date).toLocaleString('vi-VN') : '-',
     },
     {
-      title: '最后登录',
+      title: 'Đăng nhập lần cuối',
       dataIndex: 'last_login',
       key: 'last_login',
       width: 180,
       sorter: true,
       sortOrder: sortField === 'last_login' ? sortOrder : null,
-      render: (date: string) => date ? new Date(date).toLocaleString('zh-CN') : '从未登录',
+      render: (date: string) => date ? new Date(date).toLocaleString('vi-VN') : 'Chưa từng đăng nhập',
     },
     {
-      title: '操作',
+      title: 'Thao tác',
       key: 'action',
       width: isMobile ? 80 : 300,
       fixed: 'right' as const,
@@ -399,41 +399,41 @@ export default function UserManagement() {
           const menuItems = [
             {
               key: 'edit',
-              label: '编辑用户',
+              label: 'Chỉnh sửa người dùng',
               icon: <EditOutlined />,
               onClick: () => handleEdit(record),
             },
             {
               key: 'reset',
-              label: '重置密码',
+              label: 'Đặt lại mật khẩu',
               icon: <KeyOutlined />,
               onClick: () => handleResetPassword(record),
             },
             {
               key: 'toggle',
-              label: isActive ? '禁用用户' : '启用用户',
+              label: isActive ? 'Vô hiệu hóa người dùng' : 'Kích hoạt người dùng',
               icon: isActive ? <StopOutlined /> : <CheckCircleOutlined />,
               danger: isActive,
               onClick: () => {
                 modal.confirm({
-                  title: `确定${isActive ? '禁用' : '启用'}该用户吗？`,
+                  title: `Bạn có chắc chắn ${isActive ? 'vô hiệu hóa' : 'kích hoạt'} người dùng này không?`,
                   onOk: () => handleToggleStatus(record),
-                  okText: '确定',
-                  cancelText: '取消',
+                  okText: 'Xác nhận',
+                  cancelText: 'Hủy',
                 });
               },
             },
             ...(!record.is_admin ? [{
               key: 'delete',
-              label: '删除用户',
+              label: 'Xóa người dùng',
               icon: <DeleteOutlined />,
               danger: true,
               onClick: () => {
                 modal.confirm({
-                  title: '确定删除该用户吗？此操作不可恢复！',
+                  title: 'Bạn có chắc chắn xóa người dùng này không? Thao tác này không thể khôi phục!',
                   onOk: () => handleDelete(record),
-                  okText: '确定',
-                  cancelText: '取消',
+                  okText: 'Xác nhận',
+                  cancelText: 'Hủy',
                   okButtonProps: { danger: true },
                 });
               },
@@ -456,7 +456,7 @@ export default function UserManagement() {
               icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
             >
-              编辑
+              Chỉnh sửa
             </Button>
 
             <Button
@@ -465,14 +465,14 @@ export default function UserManagement() {
               icon={<KeyOutlined />}
               onClick={() => handleResetPassword(record)}
             >
-              重置密码
+              Đặt lại mật khẩu
             </Button>
 
             <Popconfirm
-              title={`确定${isActive ? '禁用' : '启用'}该用户吗？`}
+              title={`Bạn có chắc chắn ${isActive ? 'vô hiệu hóa' : 'kích hoạt'} người dùng này không?`}
               onConfirm={() => handleToggleStatus(record)}
-              okText="确定"
-              cancelText="取消"
+              okText="Xác nhận"
+              cancelText="Hủy"
             >
               <Button
                 type="link"
@@ -480,16 +480,16 @@ export default function UserManagement() {
                 danger={isActive}
                 icon={isActive ? <StopOutlined /> : <CheckCircleOutlined />}
               >
-                {isActive ? '禁用' : '启用'}
+                {isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}
               </Button>
             </Popconfirm>
 
             {!record.is_admin && (
               <Popconfirm
-                title="确定删除该用户吗？此操作不可恢复！"
+                title="Bạn có chắc chắn xóa người dùng này không? Thao tác này không thể khôi phục!"
                 onConfirm={() => handleDelete(record)}
-                okText="确定"
-                cancelText="取消"
+                okText="Xác nhận"
+                cancelText="Hủy"
                 okButtonProps={{ danger: true }}
               >
                 <Button
@@ -498,7 +498,7 @@ export default function UserManagement() {
                   danger
                   icon={<DeleteOutlined />}
                 >
-                  删除
+                  Xóa
                 </Button>
               </Popconfirm>
             )}
@@ -550,10 +550,10 @@ export default function UserManagement() {
               <Space direction="vertical" size={4}>
                 <Title level={isMobile ? 3 : 2} style={{ margin: 0, color: token.colorWhite, textShadow: `0 2px 4px ${alphaColor(token.colorText, 0.2)}` }}>
                   <TeamOutlined style={{ color: alphaColor(token.colorWhite, 0.9), marginRight: 12 }} />
-                  用户管理
+                  Quản lý người dùng
                 </Title>
                 <Text style={{ fontSize: isMobile ? 12 : 14, color: alphaColor(token.colorWhite, 0.85) }}>
-                  管理系统用户和权限
+                  Quản lý người dùng và quyền hạn hệ thống
                 </Text>
               </Space>
             </Col>
@@ -580,7 +580,7 @@ export default function UserManagement() {
                     e.currentTarget.style.transform = 'none';
                   }}
                 >
-                  返回主页
+                  Quay lại trang chính
                 </Button>
                 <Button
                   type="primary"
@@ -595,7 +595,7 @@ export default function UserManagement() {
                     fontWeight: 600
                   }}
                 >
-                  添加用户
+                  Thêm người dùng
                 </Button>
                 <UserMenu />
               </Space>
@@ -631,7 +631,7 @@ export default function UserManagement() {
             borderBottom: `1px solid ${alphaColor(token.colorText, 0.06)}`,
           }}>
             <Input
-              placeholder="搜索用户名、显示名称或用户ID"
+              placeholder="Tìm kiếm tên đăng nhập, tên hiển thị hoặc ID người dùng"
               prefix={<SearchOutlined style={{ color: token.colorTextTertiary }} />}
               value={searchText}
               onChange={(e) => {
@@ -689,7 +689,7 @@ export default function UserManagement() {
               pageSize={pageSize}
               total={filteredUsers.length}
               showSizeChanger
-              showTotal={(total) => `共 ${total} 个用户${searchText ? ' (已过滤)' : ''}`}
+              showTotal={(total) => `Tổng ${total} người dùng${searchText ? ' (đã lọc)' : ''}`}
               pageSizeOptions={[20, 50, 100]}
               onChange={(page, size) => {
                 setCurrentPage(page);
@@ -706,7 +706,7 @@ export default function UserManagement() {
 
       {/* 添加用户对话框 */}
       <Modal
-        title={<span><PlusOutlined style={{ marginRight: 8 }} />添加用户</span>}
+        title={<span><PlusOutlined style={{ marginRight: 8 }} />Thêm người dùng</span>}
         open={modalVisible}
         onCancel={() => {
           setModalVisible(false);
@@ -715,8 +715,8 @@ export default function UserManagement() {
         onOk={() => form.submit()}
         width={isMobile ? '90%' : 600}
         centered
-        okText="创建"
-        cancelText="取消"
+        okText="Tạo"
+        cancelText="Hủy"
       >
         <Form
           form={form}
@@ -724,48 +724,48 @@ export default function UserManagement() {
           onFinish={handleCreate}
         >
           <Form.Item
-            label="用户名"
+            label="Tên đăng nhập"
             name="username"
             rules={[
-              { required: true, message: '请输入用户名' },
-              { min: 3, max: 20, message: '用户名长度3-20位' },
-              { pattern: /^[a-zA-Z0-9_]+$/, message: '只能包含字母、数字和下划线' },
+              { required: true, message: 'Vui lòng nhập tên đăng nhập' },
+              { min: 3, max: 20, message: 'Tên đăng nhập dài 3-20 ký tự' },
+              { pattern: /^[a-zA-Z0-9_]+$/, message: 'Chỉ được chứa chữ cái, chữ số và dấu gạch dưới' },
             ]}
           >
-            <Input placeholder="请输入用户名" />
+            <Input placeholder="Vui lòng nhập tên đăng nhập" />
           </Form.Item>
 
           <Form.Item
-            label="显示名称"
+            label="Tên hiển thị"
             name="display_name"
             rules={[
-              { required: true, message: '请输入显示名称' },
-              { min: 2, max: 50, message: '显示名称长度2-50位' },
+              { required: true, message: 'Vui lòng nhập tên hiển thị' },
+              { min: 2, max: 50, message: 'Tên hiển thị dài 2-50 ký tự' },
             ]}
           >
-            <Input placeholder="请输入显示名称" />
+            <Input placeholder="Vui lòng nhập tên hiển thị" />
           </Form.Item>
 
           <Form.Item
-            label="初始密码"
+            label="Mật khẩu ban đầu"
             name="password"
-            extra="留空则自动生成 username@666"
+            extra="Để trống sẽ tự động tạo username@666"
             rules={[
-              { min: 6, message: '密码长度至少6位' },
+              { min: 6, message: 'Mật khẩu dài ít nhất 6 ký tự' },
             ]}
           >
-            <Input.Password placeholder="留空则自动生成" />
+            <Input.Password placeholder="Để trống sẽ tự động tạo" />
           </Form.Item>
 
           <Form.Item
-            label="头像URL"
+            label="URL ảnh đại diện"
             name="avatar_url"
           >
-            <Input placeholder="请输入头像URL（可选）" />
+            <Input placeholder="Vui lòng nhập URL ảnh đại diện (tùy chọn)" />
           </Form.Item>
 
           <Form.Item
-            label="信任等级"
+            label="Cấp độ tin cậy"
             name="trust_level"
             initialValue={0}
           >
@@ -773,7 +773,7 @@ export default function UserManagement() {
           </Form.Item>
 
           <Form.Item
-            label="设为管理员"
+            label="Đặt làm quản trị viên"
             name="is_admin"
             valuePropName="checked"
             initialValue={false}
@@ -793,7 +793,7 @@ export default function UserManagement() {
 
       {/* 编辑用户对话框 */}
       <Modal
-        title={<span><EditOutlined style={{ marginRight: 8 }} />编辑用户</span>}
+        title={<span><EditOutlined style={{ marginRight: 8 }} />Chỉnh sửa người dùng</span>}
         open={editModalVisible}
         onCancel={() => {
           setEditModalVisible(false);
@@ -802,8 +802,8 @@ export default function UserManagement() {
         onOk={() => editForm.submit()}
         width={isMobile ? '90%' : 600}
         centered
-        okText="保存"
-        cancelText="取消"
+        okText="Lưu"
+        cancelText="Hủy"
       >
         <Form
           form={editForm}
@@ -811,32 +811,32 @@ export default function UserManagement() {
           onFinish={handleUpdate}
         >
           <Form.Item
-            label="显示名称"
+            label="Tên hiển thị"
             name="display_name"
             rules={[
-              { required: true, message: '请输入显示名称' },
-              { min: 2, max: 50, message: '显示名称长度2-50位' },
+              { required: true, message: 'Vui lòng nhập tên hiển thị' },
+              { min: 2, max: 50, message: 'Tên hiển thị dài 2-50 ký tự' },
             ]}
           >
-            <Input placeholder="请输入显示名称" />
+            <Input placeholder="Vui lòng nhập tên hiển thị" />
           </Form.Item>
 
           <Form.Item
-            label="头像URL"
+            label="URL ảnh đại diện"
             name="avatar_url"
           >
-            <Input placeholder="请输入头像URL（可选）" />
+            <Input placeholder="Vui lòng nhập URL ảnh đại diện (tùy chọn)" />
           </Form.Item>
 
           <Form.Item
-            label="信任等级"
+            label="Cấp độ tin cậy"
             name="trust_level"
           >
             <InputNumber min={0} max={9} style={{ width: '100%' }} />
           </Form.Item>
 
           <Form.Item
-            label="设为管理员"
+            label="Đặt làm quản trị viên"
             name="is_admin"
             valuePropName="checked"
           >
@@ -855,7 +855,7 @@ export default function UserManagement() {
 
       {/* 重置密码对话框 */}
       <Modal
-        title={<span><KeyOutlined style={{ marginRight: 8 }} />重置密码</span>}
+        title={<span><KeyOutlined style={{ marginRight: 8 }} />Đặt lại mật khẩu</span>}
         open={resetPasswordModalVisible}
         onCancel={() => {
           setResetPasswordModalVisible(false);
@@ -864,21 +864,21 @@ export default function UserManagement() {
         onOk={handleResetPasswordConfirm}
         width={isMobile ? '90%' : 500}
         centered
-        okText="确认重置"
-        cancelText="取消"
+        okText="Xác nhận đặt lại"
+        cancelText="Hủy"
       >
         <div style={{ marginBottom: 16 }}>
-          <Text>用户：<Text strong>{currentUser?.username}</Text></Text>
+          <Text>Người dùng: <Text strong>{currentUser?.username}</Text></Text>
         </div>
         <Form layout="vertical">
           <Form.Item
-            label="新密码"
-            extra="留空则重置为默认密码 username@666"
+            label="Mật khẩu mới"
+            extra="Để trống sẽ đặt lại thành mật khẩu mặc định username@666"
           >
             <Input.Password
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="留空则使用默认密码"
+              placeholder="Để trống sẽ dùng mật khẩu mặc định"
             />
           </Form.Item>
         </Form>

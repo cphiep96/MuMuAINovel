@@ -1,9 +1,18 @@
 ---
 name: story-short-scan
+display_name: Quét bảng xếp hạng truyện ngắn
+category: Skill·Ngắn
 description: |
-  短篇网文扫榜。分析知乎盐言、七猫、黑岩、点众等平台热门短篇数据，捕捉风口题材。
-  触发方式：/story-short-scan、/短篇扫榜、「短篇什么火」「知乎故事排行」
+  Quét bảng xếp hạng tiểu thuyết mạng ngắn. Phân tích dữ liệu truyện ngắn đang hot trên Zhihu Yanyan, Qimao, Heiyan, Dianzhong..., bắt kịp đề tài đang lên.
+  Kích hoạt: /story-short-scan, «truyện ngắn đang hot gì», «bảng xếp hạng truyện Zhihu».
+triggers:
+  - /story-short-scan
+  - truyện ngắn đang hot gì
+  - bảng xếp hạng truyện Zhihu
 ---
+
+> **Yêu cầu ngôn ngữ**: nội dung tạo cho người dùng phải viết bằng tiếng Việt tự nhiên.
+
 
 # story-short-scan：短篇网文扫榜
 
@@ -188,7 +197,7 @@ description: |
 
 ---
 
-## 语言
-
-- 用户用中文就用中文回复，用英文就用英文回复
-- 中文回复遵循《中文文案排版指北》
+## Ngôn ngữ đầu ra
+- Ưu tiên trả lời và viết nội dung bằng **tiếng Việt** tự nhiên.
+- Nếu người dùng dùng tiếng Anh thì có thể trả lời bằng tiếng Anh; mặc định dùng tiếng Việt.
+- Không đổi tên kỹ thuật, đường dẫn lệnh slash (`/story-...`) hay tên file tham chiếu.

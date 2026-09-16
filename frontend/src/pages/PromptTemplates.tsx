@@ -72,7 +72,7 @@ export default function PromptTemplates() {
       setCategories(response.data);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { detail?: string } } };
-      message.error(err.response?.data?.detail || '加载失败');
+      message.error(err.response?.data?.detail || 'Tải thất bại');
     } finally {
       setLoading(false);
     }
@@ -91,7 +91,7 @@ export default function PromptTemplates() {
     return categories[index - 1]?.templates || [];
   };
 
-  // 编辑模板
+  // Chỉnh sửa模板
   const handleEdit = (template: PromptTemplate) => {
     setEditingTemplate({ ...template });
     setEditorVisible(true);
@@ -113,34 +113,34 @@ export default function PromptTemplates() {
         parameters: editingTemplate.parameters,
         is_active: editingTemplate.is_active
       });
-      message.success(createsAccountCopy ? '已保存为当前账户的自定义副本' : '保存成功');
+      message.success(createsAccountCopy ? 'Đã lưu thành bản sao tùy chỉnh cho tài khoản hiện tại' : 'Lưu thành công');
       setEditorVisible(false);
       loadTemplates();
     } catch (error: unknown) {
       const err = error as { response?: { data?: { detail?: string } } };
-      message.error(err.response?.data?.detail || '保存失败');
+      message.error(err.response?.data?.detail || 'Lưu thất bại');
     } finally {
       setLoading(false);
     }
   };
 
-  // 重置为系统默认
+  // Đặt lại为系统默认
   const handleReset = async (templateKey: string) => {
     modal.confirm({
-      title: '确认重置',
-      content: '确定要删除当前账户的自定义副本并恢复系统默认吗？这不会影响其他账户。',
-      okText: '确定',
-      cancelText: '取消',
+      title: 'Xác nhận đặt lại',
+      content: 'Bạn có chắc muốn xóa bản sao tùy chỉnh của tài khoản hiện tại và khôi phục mặc định hệ thống? Thao tác này không ảnh hưởng đến các tài khoản khác.',
+      okText: 'Xác nhận',
+      cancelText: 'Hủy',
       centered: true,
       onOk: async () => {
         try {
           setLoading(true);
           await axios.post(`/api/prompt-templates/${templateKey}/reset`);
-          message.success('已重置为系统默认');
+          message.success('Đã đặt lại về mặc định hệ thống');
           loadTemplates();
         } catch (error: unknown) {
           const err = error as { response?: { data?: { detail?: string } } };
-          message.error(err.response?.data?.detail || '重置失败');
+          message.error(err.response?.data?.detail || 'Đặt lại thất bại');
         } finally {
           setLoading(false);
         }
@@ -157,7 +157,7 @@ export default function PromptTemplates() {
       loadTemplates();
     } catch (error: unknown) {
       const err = error as { response?: { data?: { detail?: string } } };
-      message.error(err.response?.data?.detail || '操作失败');
+      message.error(err.response?.data?.detail || 'Thao tác thất bại');
     }
   };
 
@@ -177,15 +177,15 @@ export default function PromptTemplates() {
       
       if (stats) {
         message.success(
-          `成功导出 ${stats.total} 个提示词配置（${stats.customized} 个自定义，${stats.system_default} 个系统默认）`,
+          `Đã xuất thành công ${stats.total} cấu hình prompt (${stats.customized} tùy chỉnh, ${stats.system_default} mặc định hệ thống)`,
           5
         );
       } else {
-        message.success('导出成功');
+        message.success('Xuất thành công');
       }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { detail?: string } } };
-      message.error(err.response?.data?.detail || '导出失败');
+      message.error(err.response?.data?.detail || 'Xuất thất bại');
     }
   };
 
@@ -200,20 +200,20 @@ export default function PromptTemplates() {
       const stats = result.statistics;
       
       // 构建详细的成功消息
-      let successMsg = `导入成功！\n`;
+      let successMsg = `Nhập thành công!\n`;
       if (stats) {
-        successMsg += `• 保持系统默认：${stats.kept_system_default} 个\n`;
-        successMsg += `• 创建/更新自定义：${stats.created_or_updated} 个`;
+        successMsg += `• Giữ mặc định hệ thống: ${stats.kept_system_default} mục\n`;
+        successMsg += `• Tạo/cập nhật tùy chỉnh: ${stats.created_or_updated} mục`;
         
         if (stats.converted_to_custom > 0) {
-          successMsg += `\n• 检测到修改（已转为自定义）：${stats.converted_to_custom} 个`;
+          successMsg += `\n• Phát hiện chỉnh sửa (đã chuyển thành tùy chỉnh): ${stats.converted_to_custom} mục`;
         }
       }
       
       // 如果有被转换的模板，显示详细信息
       if (result.converted_templates && result.converted_templates.length > 0) {
         modal.info({
-          title: '导入完成',
+          title: 'Nhập hoàn tất',
           width: 600,
           centered: true,
           content: (
@@ -221,7 +221,7 @@ export default function PromptTemplates() {
               <p style={{ marginBottom: 16 }}>{successMsg}</p>
               {result.converted_templates.length > 0 && (
                 <div>
-                  <p style={{ fontWeight: 'bold', marginBottom: 8 }}>以下模板内容与系统默认不一致，已转为自定义：</p>
+                  <p style={{ fontWeight: 'bold', marginBottom: 8 }}>Các mẫu sau khác mặc định hệ thống và đã chuyển thành tùy chỉnh:</p>
                   <ul style={{ marginLeft: 20 }}>
                     {result.converted_templates.map((t: { template_key: string; template_name: string }) => (
                       <li key={t.template_key}>
@@ -233,7 +233,7 @@ export default function PromptTemplates() {
               )}
             </div>
           ),
-          okText: '确定'
+          okText: 'Xác nhận'
         });
       } else {
         message.success(successMsg, 5);
@@ -242,7 +242,7 @@ export default function PromptTemplates() {
       loadTemplates();
     } catch (error: unknown) {
       const err = error as { response?: { data?: { detail?: string } } };
-      message.error(err.response?.data?.detail || '导入失败');
+      message.error(err.response?.data?.detail || 'Nhập thất bại');
     }
     return false; // 阻止默认上传行为
   };
@@ -292,10 +292,10 @@ export default function PromptTemplates() {
               <Space direction="vertical" size={4}>
                 <Title level={isMobile ? 3 : 2} style={{ margin: 0, color: token.colorWhite, textShadow: `0 2px 4px ${token.colorBgMask}` }}>
                   <FileSearchOutlined style={{ color: token.colorWhite, opacity: 0.9, marginRight: 8 }} />
-                  提示词模板管理
+                  Quản lý mẫu prompt
                 </Title>
                 <Text style={{ fontSize: isMobile ? 12 : 14, color: token.colorTextLightSolid, opacity: 0.85, marginLeft: isMobile ? 40 : 48 }}>
-                  按账户隔离自定义AI生成提示词
+                  Tùy chỉnh prompt tạo AI theo tài khoản
                 </Text>
               </Space>
             </Col>
@@ -316,7 +316,7 @@ export default function PromptTemplates() {
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  导出配置
+                  Xuất cấu hình
                 </Button>
                 <Upload
                   accept=".json"
@@ -336,7 +336,7 @@ export default function PromptTemplates() {
                       backdropFilter: 'blur(10px)',
                     }}
                   >
-                    导入配置
+                    Nhập cấu hình
                   </Button>
                 </Upload>
               </Space>
@@ -348,16 +348,16 @@ export default function PromptTemplates() {
             message={
               <Space align="center">
                 <InfoCircleOutlined style={{ fontSize: 16, color: token.colorPrimary }} />
-                <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>使用说明</Text>
+                <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>Hướng dẫn sử dụng</Text>
               </Space>
             }
             description={
               <div>
                 <Text style={{ fontSize: isMobile ? 12 : 13, display: 'block', marginBottom: 8 }}>
-                  • <strong>系统默认模板</strong>（灰色头部）：始终启用，无需手动开关。点击"编辑"后将创建仅当前账户生效的自定义副本。
+                  • <strong>Mẫu mặc định hệ thống</strong> (đầu xám): luôn bật, không cần công tắc. Nhấn "Chỉnh sửa" sẽ tạo bản tùy chỉnh chỉ hiệu lực với tài khoản hiện tại.
                 </Text>
                 <Text style={{ fontSize: isMobile ? 12 : 13, display: 'block' }}>
-                  • <strong>已自定义模板</strong>（紫色头部）：仅当前账户生效，可通过开关控制启用/禁用，使用 <Text code>{'{variable_name}'}</Text> 格式表示变量占位符。点击"重置"可恢复为系统默认。
+                  • <strong>Mẫu đã tùy chỉnh</strong> (đầu tím): chỉ hiệu lực tài khoản hiện tại, bật/tắt bằng công tắc, dùng <Text code>{'{variable_name}'}</Text> làm placeholder. Nhấn "Đặt lại" để về mặc định hệ thống.
                 </Text>
               </div>
             }
@@ -391,7 +391,7 @@ export default function PromptTemplates() {
                   activeKey={selectedCategory}
                   onChange={setSelectedCategory}
                   items={[
-                    { key: '0', label: `全部 (${categories.reduce((sum, cat) => sum + cat.count, 0)})` },
+                    { key: '0', label: `Tất cả (${categories.reduce((sum, cat) => sum + cat.count, 0)})` },
                     ...categories.map((cat, index) => ({
                       key: (index + 1).toString(),
                       label: `${cat.category} (${cat.count})`
@@ -412,7 +412,7 @@ export default function PromptTemplates() {
                 }}
               >
                 <Empty
-                  description="暂无模板数据"
+                  description="Chưa có dữ liệu mẫu"
                   style={{ padding: '80px 0' }}
                 />
               </Card>
@@ -454,7 +454,7 @@ export default function PromptTemplates() {
                               {template.category}
                             </Tag>
                             <Tag color={template.is_system_default ? 'default' : 'rgba(255,255,255,0.3)'} style={{ color: template.is_system_default ? token.colorTextSecondary : token.colorWhite, border: 'none' }}>
-                              {template.is_system_default ? '系统默认' : '已自定义'}
+                              {template.is_system_default ? 'Mặc định hệ thống' : 'Đã tùy chỉnh'}
                             </Tag>
                           </Space>
                         </Space>
@@ -467,7 +467,7 @@ export default function PromptTemplates() {
                           ellipsis={{ rows: 3 }}
                           style={{ minHeight: 66, marginBottom: 16 }}
                         >
-                          {template.description || '暂无描述'}
+                          {template.description || 'Chưa có mô tả'}
                         </Paragraph>
 
                         <Space wrap style={{ marginBottom: 16 }}>
@@ -475,12 +475,12 @@ export default function PromptTemplates() {
                             icon={<CheckCircleOutlined />}
                             color={template.is_system_default || template.is_active ? 'success' : 'default'}
                           >
-                            {template.is_system_default ? '始终启用' : (template.is_active ? '已启用' : '已禁用')}
+                            {template.is_system_default ? 'Luôn bật' : (template.is_active ? 'Đã bật' : 'Đã tắt')}
                           </Tag>
                         </Space>
 
                         <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 16 }}>
-                          模板键: {template.template_key}
+                          Khóa mẫu: {template.template_key}
                         </Text>
 
                         {/* 操作按钮 */}
@@ -492,7 +492,7 @@ export default function PromptTemplates() {
                             size={isMobile ? 'small' : 'middle'}
                             style={{ borderRadius: 6 }}
                           >
-                            编辑
+                            Chỉnh sửa
                           </Button>
                           <Button
                             icon={<ReloadOutlined />}
@@ -500,7 +500,7 @@ export default function PromptTemplates() {
                             size={isMobile ? 'small' : 'middle'}
                             style={{ borderRadius: 6 }}
                           >
-                            重置
+                            Đặt lại
                           </Button>
                         </Space>
                       </div>
@@ -513,17 +513,17 @@ export default function PromptTemplates() {
         </div>
       </div>
 
-      {/* 编辑对话框 */}
+      {/* Chỉnh sửa对话框 */}
       <Modal
-        title={`编辑模板: ${editingTemplate?.template_name}`}
+        title={`Chỉnh sửa mẫu: ${editingTemplate?.template_name}`}
         open={editorVisible}
         onCancel={() => setEditorVisible(false)}
         onOk={handleSave}
         width={isMobile ? '100%' : 900}
         centered={!isMobile}
         confirmLoading={loading}
-        okText="保存"
-        cancelText="取消"
+        okText="Lưu"
+        cancelText="Hủy"
         style={isMobile ? { top: 0, paddingBottom: 0, maxWidth: '100vw' } : undefined}
         styles={isMobile ? {
           body: {
@@ -535,37 +535,37 @@ export default function PromptTemplates() {
       >
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>模板名称</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Tên mẫu</label>
             <Input
               value={editingTemplate?.template_name || ''}
               onChange={(e) => setEditingTemplate(prev => prev ? { ...prev, template_name: e.target.value } : null)}
-              placeholder="输入模板名称"
+              placeholder="Nhập tên mẫu"
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>描述</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Mô tả</label>
             <TextArea
               value={editingTemplate?.description || ''}
               onChange={(e) => setEditingTemplate(prev => prev ? { ...prev, description: e.target.value } : null)}
               rows={2}
-              placeholder="简要描述模板用途"
+              placeholder="Mô tả ngắn công dụng mẫu"
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>模板内容</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Nội dung mẫu</label>
             <TextArea
               value={editingTemplate?.template_content || ''}
               onChange={(e) => setEditingTemplate(prev => prev ? { ...prev, template_content: e.target.value } : null)}
               rows={isMobile ? 15 : 20}
               style={{ fontFamily: 'monospace', fontSize: '13px' }}
-              placeholder="输入提示词模板内容..."
+              placeholder="Nhập nội dung mẫu prompt..."
             />
           </div>
 
           <Alert
-            message="提示：使用 {variable_name} 格式表示变量占位符"
+            message="Gợi ý: dùng định dạng {variable_name} cho placeholder biến"
             type="info"
             showIcon
             style={{ borderRadius: 8 }}

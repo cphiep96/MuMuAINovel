@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 class TaskProgressTracker:
     """后台任务进度追踪器（替代SSE的WizardProgressTracker）"""
 
-    def __init__(self, task_id: str, user_id: str, task_name: str = "任务"):
+    def __init__(self, task_id: str, user_id: str, task_name: str = "tác vụ"):
         self.task_id = task_id
         self.user_id = user_id
         self.task_name = task_name
@@ -46,7 +46,7 @@ class TaskProgressTracker:
 
     async def start(self, message: str = None):
         self.current_progress = 0
-        msg = message or f"开始生成{self.task_name}..."
+        msg = message or f"Bắt đầu tạo {self.task_name}..."
         await self._update_task(
             status="running", progress=0, status_message=msg,
             started_at=datetime.now(),
@@ -56,7 +56,7 @@ class TaskProgressTracker:
     async def loading(self, message: str = None, sub_progress: float = 0.5):
         progress = 5 + int(10 * sub_progress)
         self.current_progress = progress
-        msg = message or "加载数据中..."
+        msg = message or "Đang tải dữ liệu..."
         await self._update_task(
             progress=progress, status_message=msg,
             progress_details={"stage": "loading", "message": msg}
@@ -64,7 +64,7 @@ class TaskProgressTracker:
 
     async def preparing(self, message: str = None):
         self.current_progress = 17
-        msg = message or "准备AI提示词..."
+        msg = message or "Đang chuẩn bị prompt AI..."
         await self._update_task(
             progress=17, status_message=msg,
             progress_details={"stage": "preparing", "message": msg}
@@ -80,8 +80,8 @@ class TaskProgressTracker:
             self._last_generating_progress = progress
         self.current_progress = progress
 
-        retry_suffix = f" (重试 {retry_count}/{max_retries})" if retry_count > 0 else ""
-        msg = message or f"生成{self.task_name}中... ({current_chars}字符){retry_suffix}"
+        retry_suffix = f" (thử lại {retry_count}/{max_retries})" if retry_count > 0 else ""
+        msg = message or f"Đang tạo {self.task_name}... ({current_chars} ký tự){retry_suffix}"
         await self._update_task(
             progress=progress, status_message=msg,
             progress_details={"stage": "generating", "message": msg, "current_chars": current_chars}
@@ -89,7 +89,7 @@ class TaskProgressTracker:
 
     async def parsing(self, message: str = None):
         self.current_progress = 88
-        msg = message or f"解析{self.task_name}数据..."
+        msg = message or f"Đang phân tích dữ liệu {self.task_name}..."
         await self._update_task(
             progress=88, status_message=msg,
             progress_details={"stage": "parsing", "message": msg}
@@ -98,7 +98,7 @@ class TaskProgressTracker:
     async def saving(self, message: str = None, sub_progress: float = 0.5):
         progress = 92 + int(6 * sub_progress)
         self.current_progress = progress
-        msg = message or f"保存{self.task_name}到数据库..."
+        msg = message or f"Đang lưu {self.task_name} vào cơ sở dữ liệu..."
         await self._update_task(
             progress=progress, status_message=msg,
             progress_details={"stage": "saving", "message": msg}
@@ -109,7 +109,7 @@ class TaskProgressTracker:
         normalized_progress = max(0, min(analysis_progress, 100))
         progress = 94 + int(5 * normalized_progress / 100)
         self.current_progress = progress
-        msg = message or f"分析{self.task_name}中... ({normalized_progress}%)"
+        msg = message or f"Đang phân tích {self.task_name}... ({normalized_progress}%)"
         await self._update_task(
             progress=progress, status_message=msg,
             progress_details={
@@ -124,7 +124,7 @@ class TaskProgressTracker:
 
     async def complete(self, message: str = None):
         self.current_progress = 100
-        msg = message or f"{self.task_name}生成完成!"
+        msg = message or f"Tạo {self.task_name} hoàn tất!"
         await self._update_task(
             status="completed", progress=100, status_message=msg,
             completed_at=datetime.now(),
@@ -134,7 +134,7 @@ class TaskProgressTracker:
     async def error(self, error_message: str):
         await self._update_task(
             status="failed", error_message=error_message,
-            status_message=f"失败: {error_message}",
+            status_message=f"Thất bại: {error_message}",
             completed_at=datetime.now(),
             progress_details={"stage": "error", "message": error_message}
         )
@@ -145,7 +145,7 @@ class TaskProgressTracker:
             progress_details={"stage": "warning", "message": message}
         )
 
-    async def retry(self, retry_count: int, max_retries: int, reason: str = "准备重试"):
+    async def retry(self, retry_count: int, max_retries: int, reason: str = "Chuẩn bị thử lại"):
         msg = f"⚠️ {reason}... ({retry_count}/{max_retries})"
         await self._update_task(
             status_message=msg, retry_count=retry_count,
@@ -229,7 +229,7 @@ class BackgroundTaskService:
                                 if task and task.status == "running" and not task.cancel_requested:
                                     task.status = "failed"
                                     task.error_message = str(e)
-                                    task.status_message = f"任务失败: {str(e)}"
+                                    task.status_message = f"Tác vụ thất bại: {str(e)}"
                                     task.completed_at = datetime.now()
                                     await session.commit()
                         except Exception as update_err:
@@ -283,7 +283,7 @@ class BackgroundTaskService:
             task_input=task_input or {},
             status="pending",
             progress=0,
-            status_message="任务已创建，等待执行..."
+            status_message="Đã tạo tác vụ, đang chờ thực thi..."
         )
         db.add(task)
         await db.commit()
@@ -344,7 +344,7 @@ class BackgroundTaskService:
             return False
         task.cancel_requested = True
         task.status = "cancelled"
-        task.status_message = "任务已取消"
+        task.status_message = "Tác vụ đã bị hủy"
         task.completed_at = datetime.now()
         await db.commit()
         logger.info(f"🚫 取消任务: {task_id[:8]}")
@@ -412,9 +412,9 @@ class BackgroundTaskService:
                 task = result.scalar_one_or_none()
                 if task and task.status == "pending":
                     if tasks_ahead > 0:
-                        task.status_message = f"排队中，前方还有 {tasks_ahead} 个任务等待..."
+                        task.status_message = f"Đang xếp hàng, còn {tasks_ahead} tác vụ phía trước..."
                     else:
-                        task.status_message = "即将开始执行..."
+                        task.status_message = "Sắp bắt đầu thực thi..."
                     task.progress_details = {"stage": "queued", "queue_size": tasks_ahead}
                     task.updated_at = datetime.now()
                     await session.commit()

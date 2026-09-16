@@ -1,5 +1,5 @@
 """
-LinuxDO OAuth2 服务
+Dịch vụ LinuxDO OAuth2
 """
 import httpx
 import secrets
@@ -16,7 +16,7 @@ class LinuxDOOAuthService:
     # LinuxDO OAuth2 端点
     AUTHORIZE_URL = "https://connect.linux.do/oauth2/authorize"
     TOKEN_URL = "https://connect.linux.do/oauth2/token"
-    USERINFO_URL = "https://connect.linux.do/api/user"  # 修复：使用正确的用户信息端点
+    USERINFO_URL = "https://connect.linux.do/api/user"  # Sửa: dùng đúng endpoint thông tin người dùng
     
     def __init__(self):
         self.client_id = settings.LINUXDO_CLIENT_ID
@@ -28,17 +28,17 @@ class LinuxDOOAuthService:
         if not self.redirect_uri:
             self.redirect_uri = "http://localhost:8000/api/auth/callback"
             logger.warning(
-                "⚠️  LINUXDO_REDIRECT_URI 未配置，使用默认值: http://localhost:8000/api/auth/callback\n"
-                "如需使用 OAuth 登录，请在 .env 文件中配置：\n"
-                "本地开发: LINUXDO_REDIRECT_URI=http://localhost:8000/api/auth/callback\n"
-                "Docker部署: LINUXDO_REDIRECT_URI=https://your-domain.com/api/auth/callback"
+                "⚠️  LINUXDO_REDIRECT_URI chưa được cấu hình, dùng mặc định: http://localhost:8000/api/auth/callback\n"
+                "Nếu cần dùng đăng nhập OAuth, hãy cấu hình trong file .env:\n"
+                "Phát triển local: LINUXDO_REDIRECT_URI=http://localhost:8000/api/auth/callback\n"
+                "Triển khai Docker: LINUXDO_REDIRECT_URI=https://your-domain.com/api/auth/callback"
             )
         
         # 警告：检查是否使用了localhost（在非开发环境）
         if not settings.debug and "localhost" in self.redirect_uri.lower():
             logger.warning(
-                f"⚠️  生产环境检测到使用 localhost 作为回调地址: {self.redirect_uri}\n"
-                "这可能导致OAuth回调失败！请使用实际的域名或服务器IP。"
+                f"⚠️  Môi trường production đang dùng localhost làm callback: {self.redirect_uri}\n"
+                "Điều này có thể khiến OAuth callback thất bại! Hãy dùng tên miền hoặc IP máy chủ thực tế."
             )
 
         if self.proxy_url:
@@ -60,13 +60,13 @@ class LinuxDOOAuthService:
     
     def get_authorization_url(self, state: str) -> str:
         """
-        获取授权 URL
+        Lấy URL ủy quyền
         
         Args:
-            state: 随机 state 参数
+            state: Tham số state ngẫu nhiên
             
         Returns:
-            授权 URL
+            URL ủy quyền
         """
         params = {
             "client_id": self.client_id,
@@ -81,13 +81,13 @@ class LinuxDOOAuthService:
     
     async def get_access_token(self, code: str) -> Optional[Dict[str, Any]]:
         """
-        使用授权码获取访问令牌
+        Dùng mã ủy quyền để lấy access token
         
         Args:
-            code: 授权码
+            code: Mã ủy quyền
             
         Returns:
-            包含 access_token 的字典,失败返回 None
+            Dict chứa access_token; thất bại trả về None
         """
         data = {
             "client_id": self.client_id,
@@ -117,13 +117,13 @@ class LinuxDOOAuthService:
     
     async def get_user_info(self, access_token: str) -> Optional[Dict[str, Any]]:
         """
-        使用访问令牌获取用户信息
+        Dùng access token để lấy thông tin người dùng
         
         Args:
-            access_token: 访问令牌
+            access_token: Access token
             
         Returns:
-            用户信息字典,失败返回 None
+            Dict thông tin người dùng; thất bại trả về None
         """
         try:
             # 添加真实浏览器请求头，避免被 Cloudflare 拦截
@@ -142,7 +142,7 @@ class LinuxDOOAuthService:
                 )
                 
                 logger.debug(
-                    "获取用户信息响应: status=%s headers=%s",
+                    "Phản hồi lấy thông tin người dùng: status=%s headers=%s",
                     response.status_code,
                     safe_json_preview(dict(response.headers), 500),
                 )

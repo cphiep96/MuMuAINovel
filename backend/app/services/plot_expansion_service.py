@@ -101,8 +101,8 @@ class PlotExpansionService:
         )
         characters = characters_result.scalars().all()
         characters_info = "\n".join([
-            f"- {char.name} ({'组织' if char.is_organization else '角色'}, {char.role_type}): "
-            f"{char.personality[:100] if char.personality else '暂无描述'}"
+            f"- {char.name} ({'Tổ chức' if char.is_organization else 'Nhân vật'}, {char.role_type}): "
+            f"{char.personality[:100] if char.personality else 'Chưa có mô tả'}"
             for char in characters
         ])
         
@@ -115,13 +115,13 @@ class PlotExpansionService:
         prompt = PromptService.format_prompt(
             template,
             project_title=project.title,
-            project_genre=project.genre or '通用',
-            project_theme=project.theme or '未设定',
+            project_genre=project.genre or 'Phổ thông',
+            project_theme=project.theme or 'Chưa thiết lập',
             project_narrative_perspective=project.narrative_perspective or '第三人称',
-            project_world_time_period=project.world_time_period or '未设定',
-            project_world_location=project.world_location or '未设定',
-            project_world_atmosphere=project.world_atmosphere or '未设定',
-            characters_info=characters_info or '暂无角色',
+            project_world_time_period=project.world_time_period or 'Chưa thiết lập',
+            project_world_location=project.world_location or 'Chưa thiết lập',
+            project_world_atmosphere=project.world_atmosphere or 'Chưa thiết lập',
+            characters_info=characters_info or 'Chưa có nhân vật',
             outline_order_index=outline.order_index,
             outline_title=outline.title,
             outline_content=outline.content,
@@ -175,8 +175,8 @@ class PlotExpansionService:
         )
         characters = characters_result.scalars().all()
         characters_info = "\n".join([
-            f"- {char.name} ({'组织' if char.is_organization else '角色'}, {char.role_type}): "
-            f"{char.personality[:100] if char.personality else '暂无描述'}"
+            f"- {char.name} ({'Tổ chức' if char.is_organization else 'Nhân vật'}, {char.role_type}): "
+            f"{char.personality[:100] if char.personality else 'Chưa có mô tả'}"
             for char in characters
         ])
         
@@ -206,34 +206,34 @@ class PlotExpansionService:
                 # 构建完整的已生成章节摘要（包含关键事件）
                 previous_summaries = []
                 for ch in all_chapter_plans:  # 显示所有已生成章节
-                    key_events_str = "、".join(ch.get('key_events', [])[:3]) if ch.get('key_events') else "无"
+                    key_events_str = ", ".join(ch.get('key_events', [])[:3]) if ch.get('key_events') else "Không có"
                     previous_summaries.append(
-                        f"第{ch['sub_index']}节《{ch['title']}》:\n"
-                        f"  - 剧情：{ch.get('plot_summary', '')[:150]}\n"
-                        f"  - 关键事件：{key_events_str}\n"
-                        f"  - 结尾方式：{ch.get('ending_type', '未知')}"
+                        f"Phần {ch['sub_index']}«{ch['title']}»:\n"
+                        f"  - Cốt truyện: {ch.get('plot_summary', '')[:150]}\n"
+                        f"  - Sự kiện chính: {key_events_str}\n"
+                        f"  - Cách kết thúc: {ch.get('ending_type', 'Không rõ')}"
                     )
                 
                 # 提取所有已使用的关键事件
                 all_used_events = []
                 for ch in all_chapter_plans:
                     all_used_events.extend(ch.get('key_events', []))
-                used_events_str = "、".join(all_used_events[-20:]) if all_used_events else "暂无"
+                used_events_str = ", ".join(all_used_events[-20:]) if all_used_events else "Chưa có"
                 
                 previous_context = f"""
-【🔴 已生成章节完整信息（必须参考以确保差异化）】
+【🔴 Thông tin đầy đủ về các chương đã tạo (bắt buộc tham khảo để đảm bảo tính khác biệt)】
 {chr(10).join(previous_summaries)}
 
-【🔴 已使用的关键事件（本批次不可重复使用）】
+【🔴 Sự kiện chính đã sử dụng (không được lặp lại trong lô này)】
 {used_events_str}
 
-【🔴 差异化强制要求】
-⚠️ 当前是第{current_start_index}-{current_start_index + current_batch_size - 1}节（共{target_chapter_count}节中的第{batch_num + 1}批）
-⚠️ 每个新章节必须有完全不同的：
-   1. 开场场景（不同地点/时间/人物状态）
-   2. 核心事件（不与已生成章节的关键事件重复）
-   3. 结尾悬念（不同类型的钩子）
-⚠️ 新章节的key_events不得与上面【已使用的关键事件】中的任何事件相同或相似
+【🔴 YÊU CẦU BẮT BUỘC VỀ TÍNH KHÁC BIỆT】
+⚠️ Hiện là phần {current_start_index}-{current_start_index + current_batch_size - 1} (lô {batch_num + 1} trong tổng số {target_chapter_count} phần)
+⚠️ Mỗi chương mới phải hoàn toàn khác nhau về:
+   1. Bối cảnh mở đầu (địa điểm/thời gian/trạng thái nhân vật khác nhau)
+   2. Sự kiện cốt lõi (không lặp lại sự kiện chính của các chương đã tạo)
+   3. Hồi hộp cuối chương (móc câu thuộc loại khác nhau)
+⚠️ key_events của chương mới không được trùng hoặc tương tự bất kỳ sự kiện nào trong 【Sự kiện chính đã sử dụng】 ở trên
 """
             # 获取自定义提示词模板
             template = await PromptService.get_template("OUTLINE_EXPAND_MULTI", project.user_id, db)
@@ -241,13 +241,13 @@ class PlotExpansionService:
             prompt = PromptService.format_prompt(
                 template,
                 project_title=project.title,
-                project_genre=project.genre or '通用',
-                project_theme=project.theme or '未设定',
+                project_genre=project.genre or 'Phổ thông',
+                project_theme=project.theme or 'Chưa thiết lập',
                 project_narrative_perspective=project.narrative_perspective or '第三人称',
-                project_world_time_period=project.world_time_period or '未设定',
-                project_world_location=project.world_location or '未设定',
-                project_world_atmosphere=project.world_atmosphere or '未设定',
-                characters_info=characters_info or '暂无角色',
+                project_world_time_period=project.world_time_period or 'Chưa thiết lập',
+                project_world_location=project.world_location or 'Chưa thiết lập',
+                project_world_atmosphere=project.world_atmosphere or 'Chưa thiết lập',
+                characters_info=characters_info or 'Chưa có nhân vật',
                 outline_order_index=outline.order_index,
                 outline_title=outline.title,
                 outline_content=outline.content,
@@ -316,7 +316,7 @@ class PlotExpansionService:
         )
         project = project_result.scalar_one_or_none()
         if not project:
-            raise ValueError(f"项目 {project_id} 不存在")
+            raise ValueError(f"Dự án {project_id} không tồn tại")
         
         # 获取所有大纲
         outlines_result = await db.execute(
@@ -410,7 +410,7 @@ class PlotExpansionService:
             current_outline = outline_result.scalar_one_or_none()
             
             if not current_outline:
-                raise ValueError(f"大纲 {outline_id} 不存在")
+                raise ValueError(f"Dàn ý {outline_id} không tồn tại")
             
             # 2. 查询所有在当前大纲之前的大纲（按order_index排序）
             prev_outlines_result = await db.execute(
@@ -457,7 +457,7 @@ class PlotExpansionService:
                 outline_id=outline_id,
                 chapter_number=start_chapter_number + idx,
                 sub_index=plan.get("sub_index", idx + 1),
-                title=plan.get("title", f"第{start_chapter_number + idx}章"),
+                title=plan.get("title", f"Chương {start_chapter_number + idx}"),
                 summary=plan.get("plot_summary", ""),
                 expansion_plan=expansion_plan_json,
                 status="draft"
@@ -514,11 +514,11 @@ class PlotExpansionService:
         
         context = ""
         if prev_outline:
-            context += f"【前一节】{prev_outline.title}: {prev_outline.content[:200]}...\n\n"
+            context += f"【Phần trước】{prev_outline.title}: {prev_outline.content[:200]}...\n\n"
         if next_outline:
-            context += f"【后一节】{next_outline.title}: {next_outline.content[:200]}...\n"
+            context += f"【Phần sau】{next_outline.title}: {next_outline.content[:200]}...\n"
         
-        return context if context else "（无前后文）"
+        return context if context else "(Không có nội dung trước hoặc sau)"
     
     
     def _parse_expansion_response(
@@ -546,20 +546,20 @@ class PlotExpansionService:
                 if "ending_type" not in plan:
                     # 根据叙事目标推断结尾类型
                     narrative_goal = plan.get("narrative_goal", "")
-                    if "悬念" in narrative_goal or "疑问" in narrative_goal:
-                        plan["ending_type"] = "悬念"
-                    elif "冲突" in narrative_goal or "对抗" in narrative_goal:
-                        plan["ending_type"] = "冲突升级"
-                    elif "转折" in narrative_goal:
-                        plan["ending_type"] = "情节转折"
-                    elif "情感" in narrative_goal or "情绪" in narrative_goal:
-                        plan["ending_type"] = "情感收尾"
+                    if "hồi hộp" in narrative_goal or "câu hỏi" in narrative_goal:
+                        plan["ending_type"] = "Hồi hộp"
+                    elif "xung đột" in narrative_goal or "đối đầu" in narrative_goal:
+                        plan["ending_type"] = "Xung đột leo thang"
+                    elif "bước ngoặt" in narrative_goal:
+                        plan["ending_type"] = "Bước ngoặt cốt truyện"
+                    elif "cảm xúc" in narrative_goal or "tâm trạng" in narrative_goal:
+                        plan["ending_type"] = "Kết thúc cảm xúc"
                     else:
-                        plan["ending_type"] = f"自然过渡-{idx + 1}"
+                        plan["ending_type"] = f"Chuyển tiếp tự nhiên-{idx + 1}"
                 
                 # 🔧 确保 key_events 是列表且非空
                 if not plan.get("key_events"):
-                    plan["key_events"] = [f"章节{idx + 1}核心事件"]
+                    plan["key_events"] = [f"Sự kiện cốt lõi của chương {idx + 1}"]
             
             logger.info(f"✅ 成功解析 {len(chapter_plans)} 个章节规划（含差异化标识）")
             return chapter_plans
@@ -570,14 +570,14 @@ class PlotExpansionService:
             return [{
                 "outline_id": outline_id,
                 "sub_index": 1,
-                "title": "AI解析失败的默认章节",
+                "title": "Chương mặc định do AI phân tích thất bại",
                 "plot_summary": ai_response[:500],
-                "key_events": ["解析失败"],
+                "key_events": ["Phân tích thất bại"],
                 "character_focus": [],
-                "emotional_tone": "未知",
-                "narrative_goal": "需要重新生成",
-                "conflict_type": "未知",
-                "ending_type": "未知",
+                "emotional_tone": "Không rõ",
+                "narrative_goal": "Cần tạo lại",
+                "conflict_type": "Không rõ",
+                "ending_type": "Không rõ",
                 "estimated_words": 3000
             }]
         except Exception as e:
@@ -585,14 +585,14 @@ class PlotExpansionService:
             return [{
                 "outline_id": outline_id,
                 "sub_index": 1,
-                "title": "解析异常的默认章节",
-                "plot_summary": "系统错误",
+                "title": "Chương mặc định do lỗi phân tích",
+                "plot_summary": "Lỗi hệ thống",
                 "key_events": [],
                 "character_focus": [],
-                "emotional_tone": "未知",
-                "narrative_goal": "需要重新生成",
-                "conflict_type": "未知",
-                "ending_type": "未知",
+                "emotional_tone": "Không rõ",
+                "narrative_goal": "Cần tạo lại",
+                "conflict_type": "Không rõ",
+                "ending_type": "Không rõ",
                 "estimated_words": 3000
             }]
 

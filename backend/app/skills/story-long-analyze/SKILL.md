@@ -1,13 +1,24 @@
 ---
 name: story-long-analyze
+display_name: Phân rã tiểu thuyết dài
+category: Skill·Dài
 description: |
-  长篇网文拆文。深度拆解爆款长篇小说的黄金三章、人设架构、爽点设计、节奏控制。
-  支持两种模式：
-  - 快速拆解：分析黄金三章和整体结构（默认）
-  - 深度拆解：逐章拆解整本小说，输出结构化文件到指定目录
-  触发方式：/story-long-analyze、/长篇拆文、「帮我拆这本书」「分析黄金三章」
-  深度模式触发：「深度拆解」「完整拆解」「系统拆解」或提供小说文本文件路径
+  Phân rã tiểu thuyết mạng dài. Bóc tách sâu ba chương vàng, kiến trúc nhân vật, thiết kế điểm sướng và kiểm soát nhịp độ của tác phẩm ăn khách.
+  Hỗ trợ hai chế độ:
+  - Phân rã nhanh: phân tích ba chương vàng và cấu trúc tổng thể (mặc định)
+  - Phân rã sâu: phân rã từng chương của cả cuốn, xuất tệp có cấu trúc vào thư mục chỉ định
+  Kích hoạt: /story-long-analyze, «phân rã truyện dài», «giúp tôi phân rã cuốn này», «phân tích ba chương vàng».
+  Kích hoạt chế độ sâu: «phân rã sâu», «phân rã toàn bộ», «phân rã có hệ thống» hoặc đưa đường dẫn tệp văn bản tiểu thuyết.
+triggers:
+  - /story-long-analyze
+  - phân rã truyện dài
+  - giúp tôi phân rã cuốn này
+  - phân tích ba chương vàng
+  - phân rã sâu
 ---
+
+> **Yêu cầu ngôn ngữ**: nội dung tạo cho người dùng phải viết bằng tiếng Việt tự nhiên.
+
 
 # story-long-analyze：长篇网文拆文
 
@@ -138,7 +149,7 @@ description: |
 
 ---
 
-## 语言
-
-- 用户用中文就用中文回复，用英文就用英文回复
-- 中文回复遵循《中文文案排版指北》
+## Ngôn ngữ đầu ra
+- Ưu tiên trả lời và viết nội dung bằng **tiếng Việt** tự nhiên.
+- Nếu người dùng dùng tiếng Anh thì có thể trả lời bằng tiếng Anh; mặc định dùng tiếng Việt.
+- Không đổi tên kỹ thuật, đường dẫn lệnh slash (`/story-...`) hay tên file tham chiếu.

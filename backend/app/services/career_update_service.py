@@ -176,7 +176,7 @@ class CareerUpdateService:
             character.main_career_stage = new_stage
             
             # 记录变更日志
-            change_desc = f"{'晋升' if stage_change > 0 else '降级'}"
+            change_desc = f"{'thăng cấp' if stage_change > 0 else 'hạ cấp'}"
             breakthrough_desc = career_changes.get('career_breakthrough', '')
             
             changes_log.append({
@@ -192,7 +192,7 @@ class CareerUpdateService:
             
             logger.info(
                 f"  ✨ {character.name} 的主职业 [{career.name}] "
-                f"{old_stage}阶 → {new_stage}阶 ({change_desc})"
+                f"{old_stage} bậc → {new_stage} bậc ({change_desc})"
             )
             if breakthrough_desc:
                 logger.info(f"     突破描述: {breakthrough_desc[:50]}...")
@@ -280,7 +280,7 @@ class CareerUpdateService:
             
             logger.info(
                 f"  ✨ {character.name} 的副职业 [{career.name}] "
-                f"{old_stage}阶 → {new_stage}阶"
+                f"{old_stage} bậc → {new_stage} bậc"
             )
             
             return True

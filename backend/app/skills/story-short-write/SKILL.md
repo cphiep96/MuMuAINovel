@@ -1,9 +1,18 @@
 ---
 name: story-short-write
+display_name: Viết truyện ngắn
+category: Skill·Ngắn
 description: |
-  短篇网文写作。辅助短篇小说创作，从构思到成稿，聚焦情绪拉扯与节奏把控。
-  触发方式：/story-short-write、/写短篇、「帮我写一篇短篇」「写个盐言故事」
+  Viết tiểu thuyết mạng ngắn. Hỗ trợ sáng tác truyện ngắn từ lên ý tưởng tới hoàn thiện, tập trung vào giằng xé cảm xúc và kiểm soát nhịp độ.
+  Kích hoạt: /story-short-write, «viết truyện ngắn», «giúp tôi viết một truyện ngắn».
+triggers:
+  - /story-short-write
+  - viết truyện ngắn
+  - giúp tôi viết một truyện ngắn
 ---
+
+> **Yêu cầu ngôn ngữ**: nội dung tạo cho người dùng phải viết bằng tiếng Việt tự nhiên.
+
 
 # story-short-write：短篇网文写作
 
@@ -253,7 +262,7 @@ description: |
 
 ---
 
-## 语言
-
-- 用户用中文就用中文回复，用英文就用英文回复
-- 中文回复遵循《中文文案排版指北》
+## Ngôn ngữ đầu ra
+- Ưu tiên trả lời và viết nội dung bằng **tiếng Việt** tự nhiên.
+- Nếu người dùng dùng tiếng Anh thì có thể trả lời bằng tiếng Anh; mặc định dùng tiếng Việt.
+- Không đổi tên kỹ thuật, đường dẫn lệnh slash (`/story-...`) hay tên file tham chiếu.

@@ -29,16 +29,16 @@ interface ChangelogModalProps {
 
 // 提交类型图标和颜色配置
 const typeConfig: Record<ChangelogEntry['type'], { icon: React.ReactNode; color: string; label: string }> = {
-  feature: { icon: <StarOutlined />, color: 'green', label: '新功能' },
-  update: { icon: <SyncOutlined />, color: 'geekblue', label: '更新' },
-  fix: { icon: <BugOutlined />, color: 'red', label: '修复' },
-  docs: { icon: <FileTextOutlined />, color: 'blue', label: '文档' },
-  style: { icon: <BgColorsOutlined />, color: 'purple', label: '样式' },
-  refactor: { icon: <ThunderboltOutlined />, color: 'orange', label: '重构' },
-  perf: { icon: <ThunderboltOutlined />, color: 'gold', label: '性能' },
-  test: { icon: <ExperimentOutlined />, color: 'cyan', label: '测试' },
-  chore: { icon: <ToolOutlined />, color: 'default', label: '杂项' },
-  other: { icon: <QuestionCircleOutlined />, color: 'default', label: '其他' },
+  feature: { icon: <StarOutlined />, color: 'green', label: 'Tính năng mới' },
+  update: { icon: <SyncOutlined />, color: 'geekblue', label: 'Cập nhật' },
+  fix: { icon: <BugOutlined />, color: 'red', label: 'Sửa lỗi' },
+  docs: { icon: <FileTextOutlined />, color: 'blue', label: 'Tài liệu' },
+  style: { icon: <BgColorsOutlined />, color: 'purple', label: 'Giao diện' },
+  refactor: { icon: <ThunderboltOutlined />, color: 'orange', label: 'Tái cấu trúc' },
+  perf: { icon: <ThunderboltOutlined />, color: 'gold', label: 'Hiệu năng' },
+  test: { icon: <ExperimentOutlined />, color: 'cyan', label: 'Kiểm thử' },
+  chore: { icon: <ToolOutlined />, color: 'default', label: 'Khác' },
+  other: { icon: <QuestionCircleOutlined />, color: 'default', label: 'Khác' },
 };
 
 export default function ChangelogModal({ visible, onClose }: ChangelogModalProps) {
@@ -72,7 +72,7 @@ export default function ChangelogModal({ visible, onClose }: ChangelogModalProps
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '获取更新日志失败');
+      setError(err instanceof Error ? err.message : 'Lấy nhật ký cập nhật thất bại');
     } finally {
       setLoading(false);
     }
@@ -112,16 +112,16 @@ export default function ChangelogModal({ visible, onClose }: ChangelogModalProps
     const now = new Date();
     const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return '今天';
-    if (diffDays === 1) return '昨天';
-    if (diffDays < 7) return `${diffDays} 天前`;
+    if (diffDays === 0) return 'Hôm nay';
+    if (diffDays === 1) return 'Hôm qua';
+    if (diffDays < 7) return `${diffDays} ngày trước`;
 
-    return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+    return date.toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
   // 格式化时间
   const formatTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    return new Date(dateStr).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
@@ -129,14 +129,14 @@ export default function ChangelogModal({ visible, onClose }: ChangelogModalProps
       title={
         <Space>
           <GithubOutlined />
-          <span>更新日志</span>
+          <span>Nhật ký cập nhật</span>
           <Button
             type="text"
             size="small"
             icon={<ReloadOutlined />}
             onClick={handleRefresh}
             loading={loading}
-            title="刷新"
+            title="Làm mới"
           />
         </Space>
       }
@@ -168,10 +168,10 @@ export default function ChangelogModal({ visible, onClose }: ChangelogModalProps
 
       {loading && changelog.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px 0' }}>
-          <Spin size="large" tip="加载更新日志中..." />
+          <Spin size="large" tip="Đang tải nhật ký cập nhật..." />
         </div>
       ) : changelog.length === 0 ? (
-        <Empty description="暂无更新日志" />
+        <Empty description="Chưa có nhật ký cập nhật" />
       ) : (
         <>
           {sortedDates.map(date => {
@@ -249,7 +249,7 @@ export default function ChangelogModal({ visible, onClose }: ChangelogModalProps
                               rel="noopener noreferrer"
                               style={{ fontSize: '12px' }}
                             >
-                              查看提交
+                              Xem commit
                             </a>
                           </Space>
                         </div>
@@ -269,7 +269,7 @@ export default function ChangelogModal({ visible, onClose }: ChangelogModalProps
                   onClick={handleLoadMore}
                   loading={loading}
                 >
-                  加载更多
+                  Tải thêm
                 </Button>
               </div>
             )
@@ -283,7 +283,7 @@ export default function ChangelogModal({ visible, onClose }: ChangelogModalProps
                 padding: '16px 0',
                 fontSize: '14px',
               }}>
-                已显示所有更新日志
+                Đã hiển thị toàn bộ nhật ký cập nhật
               </div>
             )
           }
@@ -299,7 +299,7 @@ export default function ChangelogModal({ visible, onClose }: ChangelogModalProps
         fontSize: '13px',
         color: 'var(--color-primary)',
       }}>
-        💡 提示：每次打开窗口时自动获取最新更新日志，数据来源于 GitHub 提交历史
+        💡 Gợi ý: Mỗi lần mở cửa sổ sẽ tự lấy nhật ký cập nhật mới nhất, dữ liệu từ lịch sử commit GitHub
       </div>
     </Modal >
   );

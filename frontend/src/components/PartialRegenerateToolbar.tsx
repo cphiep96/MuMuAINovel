@@ -47,7 +47,7 @@ export const PartialRegenerateToolbar: React.FC<PartialRegenerateToolbarProps> =
       }}
     >
       <Tooltip
-        title={`AI重写选中内容: "${displayText}"`}
+        title={`AI viết lại nội dung đã chọn: "${displayText}"`}
         placement="top"
       >
         <Button
@@ -68,7 +68,7 @@ export const PartialRegenerateToolbar: React.FC<PartialRegenerateToolbarProps> =
             boxShadow: token.boxShadowSecondary,
           }}
         >
-          AI重写
+          AI viết lại
         </Button>
       </Tooltip>
       <span style={{ 
@@ -79,7 +79,7 @@ export const PartialRegenerateToolbar: React.FC<PartialRegenerateToolbarProps> =
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
       }}>
-        已选 {selectedText.length} 字
+        Đã chọn {selectedText.length} chữ
       </span>
     </div>
   );

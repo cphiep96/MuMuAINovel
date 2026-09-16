@@ -351,7 +351,7 @@ class ForeshadowService:
                     cleaned_analysis_rows += 1
                     logger.info(
                         f"🧹 已清理章节分析 {analysis.chapter_id[:8]} 中 {removed_count} 条已删除伏笔历史记录 "
-                        f"(原数量: {original_count}, 现数量: {len(filtered_foreshadows)})"
+                        f"(số lượng gốc: {original_count}, số lượng hiện tại: {len(filtered_foreshadows)})"
                     )
 
             await db.delete(foreshadow)
@@ -359,8 +359,8 @@ class ForeshadowService:
 
             logger.info(
                 f"✅ 删除伏笔成功: {foreshadow.title} "
-                f"(关系记忆清理: {deleted_memory_rows}条, 向量记忆清理: {deleted_vector_memories}条, "
-                f"历史分析引用清理: {cleaned_analysis_refs}条/{cleaned_analysis_rows}个分析)"
+                f"(dọn ký ức quan hệ: {deleted_memory_rows} bản ghi, dọn ký ức vector: {deleted_vector_memories} bản ghi, "
+                f"dọn tham chiếu phân tích cũ: {cleaned_analysis_refs} bản ghi/{cleaned_analysis_rows} phân tích)"
             )
             return True
 
@@ -469,7 +469,7 @@ class ForeshadowService:
             
             foreshadow.status = "abandoned"
             if reason:
-                foreshadow.notes = f"{foreshadow.notes or ''}\n[废弃原因] {reason}".strip()
+                foreshadow.notes = f"{foreshadow.notes or ''}\n[Lý do loại bỏ] {reason}".strip()
             
             await db.commit()
             await db.refresh(foreshadow)
@@ -749,25 +749,25 @@ class ForeshadowService:
             # 1. 获取本章必须回收的伏笔（target_resolve_chapter_number == chapter_number）
             must_resolve = await self.get_must_resolve_foreshadows(db, project_id, chapter_number)
             if must_resolve:
-                lines.append("【🎯 本章必须回收的伏笔 - 请务必在本章完成回收】")
+                lines.append("【🎯 Phục bút bắt buộc thu hồi trong chương này - nhất định phải hoàn tất trong chương】")
                 for f in must_resolve:
                     lines.append(f"- ID:{f.id[:8]} | {f.title}")
-                    lines.append(f"  埋入章节：第{f.plant_chapter_number}章")
-                    lines.append(f"  伏笔内容：{f.content[:100]}{'...' if len(f.content) > 100 else ''}")
+                    lines.append(f"  Chương gài: chương {f.plant_chapter_number}")
+                    lines.append(f"  Nội dung phục bút: {f.content[:100]}{'...' if len(f.content) > 100 else ''}")
                     if f.resolution_notes:
-                        lines.append(f"  回收提示：{f.resolution_notes}")
+                        lines.append(f"  Gợi ý thu hồi: {f.resolution_notes}")
                     lines.append("")
             
             # 2. 超期伏笔（已过目标回收章节但未回收）
             if include_overdue:
                 overdue = await self.get_overdue_foreshadows(db, project_id, chapter_number)
                 if overdue:
-                    lines.append("【⚠️ 超期待回收伏笔 - 请尽快回收】")
+                    lines.append("【⚠️ Phục bút quá hạn chưa thu hồi - hãy thu hồi sớm】")
                     for f in overdue[:3]:
                         overdue_chapters = chapter_number - (f.target_resolve_chapter_number or 0)
-                        lines.append(f"- ID:{f.id[:8]} | {f.title} [已超期{overdue_chapters}章]")
-                        lines.append(f"  埋入章节：第{f.plant_chapter_number}章，原计划第{f.target_resolve_chapter_number}章回收")
-                        lines.append(f"  伏笔内容：{f.content[:80]}...")
+                        lines.append(f"- ID:{f.id[:8]} | {f.title} [quá hạn {overdue_chapters} chương]")
+                        lines.append(f"  Chương gài: chương {f.plant_chapter_number}, dự kiến thu hồi ở chương {f.target_resolve_chapter_number}")
+                        lines.append(f"  Nội dung phục bút: {f.content[:80]}...")
                     lines.append("")
             
             # 3. 即将需要回收的伏笔（仅作为背景参考，明确禁止提前回收）
@@ -779,24 +779,24 @@ class ForeshadowService:
                        if (f.target_resolve_chapter_number or 0) > chapter_number]
             
             if upcoming:
-                lines.append("【📋 近期待回收伏笔（仅供参考，请勿在本章回收）】")
-                lines.append("⚠️ 以下伏笔尚未到回收时机，本章请勿提前回收，仅作为剧情背景了解")
+                lines.append("【📋 Phục bút sắp đến hạn thu hồi (chỉ tham khảo, không thu hồi trong chương này)】")
+                lines.append("⚠️ Những phục bút sau chưa đến lúc thu hồi; không được thu hồi trước hạn trong chương này, chỉ dùng để hiểu bối cảnh cốt truyện")
                 for f in upcoming[:5]:
                     remaining = (f.target_resolve_chapter_number or 0) - chapter_number
-                    lines.append(f"- {f.title}（计划第{f.target_resolve_chapter_number}章回收，还有{remaining}章）")
+                    lines.append(f"- {f.title} (dự kiến thu hồi ở chương {f.target_resolve_chapter_number}, còn {remaining} chương)")
                 lines.append("")
             
             # 4. 本章待埋入伏笔
             if include_pending:
                 to_plant = await self.get_foreshadows_to_plant(db, project_id, chapter_number)
                 if to_plant:
-                    lines.append("【✨ 本章计划埋入伏笔】")
+                    lines.append("【✨ Phục bút dự kiến gài trong chương này】")
                     for f in to_plant:
                         content_preview = f.content[:80] if len(f.content) > 80 else f.content
                         lines.append(f"- {f.title}")
-                        lines.append(f"  伏笔内容：{content_preview}")
+                        lines.append(f"  Nội dung phục bút: {content_preview}")
                         if f.hint_text:
-                            lines.append(f"  埋入提示：{f.hint_text}")
+                            lines.append(f"  Gợi ý gài cắm: {f.hint_text}")
                     lines.append("")
             
             context_text = "\n".join(lines) if lines else ""
@@ -955,16 +955,16 @@ class ForeshadowService:
                 if current_chapter_number and f.target_resolve_chapter_number:
                     if f.target_resolve_chapter_number == current_chapter_number:
                         item["resolve_status"] = "must_resolve_now"  # 本章必须回收
-                        item["resolve_hint"] = "本章必须回收此伏笔"
+                        item["resolve_hint"] = "Phải thu hồi phục bút này trong chương hiện tại"
                     elif f.target_resolve_chapter_number < current_chapter_number:
                         item["resolve_status"] = "overdue"  # 已超期
-                        item["resolve_hint"] = f"已超期{current_chapter_number - f.target_resolve_chapter_number}章，应尽快回收"
+                        item["resolve_hint"] = f"Đã quá hạn {current_chapter_number - f.target_resolve_chapter_number} chương, cần thu hồi sớm"
                     else:
                         item["resolve_status"] = "not_yet"  # 尚未到期
-                        item["resolve_hint"] = f"计划第{f.target_resolve_chapter_number}章回收，请勿提前回收"
+                        item["resolve_hint"] = f"Dự kiến thu hồi ở chương {f.target_resolve_chapter_number}, không được thu hồi trước hạn"
                 else:
                     item["resolve_status"] = "no_plan"  # 无明确计划
-                    item["resolve_hint"] = "无明确回收计划，根据剧情自然回收"
+                    item["resolve_hint"] = "Không có kế hoạch thu hồi cụ thể, hãy thu hồi tự nhiên theo cốt truyện"
                 
                 formatted_list.append(item)
             
@@ -1308,7 +1308,7 @@ class ForeshadowService:
                                 existing = None
                                 logger.warning(f"⚠️ 伏笔ID不存在或不属于该项目，跳过本次回收同步: {reference_id}")
                                 stats["skipped_resolve_count"] = stats.get("skipped_resolve_count", 0) + 1
-                                stats["errors"].append(f"reference_foreshadow_id 无效或已删除: {reference_id}")
+                                stats["errors"].append(f"reference_foreshadow_id không hợp lệ hoặc đã bị xóa: {reference_id}")
                                 continue
                         
                         # 策略2: 内容匹配备用机制（仅在 analysis 未提供 reference_id 时启用）
@@ -1464,7 +1464,7 @@ class ForeshadowService:
                             logger.info(f"✅ 自动创建伏笔: {fs_title} (ID: {new_foreshadow.id}) [{new_foreshadow_count}/{MAX_NEW_FORESHADOWS_PER_CHAPTER}]")
                     
                 except Exception as item_error:
-                    error_msg = f"处理伏笔时出错: {str(item_error)}"
+                    error_msg = f"Đã xảy ra lỗi khi xử lý phục bút: {str(item_error)}"
                     stats["errors"].append(error_msg)
                     logger.error(f"❌ {error_msg}")
             
@@ -1582,7 +1582,7 @@ class ForeshadowService:
         
         # 处理标题后缀（兜底机制）
         resolved_title_clean = resolved_title
-        for suffix in ["回收", "揭示", "解答", "兑现"]:
+        for suffix in ["thu hồi", "tiết lộ", "giải đáp", "thực hiện"]:
             if resolved_title.endswith(suffix):
                 resolved_title_clean = resolved_title[:-len(suffix)]
                 logger.debug(f"🔍 去除标题后缀: '{resolved_title}' -> '{resolved_title_clean}'")

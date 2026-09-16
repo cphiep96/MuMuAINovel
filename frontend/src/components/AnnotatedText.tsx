@@ -79,11 +79,11 @@ const AnnotatedText: React.FC<AnnotatedTextProps> = ({
   // 处理标注重叠和排序
   const processedAnnotations = useMemo(() => {
     if (!annotations || annotations.length === 0) {
-      console.log('AnnotatedText: 没有标注数据');
+      console.log('AnnotatedText: không có dữ liệu chú thích');
       return [];
     }
     
-    console.log(`AnnotatedText: 收到${annotations.length}个标注，内容长度${content.length}`);
+    console.log(`AnnotatedText: nhận ${annotations.length} chú thích, độ dài nội dung ${content.length}`);
     
     // 过滤掉无效位置的标注
     const validAnnotations = annotations.filter(
@@ -92,8 +92,8 @@ const AnnotatedText: React.FC<AnnotatedTextProps> = ({
     
     const invalidCount = annotations.length - validAnnotations.length;
     if (invalidCount > 0) {
-      console.warn(`AnnotatedText: ${invalidCount}个标注位置无效，有效标注${validAnnotations.length}个`);
-      console.log('无效标注:', annotations.filter(a => a.position < 0 || a.position >= content.length));
+      console.warn(`AnnotatedText: ${invalidCount} chú thích có vị trí không hợp lệ, còn ${validAnnotations.length} chú thích hợp lệ`);
+      console.log('Chú thích không hợp lệ:', annotations.filter(a => a.position < 0 || a.position >= content.length));
     }
     
     // 按位置排序
@@ -202,7 +202,7 @@ const AnnotatedText: React.FC<AnnotatedTextProps> = ({
       });
     }
 
-    console.log(`AnnotatedText: 处理${processedAnnotations.length}个标注，生成${result.length}个片段`);
+    console.log(`AnnotatedText: xử lý ${processedAnnotations.length} chú thích, tạo ${result.length} đoạn`);
     return result;
   }, [content, processedAnnotations]);
 
@@ -221,7 +221,7 @@ const AnnotatedText: React.FC<AnnotatedTextProps> = ({
 
     // 简化工具提示内容，不再使用复杂的React元素，改为纯文本或移除Tooltip
     const tooltipText = annotations && annotations.length > 1
-      ? `此处有 ${annotations.length} 个标注`
+      ? `Có ${annotations.length} chú thích ở đây`
       : `${annotation.title}: ${annotation.content.slice(0, 100)}${annotation.content.length > 100 ? '...' : ''}`;
 
     return (

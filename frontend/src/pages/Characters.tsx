@@ -21,13 +21,13 @@ interface Career {
   max_stage: number;
 }
 
-// 副职业数据类型
+// Nghề phụ数据类型
 interface SubCareerData {
   career_id: string;
   stage: number;
 }
 
-// 角色创建表单值类型
+// 角色Tạo表单值类型
 interface CharacterFormValues {
   name: string;
   age?: string;
@@ -49,7 +49,7 @@ interface CharacterFormValues {
   color?: string;
 }
 
-// 角色创建数据类型
+// 角色Tạo数据类型
 interface CharacterCreateData {
   project_id: string;
   name: string;
@@ -137,7 +137,7 @@ export default function Characters() {
       setMainCareers(response.main_careers || []);
       setSubCareers(response.sub_careers || []);
     } catch (error) {
-      console.error('获取职业列表失败:', error);
+      console.error('Lấy danh sách nghề nghiệp thất bại:', error);
     }
   };
 
@@ -146,9 +146,9 @@ export default function Characters() {
   const handleDeleteCharacter = async (id: string) => {
     try {
       await deleteCharacter(id);
-      message.success('删除成功');
+      message.success('Xóa thành công');
     } catch {
-      message.error('删除失败');
+      message.error('Xóa thất bại');
     }
   };
 
@@ -156,7 +156,7 @@ export default function Characters() {
     try {
       setIsGenerating(true);
       setProgress(0);
-      setProgressMessage('准备生成角色...');
+      setProgressMessage('Đang chuẩn bị tạo nhân vật...');
 
       const client = new SSEPostClient(
         '/api/characters/generate-stream',
@@ -172,24 +172,24 @@ export default function Characters() {
             setProgressMessage(msg);
           },
           onResult: (data) => {
-            console.log('角色生成完成:', data);
+            console.log('Tạo nhân vật hoàn tất:', data);
           },
           onError: (error) => {
-            message.error(`生成失败: ${error}`);
+            message.error(`Tạo thất bại: ${error}`);
           },
           onComplete: () => {
             setProgress(100);
-            setProgressMessage('生成完成！');
+            setProgressMessage('Tạo hoàn tất!');
           }
         }
       );
 
       await client.connect();
-      message.success('AI生成角色成功');
+      message.success('AI tạo nhân vật thành công');
       Modal.destroyAll();
       await refreshCharacters();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'AI生成失败';
+      const errorMessage = error instanceof Error ? error.message : 'AI tạo thất bại';
       message.error(errorMessage);
     } finally {
       setTimeout(() => {
@@ -209,7 +209,7 @@ export default function Characters() {
     try {
       setIsGenerating(true);
       setProgress(0);
-      setProgressMessage('准备生成组织...');
+      setProgressMessage('Đang chuẩn bị tạo tổ chức...');
 
       const client = new SSEPostClient(
         '/api/organizations/generate-stream',
@@ -226,24 +226,24 @@ export default function Characters() {
             setProgressMessage(msg);
           },
           onResult: (data) => {
-            console.log('组织生成完成:', data);
+            console.log('Tạo tổ chức hoàn tất:', data);
           },
           onError: (error) => {
-            message.error(`生成失败: ${error}`);
+            message.error(`Tạo thất bại: ${error}`);
           },
           onComplete: () => {
             setProgress(100);
-            setProgressMessage('生成完成！');
+            setProgressMessage('Tạo hoàn tất!');
           }
         }
       );
 
       await client.connect();
-      message.success('AI生成组织成功');
+      message.success('AI tạo tổ chức thành công');
       Modal.destroyAll();
       await refreshCharacters();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'AI生成失败';
+      const errorMessage = error instanceof Error ? error.message : 'AI tạo thất bại';
       message.error(errorMessage);
     } finally {
       setTimeout(() => {
@@ -277,7 +277,7 @@ export default function Characters() {
           createData.main_career_stage = values.main_career_stage || 1;
         }
         
-        // 处理副职业数据
+        // 处理Nghề phụ数据
         if (values.sub_career_data && Array.isArray(values.sub_career_data) && values.sub_career_data.length > 0) {
           createData.sub_careers = JSON.stringify(values.sub_career_data);
         }
@@ -294,19 +294,19 @@ export default function Characters() {
       }
 
       await characterApi.createCharacter(createData);
-      message.success(`${createType === 'character' ? '角色' : '组织'}创建成功`);
+      message.success(`${createType === 'character' ? 'Nhân vật' : 'Tổ chức'} đã tạo thành công`);
       setIsCreateModalOpen(false);
       createForm.resetFields();
       await refreshCharacters();
     } catch {
-      message.error('创建失败');
+      message.error('Tạo thất bại');
     }
   };
 
   const handleEditCharacter = (character: Character) => {
     setEditingCharacter(character);
 
-    // 提取副职业数据（包含职业ID和阶段）
+    // 提取Nghề phụ数据（包含职业ID和阶段）
     const subCareerData: SubCareerData[] = character.sub_careers?.map((sc) => ({
       career_id: sc.career_id,
       stage: sc.stage || 1
@@ -323,7 +323,7 @@ export default function Characters() {
     if (!editingCharacter) return;
 
     try {
-      // 提取副职业数据，剩余的作为更新数据
+      // 提取Nghề phụ数据，剩余的作为更新数据
       const { sub_career_data: subCareerData, ...restValues } = values;
       const updateData: CharacterUpdateData = { ...restValues };
 
@@ -335,14 +335,14 @@ export default function Characters() {
       }
 
       await characterApi.updateCharacter(editingCharacter.id, updateData);
-      message.success('更新成功');
+      message.success('Cập nhật thành công');
       setIsEditModalOpen(false);
       editForm.resetFields();
       setEditingCharacter(null);
       await refreshCharacters();
     } catch (error) {
-      console.error('更新失败:', error);
-      message.error('更新失败');
+      console.error('Cập nhật thất bại:', error);
+      message.error('Cập nhật thất bại');
     }
   };
 
@@ -353,17 +353,17 @@ export default function Characters() {
   // 导出选中的角色/组织
   const handleExportSelected = async () => {
     if (selectedCharacters.length === 0) {
-      message.warning('请至少选择一个角色或组织');
+      message.warning('Vui lòng chọn ít nhất một nhân vật hoặc tổ chức');
       return;
     }
 
     try {
       await characterApi.exportCharacters(selectedCharacters);
-      message.success(`成功导出 ${selectedCharacters.length} 个角色/组织`);
+      message.success(`Đã xuất thành công ${selectedCharacters.length} nhân vật/tổ chức`);
       setSelectedCharacters([]);
     } catch (error) {
-      message.error('导出失败');
-      console.error('导出错误:', error);
+      message.error('Xuất thất bại');
+      console.error('Lỗi xuất dữ liệu:', error);
     }
   };
 
@@ -371,10 +371,10 @@ export default function Characters() {
   const handleExportSingle = async (characterId: string) => {
     try {
       await characterApi.exportCharacters([characterId]);
-      message.success('导出成功');
+      message.success('Xuất thành công');
     } catch (error) {
-      message.error('导出失败');
-      console.error('导出错误:', error);
+      message.error('Xuất thất bại');
+      console.error('Lỗi xuất dữ liệu:', error);
     }
   };
 
@@ -386,7 +386,7 @@ export default function Characters() {
       
       if (!validation.valid) {
         modal.error({
-          title: '文件验证失败',
+          title: 'Xác minh tệp thất bại',
           centered: true,
           content: (
             <div>
@@ -401,22 +401,22 @@ export default function Characters() {
 
       // 显示预览对话框
       modal.confirm({
-        title: '导入预览',
+        title: 'Xem trước nhập',
         width: 500,
         centered: true,
         content: (
           <div>
-            <p><strong>文件版本:</strong> {validation.version}</p>
+            <p><strong>Phiên bản tệp:</strong> {validation.version}</p>
             <Divider style={{ margin: '12px 0' }} />
-            <p><strong>将要导入:</strong></p>
+            <p><strong>Sẽ nhập:</strong></p>
             <ul style={{ marginLeft: 20 }}>
-              <li>角色: {validation.statistics.characters} 个</li>
-              <li>组织: {validation.statistics.organizations} 个</li>
+              <li>Nhân vật: {validation.statistics.characters}</li>
+              <li>Tổ chức: {validation.statistics.organizations}</li>
             </ul>
             {validation.warnings.length > 0 && (
               <>
                 <Divider style={{ margin: '12px 0' }} />
-                <p style={{ color: token.colorWarning }}><strong>⚠️ 警告:</strong></p>
+                <p style={{ color: token.colorWarning }}><strong>⚠️ Cảnh báo:</strong></p>
                 <ul style={{ marginLeft: 20 }}>
                   {validation.warnings.map((warning, index) => (
                     <li key={index} style={{ color: token.colorWarning }}>{warning}</li>
@@ -426,8 +426,8 @@ export default function Characters() {
             )}
           </div>
         ),
-        okText: '确认导入',
-        cancelText: '取消',
+        okText: 'Xác nhận nhập',
+        cancelText: 'Hủy',
         onOk: async () => {
           try {
             const result = await characterApi.importCharacters(currentProject.id, file);
@@ -435,15 +435,15 @@ export default function Characters() {
             if (result.success) {
               // 显示导入结果
               modal.success({
-                title: '导入完成',
+                title: 'Nhập hoàn tất',
                 width: 600,
                 centered: true,
                 content: (
                   <div>
-                    <p><strong>✅ 成功导入: {result.statistics.imported} 个</strong></p>
+                    <p><strong>✅ Nhập thành công: {result.statistics.imported}</strong></p>
                     {result.details.imported_characters.length > 0 && (
                       <>
-                        <p style={{ marginTop: 12, marginBottom: 4 }}>角色:</p>
+                        <p style={{ marginTop: 12, marginBottom: 4 }}>Nhân vật:</p>
                         <ul style={{ marginLeft: 20 }}>
                           {result.details.imported_characters.map((name, index) => (
                             <li key={index}>{name}</li>
@@ -453,7 +453,7 @@ export default function Characters() {
                     )}
                     {result.details.imported_organizations.length > 0 && (
                       <>
-                        <p style={{ marginTop: 12, marginBottom: 4 }}>组织:</p>
+                        <p style={{ marginTop: 12, marginBottom: 4 }}>Tổ chức:</p>
                         <ul style={{ marginLeft: 20 }}>
                           {result.details.imported_organizations.map((name, index) => (
                             <li key={index}>{name}</li>
@@ -464,7 +464,7 @@ export default function Characters() {
                     {result.statistics.skipped > 0 && (
                       <>
                         <Divider style={{ margin: '12px 0' }} />
-                        <p style={{ color: token.colorWarning }}>⚠️ 跳过: {result.statistics.skipped} 个</p>
+                        <p style={{ color: token.colorWarning }}>⚠️ Bỏ qua: {result.statistics.skipped}</p>
                         <ul style={{ marginLeft: 20 }}>
                           {result.details.skipped.map((name, index) => (
                             <li key={index} style={{ color: token.colorWarning }}>{name}</li>
@@ -475,7 +475,7 @@ export default function Characters() {
                     {result.warnings.length > 0 && (
                       <>
                         <Divider style={{ margin: '12px 0' }} />
-                        <p style={{ color: token.colorWarning }}>⚠️ 警告:</p>
+                        <p style={{ color: token.colorWarning }}>⚠️ Cảnh báo:</p>
                         <ul style={{ marginLeft: 20 }}>
                           {result.warnings.map((warning, index) => (
                             <li key={index} style={{ color: token.colorWarning }}>{warning}</li>
@@ -486,7 +486,7 @@ export default function Characters() {
                     {result.details.errors.length > 0 && (
                       <>
                         <Divider style={{ margin: '12px 0' }} />
-                        <p style={{ color: token.colorError }}>❌ 失败: {result.statistics.errors} 个</p>
+                        <p style={{ color: token.colorError }}>❌ Thất bại: {result.statistics.errors}</p>
                         <ul style={{ marginLeft: 20 }}>
                           {result.details.errors.map((error, index) => (
                             <li key={index} style={{ color: token.colorError }}>{error}</li>
@@ -502,19 +502,19 @@ export default function Characters() {
               await refreshCharacters();
               setIsImportModalOpen(false);
             } else {
-              message.error(result.message || '导入失败');
+              message.error(result.message || 'Nhập thất bại');
             }
           } catch (error: unknown) {
             const apiError = error as ApiError;
-            message.error(apiError.response?.data?.detail || '导入失败');
-            console.error('导入错误:', error);
+            message.error(apiError.response?.data?.detail || 'Nhập thất bại');
+            console.error('Lỗi nhập dữ liệu:', error);
           }
         },
       });
     } catch (error: unknown) {
       const apiError = error as ApiError;
-      message.error(apiError.response?.data?.detail || '文件验证失败');
-      console.error('验证错误:', error);
+      message.error(apiError.response?.data?.detail || 'Xác minh tệp thất bại');
+      console.error('Lỗi xác thực:', error);
     }
   };
 
@@ -525,7 +525,7 @@ export default function Characters() {
     );
   };
 
-  // 全选/取消全选
+  // 全选/Hủy全选
   const toggleSelectAll = () => {
     if (selectedCharacters.length === displayList.length) {
       setSelectedCharacters([]);
@@ -536,35 +536,35 @@ export default function Characters() {
 
   const showGenerateModal = () => {
     modal.confirm({
-      title: 'AI生成角色',
+      title: 'AI tạo nhân vật',
       width: 600,
       centered: true,
       content: (
         <Form form={generateForm} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item
-            label="角色名称"
+            label="Tên nhân vật"
             name="name"
           >
-            <Input placeholder="如：张三、李四（可选，AI会自动生成）" />
+            <Input placeholder="Ví dụ: Trương Tam, Lý Tứ (không bắt buộc, AI sẽ tự tạo)" />
           </Form.Item>
           <Form.Item
-            label="角色定位"
+            label="Định vị nhân vật"
             name="role_type"
-            rules={[{ required: true, message: '请选择角色定位' }]}
+            rules={[{ required: true, message: 'Vui lòng chọn định vị nhân vật' }]}
           >
-            <Select placeholder="选择角色定位">
-              <Select.Option value="protagonist">主角</Select.Option>
-              <Select.Option value="supporting">配角</Select.Option>
-              <Select.Option value="antagonist">反派</Select.Option>
+            <Select placeholder="Chọn định vị nhân vật">
+              <Select.Option value="protagonist">Nhân vật chính</Select.Option>
+              <Select.Option value="supporting">Nhân vật phụ</Select.Option>
+              <Select.Option value="antagonist">Phản diện</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item label="背景设定" name="background">
-            <TextArea rows={3} placeholder="简要描述角色背景和故事环境..." />
+          <Form.Item label="Thiết lập bối cảnh" name="background">
+            <TextArea rows={3} placeholder="Mô tả ngắn gọn bối cảnh nhân vật và môi trường câu chuyện..." />
           </Form.Item>
         </Form>
       ),
-      okText: '生成',
-      cancelText: '取消',
+      okText: 'Tạo',
+      cancelText: 'Hủy',
       onOk: async () => {
         const values = await generateForm.validateFields();
         await handleGenerate(values);
@@ -574,33 +574,33 @@ export default function Characters() {
 
   const showGenerateOrgModal = () => {
     modal.confirm({
-      title: 'AI生成组织',
+      title: 'AI tạo tổ chức',
       width: 600,
       centered: true,
       content: (
         <Form form={generateOrgForm} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item
-            label="组织名称"
+            label="Tên tổ chức"
             name="name"
           >
-            <Input placeholder="如：天剑门、黑龙会（可选，AI会自动生成）" />
+            <Input placeholder="Ví dụ: Thiên Kiếm Môn, Hắc Long Hội (không bắt buộc, AI sẽ tự tạo)" />
           </Form.Item>
           <Form.Item
-            label="组织类型"
+            label="Loại tổ chức"
             name="organization_type"
           >
-            <Input placeholder="如：门派、帮派、公司、学院（可选，AI会根据世界观生成）" />
+            <Input placeholder="Ví dụ: môn phái, bang phái, công ty, học viện (không bắt buộc, AI sẽ tạo theo bối cảnh thế giới)" />
           </Form.Item>
-          <Form.Item label="背景设定" name="background">
-            <TextArea rows={3} placeholder="简要描述组织的背景和环境..." />
+          <Form.Item label="Thiết lập bối cảnh" name="background">
+            <TextArea rows={3} placeholder="Mô tả ngắn gọn bối cảnh và môi trường của tổ chức..." />
           </Form.Item>
-          <Form.Item label="其他要求" name="requirements">
-            <TextArea rows={2} placeholder="其他特殊要求..." />
+          <Form.Item label="Yêu cầu khác" name="requirements">
+            <TextArea rows={2} placeholder="Các yêu cầu đặc biệt khác..." />
           </Form.Item>
         </Form>
       ),
-      okText: '生成',
-      cancelText: '取消',
+      okText: 'Tạo',
+      cancelText: 'Hủy',
       onOk: async () => {
         const values = await generateOrgForm.validateFields();
         await handleGenerateOrganization(values);
@@ -640,7 +640,7 @@ export default function Characters() {
       }}>
         <h2 style={{ margin: 0, fontSize: isMobile ? 18 : 24 }}>
           <TeamOutlined style={{ marginRight: 8 }} />
-          角色与组织管理
+          Quản lý nhân vật và tổ chức
         </h2>
         <Space wrap>
           <Button
@@ -652,7 +652,7 @@ export default function Characters() {
             }}
             size={isMobile ? 'small' : 'middle'}
           >
-            创建角色
+            Tạo nhân vật
           </Button>
           <Button
             type="primary"
@@ -663,7 +663,7 @@ export default function Characters() {
             }}
             size={isMobile ? 'small' : 'middle'}
           >
-            创建组织
+            Tạo tổ chức
           </Button>
           <Button
             type="dashed"
@@ -672,7 +672,7 @@ export default function Characters() {
             loading={isGenerating}
             size={isMobile ? 'small' : 'middle'}
           >
-            AI生成角色
+            AI tạo nhân vật
           </Button>
           <Button
             type="dashed"
@@ -681,14 +681,14 @@ export default function Characters() {
             loading={isGenerating}
             size={isMobile ? 'small' : 'middle'}
           >
-            AI生成组织
+            AI tạo tổ chức
           </Button>
           <Button
             icon={<ImportOutlined />}
             onClick={() => setIsImportModalOpen(true)}
             size={isMobile ? 'small' : 'middle'}
           >
-            导入
+            Nhập
           </Button>
           {selectedCharacters.length > 0 && (
             <Button
@@ -696,7 +696,7 @@ export default function Characters() {
               onClick={handleExportSelected}
               size={isMobile ? 'small' : 'middle'}
             >
-              批量导出 ({selectedCharacters.length})
+              Xuất hàng loạt ({selectedCharacters.length})
             </Button>
           )}
         </Space>
@@ -717,13 +717,13 @@ export default function Characters() {
             items={[
               {
                 key: 'all',
-                label: `全部 (${characters.length})`,
+                label: `Tất cả (${characters.length})`,
               },
               {
                 key: 'character',
                 label: (
                   <span>
-                    <UserOutlined /> 角色 ({characterList.length})
+                    <UserOutlined /> Nhân vật ({characterList.length})
                   </span>
                 ),
               },
@@ -731,7 +731,7 @@ export default function Characters() {
                 key: 'organization',
                 label: (
                   <span>
-                    <TeamOutlined /> 组织 ({organizationList.length})
+                    <TeamOutlined /> Tổ chức ({organizationList.length})
                   </span>
                 ),
               },
@@ -758,7 +758,7 @@ export default function Characters() {
               indeterminate={selectedCharacters.length > 0 && selectedCharacters.length < displayList.length}
               onChange={toggleSelectAll}
             >
-              {selectedCharacters.length > 0 ? `已选 ${selectedCharacters.length} 个` : '全选'}
+              {selectedCharacters.length > 0 ? `Đã chọn ${selectedCharacters.length}` : 'Chọn tất cả'}
             </Checkbox>
             {selectedCharacters.length > 0 && (
               <Button
@@ -766,7 +766,7 @@ export default function Characters() {
                 size="small"
                 onClick={() => setSelectedCharacters([])}
               >
-                取消选择
+                Bỏ chọn
               </Button>
             )}
           </Space>
@@ -775,7 +775,7 @@ export default function Characters() {
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {characters.length === 0 ? (
-          <Empty description="还没有角色或组织，开始创建吧！" />
+          <Empty description="Chưa có nhân vật hoặc tổ chức, hãy bắt đầu tạo!" />
         ) : (
           <>
             <Row gutter={isMobile ? [8, 8] : charactersPageGridConfig.gutter}>
@@ -787,7 +787,7 @@ export default function Characters() {
                         <Divider orientation="left">
                           <Title level={5} style={{ margin: 0 }}>
                             <UserOutlined style={{ marginRight: 8 }} />
-                            角色 ({characterList.length})
+                            Nhân vật ({characterList.length})
                           </Title>
                         </Divider>
                       </Col>
@@ -825,7 +825,7 @@ export default function Characters() {
                         <Divider orientation="left">
                           <Title level={5} style={{ margin: 0 }}>
                             <TeamOutlined style={{ marginRight: 8 }} />
-                            组织 ({organizationList.length})
+                            Tổ chức ({organizationList.length})
                           </Title>
                         </Divider>
                       </Col>
@@ -916,10 +916,10 @@ export default function Characters() {
               <Empty
                 description={
                   activeTab === 'character'
-                    ? '暂无角色'
+                    ? 'Chưa có nhân vật'
                     : activeTab === 'organization'
-                      ? '暂无组织'
-                      : '暂无数据'
+                      ? 'Chưa có tổ chức'
+                       : 'Chưa có dữ liệu'
                 }
               />
             )}
@@ -928,7 +928,7 @@ export default function Characters() {
       </div>
 
       <Modal
-        title={editingCharacter?.is_organization ? '编辑组织' : '编辑角色'}
+        title={editingCharacter?.is_organization ? 'Chỉnh sửa tổ chức' : 'Chỉnh sửa nhân vật'}
         open={isEditModalOpen}
         onCancel={() => {
           setIsEditModalOpen(false);
@@ -942,10 +942,10 @@ export default function Characters() {
               editForm.resetFields();
               setEditingCharacter(null);
             }}>
-              取消
+              Hủy
             </Button>
             <Button type="primary" onClick={() => editForm.submit()}>
-              保存
+              Lưu
             </Button>
           </Space>
         }
@@ -967,34 +967,34 @@ export default function Characters() {
               <Row gutter={12}>
                 <Col span={8}>
                   <Form.Item
-                    label="角色名称"
+                    label="Tên nhân vật"
                     name="name"
-                    rules={[{ required: true, message: '请输入角色名称' }]}
+                    rules={[{ required: true, message: 'Vui lòng nhập tên nhân vật' }]}
                     style={{ marginBottom: 12 }}
                   >
-                    <Input placeholder="角色名称" />
+                    <Input placeholder="Tên nhân vật" />
                   </Form.Item>
                 </Col>
                 <Col span={6}>
-                  <Form.Item label="角色定位" name="role_type" style={{ marginBottom: 12 }}>
+                  <Form.Item label="Định vị nhân vật" name="role_type" style={{ marginBottom: 12 }}>
                     <Select>
-                      <Select.Option value="protagonist">主角</Select.Option>
-                      <Select.Option value="supporting">配角</Select.Option>
-                      <Select.Option value="antagonist">反派</Select.Option>
+                      <Select.Option value="protagonist">Nhân vật chính</Select.Option>
+                      <Select.Option value="supporting">Nhân vật phụ</Select.Option>
+                      <Select.Option value="antagonist">Phản diện</Select.Option>
                     </Select>
                   </Form.Item>
                 </Col>
                 <Col span={5}>
-                  <Form.Item label="年龄" name="age" style={{ marginBottom: 12 }}>
-                    <Input placeholder="如：25岁" />
+                  <Form.Item label="Tuổi" name="age" style={{ marginBottom: 12 }}>
+                    <Input placeholder="VD: 25 tuổi" />
                   </Form.Item>
                 </Col>
                 <Col span={5}>
-                  <Form.Item label="性别" name="gender" style={{ marginBottom: 12 }}>
-                    <Select placeholder="性别">
-                      <Select.Option value="男">男</Select.Option>
-                      <Select.Option value="女">女</Select.Option>
-                      <Select.Option value="其他">其他</Select.Option>
+                  <Form.Item label="Giới tính" name="gender" style={{ marginBottom: 12 }}>
+                    <Select placeholder="Giới tính">
+                      <Select.Option value="男">Nam</Select.Option>
+                      <Select.Option value="女">Nữ</Select.Option>
+                      <Select.Option value="其他">Khác</Select.Option>
                     </Select>
                   </Form.Item>
                 </Col>
@@ -1003,20 +1003,20 @@ export default function Characters() {
               {/* 第二行：性格特点、外貌描写 */}
               <Row gutter={12}>
                 <Col span={12}>
-                  <Form.Item label="性格特点" name="personality" style={{ marginBottom: 12 }}>
-                    <TextArea rows={2} placeholder="描述角色的性格特点..." />
+                  <Form.Item label="Đặc điểm tính cách" name="personality" style={{ marginBottom: 12 }}>
+                    <TextArea rows={2} placeholder="Mô tả tính cách nhân vật..." />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item label="外貌描写" name="appearance" style={{ marginBottom: 12 }}>
-                    <TextArea rows={2} placeholder="描述角色的外貌特征..." />
+                  <Form.Item label="Miêu tả ngoại hình" name="appearance" style={{ marginBottom: 12 }}>
+                    <TextArea rows={2} placeholder="Mô tả ngoại hình nhân vật..." />
                   </Form.Item>
                 </Col>
               </Row>
 
               {/* 人际关系（只读，由关系管理页面维护） */}
               {editingCharacter?.relationships && (
-                <Form.Item label="人际关系（由关系管理维护）" style={{ marginBottom: 12 }}>
+                <Form.Item label="Quan hệ nhân sự (do quản lý quan hệ duy trì)" style={{ marginBottom: 12 }}>
                   <Input.TextArea
                     value={editingCharacter.relationships}
                     readOnly
@@ -1027,38 +1027,38 @@ export default function Characters() {
               )}
 
               {/* 第四行：角色背景 */}
-              <Form.Item label="角色背景" name="background" style={{ marginBottom: 12 }}>
-                <TextArea rows={2} placeholder="描述角色的背景故事..." />
+              <Form.Item label="Bối cảnh nhân vật" name="background" style={{ marginBottom: 12 }}>
+                <TextArea rows={2} placeholder="Mô tả câu chuyện nền nhân vật..." />
               </Form.Item>
 
-              {/* 职业信息 */}
+              {/* Thông tin nghề */}
               {(mainCareers.length > 0 || subCareers.length > 0) && (
                 <>
                   <Divider style={{ margin: '8px 0' }}>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>职业信息</Typography.Text>
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>Thông tin nghề</Typography.Text>
                   </Divider>
                   {mainCareers.length > 0 && (
                     <Row gutter={12}>
                       <Col span={16}>
-                        <Form.Item label="主职业" name="main_career_id" tooltip="角色的主要修炼职业" style={{ marginBottom: 12 }}>
-                          <Select placeholder="选择主职业" allowClear size="small">
+                        <Form.Item label="Nghề chính" name="main_career_id" tooltip="Nghề tu luyện chính của nhân vật" style={{ marginBottom: 12 }}>
+                          <Select placeholder="Chọn nghề chính" allowClear size="small">
                             {mainCareers.map(career => (
                               <Select.Option key={career.id} value={career.id}>
-                                {career.name}（最高{career.max_stage}阶）
+                                {career.name} (cao nhất bậc {career.max_stage})
                               </Select.Option>
                             ))}
                           </Select>
                         </Form.Item>
                       </Col>
                       <Col span={8}>
-                        <Form.Item label="当前阶段" name="main_career_stage" tooltip="主职业当前修炼到的阶段" style={{ marginBottom: 12 }}>
+                        <Form.Item label="Giai đoạn hiện tại" name="main_career_stage" tooltip="Giai đoạn hiện tại của nghề chính" style={{ marginBottom: 12 }}>
                           <InputNumber
                             min={1}
                             max={editForm.getFieldValue('main_career_id') ?
                               mainCareers.find(c => c.id === editForm.getFieldValue('main_career_id'))?.max_stage || 10
                               : 10}
                             style={{ width: '100%' }}
-                            placeholder="阶段"
+                            placeholder="Giai đoạn"
                             size="small"
                           />
                         </Form.Item>
@@ -1070,7 +1070,7 @@ export default function Characters() {
                       {(fields, { add, remove }) => (
                         <>
                           <div style={{ marginBottom: 4 }}>
-                            <Typography.Text strong style={{ fontSize: 12 }}>副职业</Typography.Text>
+                            <Typography.Text strong style={{ fontSize: 12 }}>Nghề phụ</Typography.Text>
                           </div>
                           <div style={{ maxHeight: '80px', overflowY: 'auto', overflowX: 'hidden', marginBottom: 8, paddingRight: 8 }}>
                             {fields.map((field) => (
@@ -1079,13 +1079,13 @@ export default function Characters() {
                                   <Form.Item
                                     {...field}
                                     name={[field.name, 'career_id']}
-                                    rules={[{ required: true, message: '请选择副职业' }]}
+                                    rules={[{ required: true, message: 'Vui lòng chọn nghề phụ' }]}
                                     style={{ marginBottom: 0 }}
                                   >
-                                    <Select placeholder="选择副职业" size="small">
+                                    <Select placeholder="Chọn nghề phụ" size="small">
                                       {subCareers.map(career => (
                                         <Select.Option key={career.id} value={career.id}>
-                                          {career.name}（最高{career.max_stage}阶）
+                                          {career.name} (cao nhất bậc {career.max_stage})
                                         </Select.Option>
                                       ))}
                                     </Select>
@@ -1095,7 +1095,7 @@ export default function Characters() {
                                   <Form.Item
                                     {...field}
                                     name={[field.name, 'stage']}
-                                    rules={[{ required: true, message: '阶段' }]}
+                                    rules={[{ required: true, message: 'Giai đoạn' }]}
                                     style={{ marginBottom: 0 }}
                                   >
                                     <InputNumber
@@ -1105,7 +1105,7 @@ export default function Characters() {
                                         const career = subCareers.find(c => c.id === careerId);
                                         return career?.max_stage || 10;
                                       })()}
-                                      placeholder="阶段"
+                                      placeholder="Giai đoạn"
                                       style={{ width: '100%' }}
                                       size="small"
                                     />
@@ -1118,7 +1118,7 @@ export default function Characters() {
                                     size="small"
                                     onClick={() => remove(field.name)}
                                   >
-                                    删除
+                                    Xóa
                                   </Button>
                                 </Col>
                               </Row>
@@ -1130,7 +1130,7 @@ export default function Characters() {
                             block
                             size="small"
                           >
-                            + 添加副职业
+                            + Thêm nghề phụ
                           </Button>
                         </>
                       )}
@@ -1145,29 +1145,29 @@ export default function Characters() {
               <Row gutter={12}>
                 <Col span={10}>
                   <Form.Item
-                    label="组织名称"
+                    label="Tên tổ chức"
                     name="name"
-                    rules={[{ required: true, message: '请输入组织名称' }]}
+                    rules={[{ required: true, message: 'Vui lòng nhập tên tổ chức' }]}
                     style={{ marginBottom: 12 }}
                   >
-                    <Input placeholder="组织名称" />
+                    <Input placeholder="Tên tổ chức" />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
                   <Form.Item
-                    label="组织类型"
+                    label="Loại tổ chức"
                     name="organization_type"
-                    rules={[{ required: true, message: '请输入组织类型' }]}
+                    rules={[{ required: true, message: 'Vui lòng nhập loại tổ chức' }]}
                     style={{ marginBottom: 12 }}
                   >
-                    <Input placeholder="如：门派、帮派" />
+                    <Input placeholder="VD: môn phái, bang hội" />
                   </Form.Item>
                 </Col>
                 <Col span={6}>
                   <Form.Item
-                    label="势力等级"
+                    label="Cấp thế lực"
                     name="power_level"
-                    tooltip="0-100的数值"
+                    tooltip="Giá trị 0-100"
                     style={{ marginBottom: 12 }}
                   >
                     <InputNumber min={0} max={100} style={{ width: '100%' }} />
@@ -1177,63 +1177,63 @@ export default function Characters() {
 
               {/* 第二行：组织目的 */}
               <Form.Item
-                label="组织目的"
+                label="Mục đích tổ chức"
                 name="organization_purpose"
-                rules={[{ required: true, message: '请输入组织目的' }]}
+                rules={[{ required: true, message: 'Vui lòng nhập mục đích tổ chức' }]}
                 style={{ marginBottom: 12 }}
               >
-                <Input placeholder="描述组织的宗旨和目标..." />
+                <Input placeholder="Mô tả tôn chỉ và mục tiêu tổ chức..." />
               </Form.Item>
 
               {/* 第三行：主要成员（只读展示） */}
               <Form.Item
-                label="主要成员"
+                label="Thành viên chính"
                 name="organization_members"
                 style={{ marginBottom: 4 }}
-                tooltip="成员信息由组织管理模块维护，此处仅展示"
+                tooltip="Thông tin thành viên do module quản lý tổ chức duy trì, ở đây chỉ hiển thị"
               >
                 <TextArea
                   disabled
                   autoSize={{ minRows: 1, maxRows: 4 }}
-                  placeholder="暂无成员，请在组织管理中添加"
+                  placeholder="Chưa có thành viên, hãy thêm trong quản lý tổ chức"
                   style={{ color: token.colorText, backgroundColor: token.colorFillAlter }}
                 />
               </Form.Item>
               <div style={{ marginBottom: 12, fontSize: 12, color: token.colorTextTertiary }}>
-                💡 请前往「组织管理」页面添加或管理组织成员
+                💡 Hãy sang trang «Quản lý tổ chức» để thêm hoặc quản lý thành viên
               </div>
 
               {/* 第四行：所在地、代表颜色 */}
               <Row gutter={12}>
                 <Col span={12}>
-                  <Form.Item label="所在地" name="location" style={{ marginBottom: 12 }}>
-                    <Input placeholder="总部位置" />
+                  <Form.Item label="Địa điểm" name="location" style={{ marginBottom: 12 }}>
+                    <Input placeholder="Vị trí trụ sở" />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item label="代表颜色" name="color" style={{ marginBottom: 12 }}>
-                    <Input placeholder="如：金色" />
+                  <Form.Item label="Màu đại diện" name="color" style={{ marginBottom: 12 }}>
+                    <Input placeholder="VD: vàng" />
                   </Form.Item>
                 </Col>
               </Row>
 
               {/* 第四行：格言/口号 */}
-              <Form.Item label="格言/口号" name="motto" style={{ marginBottom: 12 }}>
-                <Input placeholder="组织的宗旨、格言或口号" />
+              <Form.Item label="Châm ngôn/khẩu hiệu" name="motto" style={{ marginBottom: 12 }}>
+                <Input placeholder="Tôn chỉ, châm ngôn hoặc khẩu hiệu tổ chức" />
               </Form.Item>
 
               {/* 第五行：组织背景 */}
-              <Form.Item label="组织背景" name="background" style={{ marginBottom: 12 }}>
-                <TextArea rows={2} placeholder="描述组织的背景故事..." />
+              <Form.Item label="Bối cảnh tổ chức" name="background" style={{ marginBottom: 12 }}>
+                <TextArea rows={2} placeholder="Mô tả câu chuyện nền tổ chức..." />
               </Form.Item>
             </>
           )}
         </Form>
       </Modal>
 
-      {/* 手动创建角色/组织模态框 */}
+      {/* 手动Tạo角色/组织模态框 */}
       <Modal
-        title={createType === 'character' ? '创建角色' : '创建组织'}
+        title={createType === 'character' ? 'Tạo nhân vật' : 'Tạo tổ chức'}
         open={isCreateModalOpen}
         onCancel={() => {
           setIsCreateModalOpen(false);
@@ -1258,34 +1258,34 @@ export default function Characters() {
               <Row gutter={12}>
                 <Col span={8}>
                   <Form.Item
-                    label="角色名称"
+                    label="Tên nhân vật"
                     name="name"
-                    rules={[{ required: true, message: '请输入角色名称' }]}
+                    rules={[{ required: true, message: 'Vui lòng nhập tên nhân vật' }]}
                     style={{ marginBottom: 12 }}
                   >
-                    <Input placeholder="角色名称" />
+                    <Input placeholder="Tên nhân vật" />
                   </Form.Item>
                 </Col>
                 <Col span={6}>
-                  <Form.Item label="角色定位" name="role_type" initialValue="supporting" style={{ marginBottom: 12 }}>
+                  <Form.Item label="Định vị nhân vật" name="role_type" initialValue="supporting" style={{ marginBottom: 12 }}>
                     <Select>
-                      <Select.Option value="protagonist">主角</Select.Option>
-                      <Select.Option value="supporting">配角</Select.Option>
-                      <Select.Option value="antagonist">反派</Select.Option>
+                      <Select.Option value="protagonist">Nhân vật chính</Select.Option>
+                      <Select.Option value="supporting">Nhân vật phụ</Select.Option>
+                      <Select.Option value="antagonist">Phản diện</Select.Option>
                     </Select>
                   </Form.Item>
                 </Col>
                 <Col span={5}>
-                  <Form.Item label="年龄" name="age" style={{ marginBottom: 12 }}>
-                    <Input placeholder="如：25岁" />
+                  <Form.Item label="Tuổi" name="age" style={{ marginBottom: 12 }}>
+                    <Input placeholder="VD: 25 tuổi" />
                   </Form.Item>
                 </Col>
                 <Col span={5}>
-                  <Form.Item label="性别" name="gender" style={{ marginBottom: 12 }}>
-                    <Select placeholder="性别">
-                      <Select.Option value="男">男</Select.Option>
-                      <Select.Option value="女">女</Select.Option>
-                      <Select.Option value="其他">其他</Select.Option>
+                  <Form.Item label="Giới tính" name="gender" style={{ marginBottom: 12 }}>
+                    <Select placeholder="Giới tính">
+                      <Select.Option value="男">Nam</Select.Option>
+                      <Select.Option value="女">Nữ</Select.Option>
+                      <Select.Option value="其他">Khác</Select.Option>
                     </Select>
                   </Form.Item>
                 </Col>
@@ -1294,50 +1294,50 @@ export default function Characters() {
               {/* 第二行：性格特点、外貌描写 */}
               <Row gutter={12}>
                 <Col span={12}>
-                  <Form.Item label="性格特点" name="personality" style={{ marginBottom: 12 }}>
-                    <TextArea rows={2} placeholder="描述角色的性格特点..." />
+                  <Form.Item label="Đặc điểm tính cách" name="personality" style={{ marginBottom: 12 }}>
+                    <TextArea rows={2} placeholder="Mô tả tính cách nhân vật..." />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item label="外貌描写" name="appearance" style={{ marginBottom: 12 }}>
-                    <TextArea rows={2} placeholder="描述角色的外貌特征..." />
+                  <Form.Item label="Miêu tả ngoại hình" name="appearance" style={{ marginBottom: 12 }}>
+                    <TextArea rows={2} placeholder="Mô tả ngoại hình nhân vật..." />
                   </Form.Item>
                 </Col>
               </Row>
 
               {/* 第三行：角色背景 */}
-              <Form.Item label="角色背景" name="background" style={{ marginBottom: 12 }}>
-                <TextArea rows={2} placeholder="描述角色的背景故事..." />
+              <Form.Item label="Bối cảnh nhân vật" name="background" style={{ marginBottom: 12 }}>
+                <TextArea rows={2} placeholder="Mô tả câu chuyện nền nhân vật..." />
               </Form.Item>
 
-              {/* 职业信息 - 折叠区域 */}
+              {/* Thông tin nghề - 折叠区域 */}
               {(mainCareers.length > 0 || subCareers.length > 0) && (
                 <>
                   <Divider style={{ margin: '8px 0' }}>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>职业信息（可选）</Typography.Text>
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>Thông tin nghề (tùy chọn)</Typography.Text>
                   </Divider>
                   {mainCareers.length > 0 && (
                     <Row gutter={12}>
                       <Col span={16}>
-                        <Form.Item label="主职业" name="main_career_id" tooltip="角色的主要修炼职业" style={{ marginBottom: 12 }}>
-                          <Select placeholder="选择主职业" allowClear size="small">
+                        <Form.Item label="Nghề chính" name="main_career_id" tooltip="Nghề tu luyện chính của nhân vật" style={{ marginBottom: 12 }}>
+                          <Select placeholder="Chọn nghề chính" allowClear size="small">
                             {mainCareers.map(career => (
                               <Select.Option key={career.id} value={career.id}>
-                                {career.name}（最高{career.max_stage}阶）
+                                {career.name} (cao nhất bậc {career.max_stage})
                               </Select.Option>
                             ))}
                           </Select>
                         </Form.Item>
                       </Col>
                       <Col span={8}>
-                        <Form.Item label="当前阶段" name="main_career_stage" tooltip="主职业当前修炼到的阶段" style={{ marginBottom: 12 }}>
+                        <Form.Item label="Giai đoạn hiện tại" name="main_career_stage" tooltip="Giai đoạn hiện tại của nghề chính" style={{ marginBottom: 12 }}>
                           <InputNumber
                             min={1}
                             max={createForm.getFieldValue('main_career_id') ?
                               mainCareers.find(c => c.id === createForm.getFieldValue('main_career_id'))?.max_stage || 10
                               : 10}
                             style={{ width: '100%' }}
-                            placeholder="阶段"
+                            placeholder="Giai đoạn"
                             size="small"
                           />
                         </Form.Item>
@@ -1349,7 +1349,7 @@ export default function Characters() {
                       {(fields, { add, remove }) => (
                         <>
                           <div style={{ marginBottom: 4 }}>
-                            <Typography.Text strong style={{ fontSize: 12 }}>副职业</Typography.Text>
+                            <Typography.Text strong style={{ fontSize: 12 }}>Nghề phụ</Typography.Text>
                           </div>
                           <div style={{ maxHeight: '80px', overflowY: 'auto', overflowX: 'hidden', marginBottom: 8, paddingRight: 8 }}>
                             {fields.map((field) => (
@@ -1358,13 +1358,13 @@ export default function Characters() {
                                   <Form.Item
                                     {...field}
                                     name={[field.name, 'career_id']}
-                                    rules={[{ required: true, message: '请选择副职业' }]}
+                                    rules={[{ required: true, message: 'Vui lòng chọn nghề phụ' }]}
                                     style={{ marginBottom: 0 }}
                                   >
-                                    <Select placeholder="选择副职业" size="small">
+                                    <Select placeholder="Chọn nghề phụ" size="small">
                                       {subCareers.map(career => (
                                         <Select.Option key={career.id} value={career.id}>
-                                          {career.name}（最高{career.max_stage}阶）
+                                          {career.name} (cao nhất bậc {career.max_stage})
                                         </Select.Option>
                                       ))}
                                     </Select>
@@ -1374,7 +1374,7 @@ export default function Characters() {
                                   <Form.Item
                                     {...field}
                                     name={[field.name, 'stage']}
-                                    rules={[{ required: true, message: '阶段' }]}
+                                    rules={[{ required: true, message: 'Giai đoạn' }]}
                                     style={{ marginBottom: 0 }}
                                   >
                                     <InputNumber
@@ -1384,7 +1384,7 @@ export default function Characters() {
                                         const career = subCareers.find(c => c.id === careerId);
                                         return career?.max_stage || 10;
                                       })()}
-                                      placeholder="阶段"
+                                      placeholder="Giai đoạn"
                                       style={{ width: '100%' }}
                                       size="small"
                                     />
@@ -1397,7 +1397,7 @@ export default function Characters() {
                                     size="small"
                                     onClick={() => remove(field.name)}
                                   >
-                                    删除
+                                    Xóa
                                   </Button>
                                 </Col>
                               </Row>
@@ -1409,7 +1409,7 @@ export default function Characters() {
                             block
                             size="small"
                           >
-                            + 添加副职业
+                            + Thêm nghề phụ
                           </Button>
                         </>
                       )}
@@ -1424,30 +1424,30 @@ export default function Characters() {
               <Row gutter={12}>
                 <Col span={10}>
                   <Form.Item
-                    label="组织名称"
+                    label="Tên tổ chức"
                     name="name"
-                    rules={[{ required: true, message: '请输入组织名称' }]}
+                    rules={[{ required: true, message: 'Vui lòng nhập tên tổ chức' }]}
                     style={{ marginBottom: 12 }}
                   >
-                    <Input placeholder="组织名称" />
+                    <Input placeholder="Tên tổ chức" />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
                   <Form.Item
-                    label="组织类型"
+                    label="Loại tổ chức"
                     name="organization_type"
-                    rules={[{ required: true, message: '请输入组织类型' }]}
+                    rules={[{ required: true, message: 'Vui lòng nhập loại tổ chức' }]}
                     style={{ marginBottom: 12 }}
                   >
-                    <Input placeholder="如：门派、帮派" />
+                    <Input placeholder="VD: môn phái, bang hội" />
                   </Form.Item>
                 </Col>
                 <Col span={6}>
                   <Form.Item
-                    label="势力等级"
+                    label="Cấp thế lực"
                     name="power_level"
                     initialValue={50}
-                    tooltip="0-100的数值"
+                    tooltip="Giá trị 0-100"
                     style={{ marginBottom: 12 }}
                   >
                     <InputNumber min={0} max={100} style={{ width: '100%' }} />
@@ -1457,36 +1457,36 @@ export default function Characters() {
 
               {/* 第二行：组织目的 */}
               <Form.Item
-                label="组织目的"
+                label="Mục đích tổ chức"
                 name="organization_purpose"
-                rules={[{ required: true, message: '请输入组织目的' }]}
+                rules={[{ required: true, message: 'Vui lòng nhập mục đích tổ chức' }]}
                 style={{ marginBottom: 12 }}
               >
-                <Input placeholder="描述组织的宗旨和目标..." />
+                <Input placeholder="Mô tả tôn chỉ và mục tiêu tổ chức..." />
               </Form.Item>
 
               {/* 第三行：所在地、代表颜色 */}
               <Row gutter={12}>
                 <Col span={12}>
-                  <Form.Item label="所在地" name="location" style={{ marginBottom: 12 }}>
-                    <Input placeholder="总部位置" />
+                  <Form.Item label="Địa điểm" name="location" style={{ marginBottom: 12 }}>
+                    <Input placeholder="Vị trí trụ sở" />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item label="代表颜色" name="color" style={{ marginBottom: 12 }}>
-                    <Input placeholder="如：金色" />
+                  <Form.Item label="Màu đại diện" name="color" style={{ marginBottom: 12 }}>
+                    <Input placeholder="VD: vàng" />
                   </Form.Item>
                 </Col>
               </Row>
 
               {/* 第四行：格言/口号 */}
-              <Form.Item label="格言/口号" name="motto" style={{ marginBottom: 12 }}>
-                <Input placeholder="组织的宗旨、格言或口号" />
+              <Form.Item label="Châm ngôn/khẩu hiệu" name="motto" style={{ marginBottom: 12 }}>
+                <Input placeholder="Tôn chỉ, châm ngôn hoặc khẩu hiệu tổ chức" />
               </Form.Item>
 
               {/* 第五行：组织背景 */}
-              <Form.Item label="组织背景" name="background" style={{ marginBottom: 12 }}>
-                <TextArea rows={2} placeholder="描述组织的背景故事..." />
+              <Form.Item label="Bối cảnh tổ chức" name="background" style={{ marginBottom: 12 }}>
+                <TextArea rows={2} placeholder="Mô tả câu chuyện nền tổ chức..." />
               </Form.Item>
             </>
           )}
@@ -1497,10 +1497,10 @@ export default function Characters() {
                 setIsCreateModalOpen(false);
                 createForm.resetFields();
               }}>
-                取消
+                Hủy
               </Button>
               <Button type="primary" htmlType="submit">
-                创建
+                Tạo
               </Button>
             </Space>
           </Form.Item>
@@ -1509,7 +1509,7 @@ export default function Characters() {
 
       {/* 导入对话框 */}
       <Modal
-        title="导入角色/组织"
+        title="Nhập nhân vật/tổ chức"
         open={isImportModalOpen}
         onCancel={() => setIsImportModalOpen(false)}
         footer={null}
@@ -1519,7 +1519,7 @@ export default function Characters() {
         <div style={{ textAlign: 'center', padding: '40px 20px' }}>
           <DownloadOutlined style={{ fontSize: 48, color: '#1890ff', marginBottom: 16 }} />
           <p style={{ fontSize: 16, marginBottom: 24 }}>
-            选择之前导出的角色/组织JSON文件进行导入
+            Chọn tệp JSON nhân vật/tổ chức đã xuất để nhập
           </p>
           <input
             ref={fileInputRef}
@@ -1540,15 +1540,15 @@ export default function Characters() {
             icon={<ImportOutlined />}
             onClick={() => fileInputRef.current?.click()}
           >
-            选择文件
+            Chọn tệp
           </Button>
           <Divider />
           <div style={{ textAlign: 'left', fontSize: 12, color: '#666' }}>
-            <p style={{ marginBottom: 8 }}><strong>说明：</strong></p>
+            <p style={{ marginBottom: 8 }}><strong>Hướng dẫn:</strong></p>
             <ul style={{ marginLeft: 20 }}>
-              <li>支持导入.json格式的角色/组织文件</li>
-              <li>重复名称的角色/组织将被跳过</li>
-              <li>职业信息如不存在将被忽略</li>
+              <li>Hỗ trợ nhập tệp nhân vật/tổ chức định dạng .json</li>
+              <li>Nhân vật/tổ chức trùng tên sẽ bị bỏ qua</li>
+              <li>Thông tin nghề không tồn tại sẽ bị bỏ qua</li>
             </ul>
           </div>
         </div>

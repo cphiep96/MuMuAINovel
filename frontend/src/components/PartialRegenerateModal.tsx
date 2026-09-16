@@ -68,14 +68,14 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
 
   const handleGenerate = async () => {
     if (!userInstructions.trim()) {
-      message.warning('请输入重写要求');
+      message.warning('Vui lòng nhập yêu cầu viết lại');
       return;
     }
 
     setIsGenerating(true);
     setGeneratedText('');
     setProgress(0);
-    setProgressMessage('准备生成...');
+    setProgressMessage('Chuẩn bị tạo...');
 
     // 创建 AbortController 用于取消请求
     abortControllerRef.current = new AbortController();
@@ -103,12 +103,12 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
           },
           onResult: () => {
             setProgress(100);
-            setProgressMessage('生成完成');
+            setProgressMessage('Tạo hoàn tất');
             setHasGenerated(true);
           },
           onError: (error) => {
-            console.error('SSE错误:', error);
-            message.error(error || '生成过程中发生错误');
+            console.error('Lỗi SSE:', error);
+            message.error(error || 'Đã xảy ra lỗi trong quá trình tạo');
           },
           onComplete: () => {
             setIsGenerating(false);
@@ -117,9 +117,9 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
         }
       );
     } catch (error) {
-      console.error('生成失败:', error);
+      console.error('Tạo thất bại:', error);
       if ((error as Error).name !== 'AbortError') {
-        message.error('生成失败，请重试');
+        message.error('Tạo thất bại, vui lòng thử lại');
       }
       setIsGenerating(false);
     }
@@ -129,14 +129,14 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
     if (isGenerating && abortControllerRef.current) {
       abortControllerRef.current.abort();
       setIsGenerating(false);
-      message.info('已取消生成');
+      message.info('Đã hủy tạo');
     }
     onClose();
   };
 
   const handleAccept = async () => {
     if (!generatedText.trim()) {
-      message.warning('没有可应用的内容');
+      message.warning('Không có nội dung để áp dụng');
       return;
     }
 
@@ -148,12 +148,12 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
         end_position: endPosition,
       });
 
-      message.success('已应用重写内容');
+      message.success('Đã áp dụng nội dung viết lại');
       onApply(generatedText, startPosition, endPosition);
       onClose();
     } catch (error) {
-      console.error('应用失败:', error);
-      message.error('应用失败，请重试');
+      console.error('Áp dụng thất bại:', error);
+      message.error('Áp dụng thất bại, vui lòng thử lại');
     }
   };
 
@@ -167,10 +167,10 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
 
   const getLengthModeDescription = (mode: LengthMode): string => {
     const descriptions: Record<LengthMode, string> = {
-      similar: '保持与原文相近的长度',
-      expand: '扩展内容，增加更多细节',
-      condense: '精简内容，保留核心要点',
-      custom: '指定目标字数',
+      similar: 'Giữ độ dài gần với bản gốc',
+      expand: 'Mở rộng nội dung, thêm chi tiết',
+      condense: 'Rút gọn nội dung, giữ điểm chính',
+      custom: 'Chỉ định số chữ mục tiêu',
     };
     return descriptions[mode];
   };
@@ -180,7 +180,7 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
       title={
         <Space>
           <EditOutlined style={{ color: token.colorPrimary }} />
-          <span>AI局部重写</span>
+          <span>AI viết lại cục bộ</span>
         </Space>
       }
       open={visible}
@@ -193,7 +193,7 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
       footer={
         <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
           <Button onClick={handleCancel} disabled={isGenerating}>
-            取消
+            Hủy
           </Button>
           {!hasGenerated ? (
             <Button
@@ -208,7 +208,7 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
                 boxShadow: token.boxShadowSecondary,
               }}
             >
-              {isGenerating ? '生成中...' : '开始重写'}
+              {isGenerating ? 'Đang tạo...' : 'Bắt đầu viết lại'}
             </Button>
           ) : (
             <>
@@ -216,7 +216,7 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
                 icon={<ReloadOutlined />}
                 onClick={handleRegenerate}
               >
-                重新生成
+                Tạo lại
               </Button>
               <Button
                 type="primary"
@@ -224,7 +224,7 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
                 onClick={handleAccept}
                 style={{ background: token.colorSuccess, borderColor: token.colorSuccess }}
               >
-                接受并应用
+                Chấp nhận và áp dụng
               </Button>
             </>
           )}
@@ -242,8 +242,8 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
         size="small"
         title={
           <Space>
-            <Text strong>原文内容</Text>
-            <Text type="secondary">({selectedText.length}字)</Text>
+            <Text strong>Nội dung gốc</Text>
+            <Text type="secondary">({selectedText.length} chữ)</Text>
           </Space>
         }
         style={{ marginBottom: 16 }}
@@ -270,12 +270,12 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
       {/* 重写要求输入 */}
       <div style={{ marginBottom: 16 }}>
         <Text strong style={{ display: 'block', marginBottom: 8 }}>
-          重写要求 <Text type="danger">*</Text>
+          Yêu cầu viết lại <Text type="danger">*</Text>
         </Text>
         <TextArea
           value={userInstructions}
           onChange={(e) => setUserInstructions(e.target.value)}
-          placeholder="请描述您希望如何重写这段内容，例如：&#10;- 让描写更加生动细腻&#10;- 增加环境氛围描写&#10;- 加强角色心理活动&#10;- 改变叙事节奏，更加紧凑&#10;- 添加对话内容"
+          placeholder="Mô tả cách bạn muốn viết lại đoạn này, ví dụ:&#10;- Khiến miêu tả sống động, tinh tế hơn&#10;- Thêm miêu tả không khí môi trường&#10;- Tăng hoạt động tâm lý nhân vật&#10;- Thay đổi nhịp kể chuyện cho chặt hơn&#10;- Thêm hội thoại"
           rows={4}
           disabled={isGenerating}
           style={{ resize: 'none' }}
@@ -285,7 +285,7 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
       {/* 长度模式选择 */}
       <div style={{ marginBottom: 16 }}>
         <Text strong style={{ display: 'block', marginBottom: 8 }}>
-          长度控制
+          Kiểm soát độ dài
         </Text>
         <Radio.Group
           value={lengthMode}
@@ -293,10 +293,10 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
           disabled={isGenerating}
           buttonStyle="solid"
         >
-          <Radio.Button value="similar">保持长度</Radio.Button>
-          <Radio.Button value="expand">扩展内容</Radio.Button>
-          <Radio.Button value="condense">精简内容</Radio.Button>
-          <Radio.Button value="custom">自定义</Radio.Button>
+          <Radio.Button value="similar">Giữ độ dài</Radio.Button>
+          <Radio.Button value="expand">Mở rộng</Radio.Button>
+          <Radio.Button value="condense">Rút gọn</Radio.Button>
+          <Radio.Button value="custom">Tùy chỉnh</Radio.Button>
         </Radio.Group>
         <div style={{ marginTop: 8 }}>
           <Text type="secondary" style={{ fontSize: 12 }}>
@@ -306,7 +306,7 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
         {lengthMode === 'custom' && (
           <div style={{ marginTop: 12 }}>
             <Space>
-              <Text>目标字数：</Text>
+              <Text>Số chữ mục tiêu: </Text>
               <InputNumber
                 value={customWordCount}
                 onChange={(value) => setCustomWordCount(value || selectedText.length)}
@@ -314,7 +314,7 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
                 max={10000}
                 step={50}
                 disabled={isGenerating}
-                addonAfter="字"
+                addonAfter="chữ"
                 style={{ width: 150 }}
               />
             </Space>
@@ -334,15 +334,15 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
             marginBottom: 8 
           }}>
             <Space>
-              <Text strong>重写结果</Text>
+              <Text strong>Kết quả viết lại</Text>
               {generatedText && (
-                <Text type="secondary">({generatedText.length}字)</Text>
+                <Text type="secondary">({generatedText.length} chữ)</Text>
               )}
             </Space>
             {isGenerating && (
               <Space>
                 <Spin indicator={<LoadingOutlined style={{ fontSize: 14 }} spin />} />
-                <Text type="secondary">{progressMessage || '生成中...'}</Text>
+                <Text type="secondary">{progressMessage || 'Đang tạo...'}</Text>
               </Space>
             )}
           </div>
@@ -410,22 +410,22 @@ export const PartialRegenerateModal: React.FC<PartialRegenerateModalProps> = ({
               </Paragraph>
             ) : (
               <div style={{ textAlign: 'center', padding: 20, color: token.colorTextTertiary }}>
-                {isGenerating ? '正在生成内容...' : '等待生成...'}
+                {isGenerating ? 'Đang tạo nội dung...' : 'Chờ tạo...'}
               </div>
             )}
           </Card>
 
           {hasGenerated && generatedText && (
             <Alert
-              message="生成完成"
+              message="Tạo hoàn tất"
               description={
                 <span>
-                  原文 {selectedText.length} 字 → 新文 {generatedText.length} 字
+                  Gốc {selectedText.length} chữ → Mới {generatedText.length} chữ
                   {generatedText.length > selectedText.length && (
-                    <Text type="success"> (+{generatedText.length - selectedText.length}字)</Text>
+                    <Text type="success"> (+{generatedText.length - selectedText.length} chữ)</Text>
                   )}
                   {generatedText.length < selectedText.length && (
-                    <Text type="warning"> ({generatedText.length - selectedText.length}字)</Text>
+                    <Text type="warning"> ({generatedText.length - selectedText.length} chữ)</Text>
                   )}
                 </span>
               }

@@ -127,14 +127,14 @@ function parseCommitType(message: string): { type: ChangelogEntry['type']; scope
 
   // 优先级4：关键词模糊匹配（仅当前面都不匹配时）
   const keywordMap: Array<{ keywords: string[]; type: ChangelogEntry['type'] }> = [
-    { keywords: ['修复', 'fix'], type: 'fix' },
-    { keywords: ['优化', 'perf'], type: 'perf' },
-    { keywords: ['文档', 'document'], type: 'docs' },
-    { keywords: ['新增', '添加', '增加', 'add'], type: 'feature' },
-    { keywords: ['更新', 'update'], type: 'update' },
-    { keywords: ['样式', 'style'], type: 'style' },
-    { keywords: ['重构', 'refactor'], type: 'refactor' },
-    { keywords: ['测试', 'test'], type: 'test' },
+    { keywords: ['Sửa lỗi', 'fix'], type: 'fix' },
+    { keywords: ['Tối ưu', 'perf'], type: 'perf' },
+    { keywords: ['Tài liệu', 'document'], type: 'docs' },
+    { keywords: ['Thêm mới', 'Thêm', 'Tăng', 'add'], type: 'feature' },
+    { keywords: ['Cập nhật', 'update'], type: 'update' },
+    { keywords: ['Giao diện', 'style'], type: 'style' },
+    { keywords: ['Tái cấu trúc', 'refactor'], type: 'refactor' },
+    { keywords: ['Kiểm tra', 'test'], type: 'test' },
   ];
 
   for (const { keywords, type } of keywordMap) {
@@ -163,12 +163,12 @@ export async function fetchGitHubCommits(page: number = 1, perPage: number = 30)
     });
 
     if (!response.ok) {
-      throw new Error(`GitHub API 请求失败: ${response.status} ${response.statusText}`);
+      throw new Error(`Yêu cầu GitHub API thất bại: ${response.status} ${response.statusText}`);
     }
 
     return await response.json();
   } catch (error) {
-    console.error('获取 GitHub 提交历史失败:', error);
+    console.error('Lấy lịch sử commit GitHub thất bại:', error);
     throw error;
   }
 }

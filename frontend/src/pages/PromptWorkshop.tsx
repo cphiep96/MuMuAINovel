@@ -168,7 +168,7 @@ export default function PromptWorkshop() {
       setTotal(response.data?.total || 0);
     } catch (error) {
       console.error('Failed to load workshop items:', error);
-      message.error('加载提示词工坊失败');
+      message.error('Tải xưởng prompt thất bại');
     } finally {
       setLoading(false);
     }
@@ -196,12 +196,12 @@ export default function PromptWorkshop() {
     setImportingId(item.id);
     try {
       await promptWorkshopApi.importItem(item.id);
-      message.success(`已导入「${item.name}」到本地写作风格`);
+      message.success(`Đã nhập “${item.name}” vào phong cách viết cục bộ`);
       // 刷新列表更新下载计数
       loadItems();
     } catch (error) {
       console.error('Failed to import item:', error);
-      message.error('导入失败');
+      message.error('Nhập thất bại');
     } finally {
       setImportingId(null);
     }
@@ -219,7 +219,7 @@ export default function PromptWorkshop() {
       ));
     } catch (error) {
       console.error('Failed to toggle like:', error);
-      message.error('操作失败');
+      message.error('Thao tác thất bại');
     }
   };
 
@@ -231,7 +231,7 @@ export default function PromptWorkshop() {
         ...values,
         tags: values.tags ? (values.tags as unknown as string).split(',').map((t: string) => t.trim()).filter(Boolean) : [],
       });
-      message.success('提交成功，等待管理员审核');
+      message.success('Gửi thành công, đang chờ quản trị viên duyệt');
       setIsSubmitModalOpen(false);
       submitForm.resetFields();
       loadMySubmissions();
@@ -241,7 +241,7 @@ export default function PromptWorkshop() {
       }
     } catch (error) {
       console.error('Failed to submit:', error);
-      message.error('提交失败');
+      message.error('Gửi thất bại');
     } finally {
       setSubmitLoading(false);
     }
@@ -251,7 +251,7 @@ export default function PromptWorkshop() {
   const handleWithdraw = async (submissionId: string) => {
     try {
       await promptWorkshopApi.withdrawSubmission(submissionId);
-      message.success('已撤回');
+      message.success('Đã thu hồi');
       loadMySubmissions();
       // 如果是服务端管理员，刷新待审核列表
       if (isServerAdmin) {
@@ -259,23 +259,23 @@ export default function PromptWorkshop() {
       }
     } catch (error) {
       console.error('Failed to withdraw:', error);
-      message.error('撤回失败');
+      message.error('Thu hồi thất bại');
     }
   };
 
   // 删除提交记录（已审核状态）
   const handleDeleteSubmission = async (submission: PromptSubmission) => {
     Modal.confirm({
-      title: '删除提交记录',
-      content: `确定要删除「${submission.name}」的提交记录吗？此操作不可恢复。`,
-      okText: '删除',
+      title: 'Xóa bản ghi đã gửi',
+      content: `Bạn có chắc muốn xóa bản ghi đã gửi của “${submission.name}”? Thao tác này không thể khôi phục.`,
+      okText: 'Xóa',
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: 'Hủy',
       centered: true,
       onOk: async () => {
         try {
           await promptWorkshopApi.deleteSubmission(submission.id);
-          message.success('删除成功');
+          message.success('Xóa thành công');
           loadMySubmissions();
           // 如果是服务端管理员，刷新相关列表
           if (isServerAdmin) {
@@ -283,7 +283,7 @@ export default function PromptWorkshop() {
           }
         } catch (error) {
           console.error('Failed to delete submission:', error);
-          message.error('删除失败');
+          message.error('Xóa thất bại');
         }
       },
     });
@@ -297,7 +297,7 @@ export default function PromptWorkshop() {
       setIsDetailModalOpen(true);
     } catch (error) {
       console.error('Failed to load detail:', error);
-      message.error('加载详情失败');
+      message.error('Tải chi tiết thất bại');
     }
   };
 
@@ -332,9 +332,9 @@ export default function PromptWorkshop() {
   // 获取提交状态标签
   const getStatusTag = (status: string) => {
     const config: Record<string, { color: string; icon: React.ReactNode; text: string }> = {
-      pending: { color: 'processing', icon: <ClockCircleOutlined />, text: '待审核' },
-      approved: { color: 'success', icon: <CheckCircleOutlined />, text: '已通过' },
-      rejected: { color: 'error', icon: <CloseCircleOutlined />, text: '已拒绝' },
+      pending: { color: 'processing', icon: <ClockCircleOutlined />, text: 'Chờ duyệt' },
+      approved: { color: 'success', icon: <CheckCircleOutlined />, text: 'Đã duyệt' },
+      rejected: { color: 'error', icon: <CloseCircleOutlined />, text: 'Đã từ chối' },
     };
     const cfg = config[status] || config.pending;
     return <Tag color={cfg.color} icon={cfg.icon}>{cfg.text}</Tag>;
@@ -347,8 +347,8 @@ export default function PromptWorkshop() {
       {serviceStatus && !serviceStatus.cloud_connected && serviceStatus.mode === 'client' && (
         <Alert
           type="warning"
-          message="云端服务未连接"
-          description="无法访问提示词工坊，请检查网络连接或稍后重试"
+          message="Dịch vụ đám mây chưa kết nối"
+          description="Không thể truy cập xưởng prompt, vui lòng kiểm tra kết nối mạng hoặc thử lại sau"
           icon={<DisconnectOutlined />}
           showIcon
           style={{ marginBottom: 16 }}
@@ -363,7 +363,7 @@ export default function PromptWorkshop() {
         alignItems: 'center',
       }}>
         <Input
-          placeholder="搜索提示词..."
+          placeholder="Tìm kiếm prompt..."
           prefix={<SearchOutlined />}
           value={searchKeyword}
           onChange={e => setSearchKeyword(e.target.value)}
@@ -372,7 +372,7 @@ export default function PromptWorkshop() {
           allowClear
         />
         <Select
-          placeholder="选择分类"
+          placeholder="Chọn phân loại"
           value={category}
           onChange={v => { setCategory(v); setCurrentPage(1); }}
           style={{ width: isMobile ? '100%' : 150 }}
@@ -387,15 +387,15 @@ export default function PromptWorkshop() {
           onChange={v => { setSortBy(v); setCurrentPage(1); }}
           style={{ width: isMobile ? '100%' : 120 }}
         >
-          <Select.Option value="newest">最新发布</Select.Option>
-          <Select.Option value="popular">最受欢迎</Select.Option>
-          <Select.Option value="downloads">下载最多</Select.Option>
+          <Select.Option value="newest">Mới phát hành</Select.Option>
+          <Select.Option value="popular">Phổ biến nhất</Select.Option>
+          <Select.Option value="downloads">Tải nhiều nhất</Select.Option>
         </Select>
         <Button
           icon={<SyncOutlined />}
           onClick={() => { setCurrentPage(1); loadItems(); }}
         >
-          刷新
+          Làm mới
         </Button>
       </div>
     </div>
@@ -407,7 +407,7 @@ export default function PromptWorkshop() {
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: 4 }}>
         <Spin spinning={loading}>
           {items.length === 0 ? (
-            <Empty description="暂无提示词" />
+            <Empty description="Chưa có prompt" />
           ) : (
               <Row
                 gutter={[0, gridConfig.gutter]}
@@ -443,10 +443,10 @@ export default function PromptWorkshop() {
                       flex: 1,
                     }}
                     actions={[
-                      <Tooltip title="查看详情" key="view">
+                      <Tooltip title="Xem chi tiết" key="view">
                         <EyeOutlined onClick={() => handleViewDetail(item)} />
                       </Tooltip>,
-                      <Tooltip title={item.is_liked ? '取消点赞' : '点赞'} key="like">
+                      <Tooltip title={item.is_liked ? 'Bỏ thích' : 'Thích'} key="like">
                         <span onClick={() => handleLike(item)}>
                           {item.is_liked ? (
                             <HeartFilled style={{ color: token.colorError }} />
@@ -456,7 +456,7 @@ export default function PromptWorkshop() {
                           <span style={{ marginLeft: 4 }}>{item.like_count || 0}</span>
                         </span>
                       </Tooltip>,
-                      <Tooltip title="导入到本地" key="import">
+                      <Tooltip title="Nhập vào cục bộ" key="import">
                         <Button
                           type="link"
                           size="small"
@@ -517,7 +517,7 @@ export default function PromptWorkshop() {
                     
                     <div style={{ marginTop: 8, color: token.colorTextTertiary, fontSize: 12 }}>
                       <Space>
-                        <span><UserOutlined /> {item.author_name || '匿名'}</span>
+                        <span><UserOutlined /> {item.author_name || 'Ẩn danh'}</span>
                       </Space>
                     </div>
                   </Card>
@@ -545,7 +545,7 @@ export default function PromptWorkshop() {
             pageSize={pageSize}
             onChange={page => setCurrentPage(page)}
             showSizeChanger={false}
-            showTotal={t => `共 ${t} 个提示词`}
+            showTotal={t => `Tổng ${t} prompt`}
           />
         </div>
       )}
@@ -556,15 +556,15 @@ export default function PromptWorkshop() {
   const renderMySubmissions = () => (
     <div>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text>查看您提交的提示词及审核状态</Text>
+        <Text>Xem các prompt bạn đã gửi và trạng thái duyệt</Text>
         <Button icon={<SyncOutlined />} onClick={loadMySubmissions}>
-          刷新
+          Làm mới
         </Button>
       </div>
       
       <Spin spinning={submissionsLoading}>
           {mySubmissions.length === 0 ? (
-            <Empty description="暂无提交记录" />
+            <Empty description="Chưa có bản ghi đã gửi" />
           ) : (
             <Row gutter={[0, gridConfig.gutter]} style={{ marginLeft: 0, marginRight: 0 }}>
               {mySubmissions.map(sub => (
@@ -606,14 +606,14 @@ export default function PromptWorkshop() {
                     {sub.status === 'rejected' && sub.review_note && (
                       <Alert
                         type="error"
-                        message="拒绝原因"
+                        message="Lý do từ chối"
                         description={sub.review_note}
                         style={{ fontSize: 12 }}
                       />
                     )}
                     
                     <div style={{ fontSize: 12, color: token.colorTextTertiary }}>
-                      提交时间: {sub.created_at ? new Date(sub.created_at).toLocaleDateString() : '-'}
+                      Thời gian gửi: {sub.created_at ? new Date(sub.created_at).toLocaleDateString() : '-'}
                     </div>
                     
                     <Space>
@@ -625,7 +625,7 @@ export default function PromptWorkshop() {
                           icon={<DeleteOutlined />}
                           onClick={() => handleWithdraw(sub.id)}
                         >
-                          撤回
+                          Thu hồi
                         </Button>
                       )}
                       {sub.status !== 'pending' && (
@@ -636,7 +636,7 @@ export default function PromptWorkshop() {
                           icon={<DeleteOutlined />}
                           onClick={() => handleDeleteSubmission(sub)}
                         >
-                          删除记录
+                          Xóa bản ghi
                         </Button>
                       )}
                     </Space>
@@ -688,22 +688,22 @@ export default function PromptWorkshop() {
   // 删除已发布的提示词
   const handleDeleteItem = async (item: PromptWorkshopItem) => {
     Modal.confirm({
-      title: '确认删除',
-      content: `确定要删除「${item.name}」吗？此操作不可恢复。`,
-      okText: '删除',
+      title: 'Xác nhận xóa',
+      content: `Bạn có chắc muốn xóa “${item.name}”? Thao tác này không thể khôi phục.`,
+      okText: 'Xóa',
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: 'Hủy',
       centered: true,
       onOk: async () => {
         try {
           await promptWorkshopApi.adminDeleteItem(item.id);
-          message.success('删除成功');
+          message.success('Xóa thành công');
           loadPublishedItems();
           loadAdminSubmissions();
           loadItems();
         } catch (error) {
           console.error('Failed to delete item:', error);
-          message.error('删除失败');
+          message.error('Xóa thất bại');
         }
       },
     });
@@ -719,7 +719,7 @@ export default function PromptWorkshop() {
         ...values,
         tags: values.tags ? values.tags.split(',').map(t => t.trim()).filter(Boolean) : undefined,
       });
-      message.success('修改成功');
+      message.success('Cập nhật thành công');
       setEditModalOpen(false);
       setEditingItem(null);
       editForm.resetFields();
@@ -727,7 +727,7 @@ export default function PromptWorkshop() {
       loadItems();
     } catch (error) {
       console.error('Failed to update item:', error);
-      message.error('修改失败');
+      message.error('Cập nhật thất bại');
     } finally {
       setEditLoading(false);
     }
@@ -759,7 +759,7 @@ export default function PromptWorkshop() {
         category: values.category,
         tags: values.tags ? values.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : undefined,
       });
-      message.success(action === 'approve' ? '已通过审核' : '已拒绝');
+      message.success(action === 'approve' ? 'Đã duyệt' : 'Đã từ chối');
       setReviewModalOpen(false);
       setReviewingSubmission(null);
       reviewForm.resetFields();
@@ -769,7 +769,7 @@ export default function PromptWorkshop() {
       loadPublishedItems();  // 通过时会新增到已发布列表
     } catch (error) {
       console.error('Failed to review:', error);
-      message.error('审核失败');
+      message.error('Duyệt thất bại');
     } finally {
       setReviewLoading(false);
     }
@@ -783,7 +783,7 @@ export default function PromptWorkshop() {
         ...values,
         tags: values.tags ? values.tags.split(',').map(t => t.trim()).filter(Boolean) : undefined,
       });
-      message.success('添加成功');
+      message.success('Thêm thành công');
       setAddOfficialModalOpen(false);
       addOfficialForm.resetFields();
       loadItems();
@@ -791,7 +791,7 @@ export default function PromptWorkshop() {
       loadPublishedItems();
     } catch (error) {
       console.error('Failed to add official item:', error);
-      message.error('添加失败');
+      message.error('Thêm thất bại');
     } finally {
       setAddOfficialLoading(false);
     }
@@ -805,33 +805,33 @@ export default function PromptWorkshop() {
         <Row gutter={16} style={{ marginBottom: 24 }}>
           <Col span={4}>
             <Card size="small">
-              <Statistic title="总提示词" value={adminStats.total_items} />
+              <Statistic title="Tổng prompt" value={adminStats.total_items} />
             </Card>
           </Col>
           <Col span={4}>
             <Card size="small">
-              <Statistic title="官方提示词" value={adminStats.total_official} />
+              <Statistic title="Prompt chính thức" value={adminStats.total_official} />
             </Card>
           </Col>
           <Col span={4}>
             <Card size="small">
-              <Statistic title="待审核" value={adminStats.total_pending} valueStyle={{ color: token.colorWarning }} />
+              <Statistic title="Chờ duyệt" value={adminStats.total_pending} valueStyle={{ color: token.colorWarning }} />
             </Card>
           </Col>
           <Col span={4}>
             <Card size="small">
-              <Statistic title="总下载" value={adminStats.total_downloads} />
+              <Statistic title="Tổng lượt tải" value={adminStats.total_downloads} />
             </Card>
           </Col>
           <Col span={4}>
             <Card size="small">
-              <Statistic title="总点赞" value={adminStats.total_likes} />
+              <Statistic title="Tổng lượt thích" value={adminStats.total_likes} />
             </Card>
           </Col>
           <Col span={4}>
             <Card size="small" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
               <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddOfficialModalOpen(true)}>
-                添加官方
+                Thêm chính thức
               </Button>
             </Card>
           </Col>
@@ -840,15 +840,15 @@ export default function PromptWorkshop() {
       
       {/* 待审核列表 */}
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text strong>待审核提交 ({adminPendingCount})</Text>
+        <Text strong>Bản gửi chờ duyệt ({adminPendingCount})</Text>
         <Button icon={<SyncOutlined />} onClick={loadAdminSubmissions}>
-          刷新
+          Làm mới
         </Button>
       </div>
       
       <Spin spinning={adminSubmissionsLoading}>
         {adminSubmissions.length === 0 ? (
-          <Empty description="暂无待审核提交" />
+          <Empty description="Chưa có bản gửi chờ duyệt" />
         ) : (
           <Row gutter={[0, gridConfig.gutter]} style={{ marginLeft: 0, marginRight: 0 }}>
             {adminSubmissions.map(sub => (
@@ -882,7 +882,7 @@ export default function PromptWorkshop() {
                         setReviewModalOpen(true);
                       }}
                     >
-                      审核
+                      Duyệt
                     </Button>,
                   ]}
                 >
@@ -901,9 +901,9 @@ export default function PromptWorkshop() {
                     </Paragraph>
                     
                     <div style={{ fontSize: 11, color: token.colorTextTertiary }}>
-                      <div>提交者: {sub.submitter_name || '未知'}</div>
-                      <div>来源: {sub.source_instance}</div>
-                      <div>时间: {sub.created_at ? new Date(sub.created_at).toLocaleDateString() : '-'}</div>
+                      <div>Người gửi: {sub.submitter_name || 'Không rõ'}</div>
+                      <div>Nguồn: {sub.source_instance}</div>
+                      <div>Thời gian: {sub.created_at ? new Date(sub.created_at).toLocaleDateString() : '-'}</div>
                     </div>
                   </Space>
                 </Card>
@@ -915,15 +915,15 @@ export default function PromptWorkshop() {
       
       {/* 已发布提示词管理 */}
       <div style={{ marginTop: 32, marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text strong>已发布提示词管理 ({publishedItems.length})</Text>
+        <Text strong>Quản lý prompt đã phát hành ({publishedItems.length})</Text>
         <Button icon={<SyncOutlined />} onClick={loadPublishedItems}>
-          刷新
+          Làm mới
         </Button>
       </div>
       
       <Spin spinning={publishedLoading}>
         {publishedItems.length === 0 ? (
-          <Empty description="暂无已发布提示词" />
+          <Empty description="Chưa có prompt đã phát hành" />
         ) : (
           <Row gutter={[0, gridConfig.gutter]} style={{ marginLeft: 0, marginRight: 0 }}>
             {publishedItems.map(item => (
@@ -944,14 +944,14 @@ export default function PromptWorkshop() {
                   style={{ borderRadius: 12, border: `1px solid ${token.colorBorderSecondary}` }}
                   bodyStyle={{ padding: 16 }}
                   actions={[
-                    <Tooltip title="编辑" key="edit">
+                    <Tooltip title="Chỉnh sửa" key="edit">
                       <Button
                         type="link"
                         icon={<SettingOutlined />}
                         onClick={() => openEditModal(item)}
                       />
                     </Tooltip>,
-                    <Tooltip title="删除" key="delete">
+                    <Tooltip title="Xóa" key="delete">
                       <Button
                         type="link"
                         danger
@@ -964,7 +964,7 @@ export default function PromptWorkshop() {
                   <Space direction="vertical" style={{ width: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Text strong ellipsis style={{ maxWidth: 120 }}>{item.name}</Text>
-                      {item.is_official && <Tag color="gold">官方</Tag>}
+                      {item.is_official && <Tag color="gold">Chính thức</Tag>}
                     </div>
                     <Tag color={getCategoryColor(item.category)}>
                       {getCategoryName(item.category)}
@@ -1011,9 +1011,9 @@ export default function PromptWorkshop() {
         }}>
           <h2 style={{ margin: 0, fontSize: isMobile ? 18 : 24, display: 'flex', alignItems: 'center', gap: 8 }}>
             <CloudOutlined />
-            提示词工坊
+            Xưởng prompt
             {serviceStatus?.mode === 'server' && (
-              <Badge status="success" text="服务端模式" style={{ marginLeft: 8, fontSize: 12 }} />
+              <Badge status="success" text="Chế độ máy chủ" style={{ marginLeft: 8, fontSize: 12 }} />
             )}
           </h2>
           <Button
@@ -1021,7 +1021,7 @@ export default function PromptWorkshop() {
             icon={<CloudUploadOutlined />}
             onClick={() => setIsSubmitModalOpen(true)}
           >
-            分享我的提示词
+            Chia sẻ prompt của tôi
           </Button>
         </div>
 
@@ -1037,12 +1037,12 @@ export default function PromptWorkshop() {
             }
           }}
           items={[
-            { key: 'browse', label: '浏览工坊' },
+            { key: 'browse', label: 'Duyệt xưởng' },
             {
               key: 'submissions',
               label: (
                 <Badge count={mySubmissions.filter(s => s.status === 'pending').length} size="small">
-                  我的提交
+                  Bản gửi của tôi
                 </Badge>
               ),
             },
@@ -1050,7 +1050,7 @@ export default function PromptWorkshop() {
               key: 'admin',
               label: (
                 <Badge count={adminPendingCount} size="small">
-                  <span><SettingOutlined /> 管理审核</span>
+                  <span><SettingOutlined /> Quản lý duyệt</span>
                 </Badge>
               ),
             }] : []),
@@ -1075,7 +1075,7 @@ export default function PromptWorkshop() {
 
       {/* 提交弹窗 */}
       <Modal
-        title="分享提示词到工坊"
+        title="Chia sẻ prompt lên xưởng"
         open={isSubmitModalOpen}
         onCancel={() => {
           setIsSubmitModalOpen(false);
@@ -1087,8 +1087,8 @@ export default function PromptWorkshop() {
       >
         <Alert
           type="info"
-          message="提交须知"
-          description="您的提示词将提交给管理员审核，审核通过后会在工坊中展示。请确保内容原创且不含敏感信息。"
+          message="Lưu ý khi gửi"
+          description="Prompt của bạn sẽ được gửi cho quản trị viên duyệt, sau khi duyệt sẽ hiển thị trong xưởng. Vui lòng đảm bảo nội dung nguyên bản và không chứa thông tin nhạy cảm."
           style={{ marginBottom: 16 }}
           showIcon
         />
@@ -1100,47 +1100,47 @@ export default function PromptWorkshop() {
         >
           <Form.Item
             name="name"
-            label="名称"
-            rules={[{ required: true, message: '请输入名称' }]}
+            label="Tên"
+            rules={[{ required: true, message: 'Vui lòng nhập tên' }]}
           >
-            <Input placeholder="给您的提示词起个名字" maxLength={50} />
+            <Input placeholder="Đặt tên cho prompt của bạn" maxLength={50} />
           </Form.Item>
           
           <Form.Item
             name="category"
-            label="分类"
-            rules={[{ required: true, message: '请选择分类' }]}
+            label="Phân loại"
+            rules={[{ required: true, message: 'Vui lòng chọn phân loại' }]}
           >
-            <Select placeholder="选择分类">
+            <Select placeholder="Chọn phân loại">
               {categoryOptions.map(cat => (
                 <Select.Option key={cat.value} value={cat.value}>{cat.label}</Select.Option>
               ))}
             </Select>
           </Form.Item>
           
-          <Form.Item name="description" label="描述">
-            <TextArea rows={2} placeholder="简要描述这个提示词的用途和效果" maxLength={200} />
+          <Form.Item name="description" label="Mô tả">
+            <TextArea rows={2} placeholder="Mô tả ngắn gọn mục đích và hiệu quả của prompt này" maxLength={200} />
           </Form.Item>
           
           <Form.Item
             name="prompt_content"
-            label="提示词内容"
-            rules={[{ required: true, message: '请输入提示词内容' }]}
+            label="Nội dung prompt"
+            rules={[{ required: true, message: 'Vui lòng nhập nội dung prompt' }]}
           >
-            <TextArea rows={6} placeholder="输入完整的提示词内容..." />
+            <TextArea rows={6} placeholder="Nhập nội dung prompt đầy đủ..." />
           </Form.Item>
           
           <Form.Item
             name="author_display_name"
-            label="作者署名"
-            rules={[{ required: true, message: '请输入作者署名' }]}
-            tooltip="发布后显示的作者名称"
+            label="Tên tác giả"
+            rules={[{ required: true, message: 'Vui lòng nhập tên tác giả' }]}
+            tooltip="Tên tác giả hiển thị sau khi phát hành"
           >
-            <Input placeholder="请输入作者署名（必填）" maxLength={50} />
+            <Input placeholder="Vui lòng nhập tên tác giả (bắt buộc)" maxLength={50} />
           </Form.Item>
           
-          <Form.Item name="tags" label="标签">
-            <Input placeholder="输入标签，多个用逗号分隔，如: 武侠,对话,细腻" />
+          <Form.Item name="tags" label="Thẻ">
+            <Input placeholder="Nhập thẻ, phân tách bằng dấu phẩy, ví dụ: kiếm hiệp, đối thoại, tinh tế" />
           </Form.Item>
           
           <Form.Item>
@@ -1149,10 +1149,10 @@ export default function PromptWorkshop() {
                 setIsSubmitModalOpen(false);
                 submitForm.resetFields();
               }}>
-                取消
+                Hủy
               </Button>
               <Button type="primary" htmlType="submit" loading={submitLoading}>
-                提交审核
+                Gửi duyệt
               </Button>
             </Space>
           </Form.Item>
@@ -1169,7 +1169,7 @@ export default function PromptWorkshop() {
         }}
         footer={[
           <Button key="close" onClick={() => setIsDetailModalOpen(false)}>
-            关闭
+            Đóng
           </Button>,
           <Button
             key="import"
@@ -1178,7 +1178,7 @@ export default function PromptWorkshop() {
             loading={importingId === detailItem?.id}
             onClick={() => detailItem && handleImport(detailItem)}
           >
-            导入到本地
+            Nhập vào cục bộ
           </Button>,
         ]}
         width={isMobile ? '100%' : 700}
@@ -1209,7 +1209,7 @@ export default function PromptWorkshop() {
               maxHeight: 400,
               overflow: 'auto',
             }}>
-              <Text strong style={{ display: 'block', marginBottom: 8 }}>提示词内容</Text>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>Nội dung prompt</Text>
               <pre style={{
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
@@ -1222,15 +1222,15 @@ export default function PromptWorkshop() {
             
             <Row gutter={16}>
               <Col span={8}>
-                <Text type="secondary">作者</Text>
-                <div><UserOutlined /> {detailItem.author_name || '匿名'}</div>
+                <Text type="secondary">Tác giả</Text>
+                <div><UserOutlined /> {detailItem.author_name || 'Ẩn danh'}</div>
               </Col>
               <Col span={8}>
-                <Text type="secondary">点赞</Text>
+                <Text type="secondary">Lượt thích</Text>
                 <div><HeartOutlined /> {detailItem.like_count || 0}</div>
               </Col>
               <Col span={8}>
-                <Text type="secondary">下载</Text>
+                <Text type="secondary">Lượt tải</Text>
                 <div><DownloadOutlined /> {detailItem.download_count || 0}</div>
               </Col>
             </Row>
@@ -1239,7 +1239,7 @@ export default function PromptWorkshop() {
       </Modal>
       {/* 审核弹窗 */}
       <Modal
-        title={`审核: ${reviewingSubmission?.name}`}
+        title={`Duyệt: ${reviewingSubmission?.name}`}
         open={reviewModalOpen}
         onCancel={() => {
           setReviewModalOpen(false);
@@ -1260,7 +1260,7 @@ export default function PromptWorkshop() {
               maxHeight: 300,
               overflow: 'auto',
             }}>
-              <Text strong style={{ display: 'block', marginBottom: 8 }}>提示词内容预览</Text>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>Xem trước nội dung prompt</Text>
               <pre style={{
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
@@ -1272,7 +1272,7 @@ export default function PromptWorkshop() {
             </div>
             
             <Form form={reviewForm} layout="vertical">
-              <Form.Item name="category" label="分类（可修改）">
+              <Form.Item name="category" label="Phân loại (có thể sửa)">
                 <Select>
                   {categoryOptions.map(cat => (
                     <Select.Option key={cat.value} value={cat.value}>{cat.label}</Select.Option>
@@ -1280,24 +1280,24 @@ export default function PromptWorkshop() {
                 </Select>
               </Form.Item>
               
-              <Form.Item name="tags" label="标签（可修改，逗号分隔）">
-                <Input placeholder="武侠, 对话, 细腻" />
+              <Form.Item name="tags" label="Thẻ (có thể sửa, phân tách bằng dấu phẩy)">
+                <Input placeholder="kiếm hiệp, đối thoại, tinh tế" />
               </Form.Item>
               
-              <Form.Item name="review_note" label="审核备注">
-                <TextArea rows={2} placeholder="拒绝时请填写原因..." />
+              <Form.Item name="review_note" label="Ghi chú duyệt">
+                <TextArea rows={2} placeholder="Vui lòng ghi lý do khi từ chối..." />
               </Form.Item>
               
               <Form.Item>
                 <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
                   <Button onClick={() => setReviewModalOpen(false)}>
-                    取消
+                    Hủy
                   </Button>
                   <Button danger loading={reviewLoading} onClick={() => handleReview('reject')}>
-                    拒绝
+                    Từ chối
                   </Button>
                   <Button type="primary" loading={reviewLoading} onClick={() => handleReview('approve')}>
-                    通过
+                    Duyệt
                   </Button>
                 </Space>
               </Form.Item>
@@ -1308,7 +1308,7 @@ export default function PromptWorkshop() {
 
       {/* 添加官方提示词弹窗 */}
       <Modal
-        title="添加官方提示词"
+        title="Thêm prompt chính thức"
         open={addOfficialModalOpen}
         onCancel={() => {
           setAddOfficialModalOpen(false);
@@ -1325,38 +1325,38 @@ export default function PromptWorkshop() {
         >
           <Form.Item
             name="name"
-            label="名称"
-            rules={[{ required: true, message: '请输入名称' }]}
+            label="Tên"
+            rules={[{ required: true, message: 'Vui lòng nhập tên' }]}
           >
-            <Input placeholder="提示词名称" maxLength={50} />
+            <Input placeholder="Tên prompt" maxLength={50} />
           </Form.Item>
           
           <Form.Item
             name="category"
-            label="分类"
-            rules={[{ required: true, message: '请选择分类' }]}
+            label="Phân loại"
+            rules={[{ required: true, message: 'Vui lòng chọn phân loại' }]}
           >
-            <Select placeholder="选择分类">
+            <Select placeholder="Chọn phân loại">
               {categoryOptions.map(cat => (
                 <Select.Option key={cat.value} value={cat.value}>{cat.label}</Select.Option>
               ))}
             </Select>
           </Form.Item>
           
-          <Form.Item name="description" label="描述">
-            <TextArea rows={2} placeholder="简要描述" maxLength={200} />
+          <Form.Item name="description" label="Mô tả">
+            <TextArea rows={2} placeholder="Mô tả ngắn gọn" maxLength={200} />
           </Form.Item>
           
           <Form.Item
             name="prompt_content"
-            label="提示词内容"
-            rules={[{ required: true, message: '请输入提示词内容' }]}
+            label="Nội dung prompt"
+            rules={[{ required: true, message: 'Vui lòng nhập nội dung prompt' }]}
           >
-            <TextArea rows={8} placeholder="输入完整的提示词内容..." />
+            <TextArea rows={8} placeholder="Nhập nội dung prompt đầy đủ..." />
           </Form.Item>
           
-          <Form.Item name="tags" label="标签">
-            <Input placeholder="逗号分隔，如: 武侠,对话,细腻" />
+          <Form.Item name="tags" label="Thẻ">
+            <Input placeholder="Phân tách bằng dấu phẩy, ví dụ: kiếm hiệp, đối thoại, tinh tế" />
           </Form.Item>
           
           <Form.Item>
@@ -1365,10 +1365,10 @@ export default function PromptWorkshop() {
                 setAddOfficialModalOpen(false);
                 addOfficialForm.resetFields();
               }}>
-                取消
+                Hủy
               </Button>
               <Button type="primary" htmlType="submit" loading={addOfficialLoading}>
-                添加
+                Thêm
               </Button>
             </Space>
           </Form.Item>
@@ -1377,7 +1377,7 @@ export default function PromptWorkshop() {
 
       {/* 编辑提示词弹窗 */}
       <Modal
-        title={`编辑: ${editingItem?.name}`}
+        title={`Chỉnh sửa: ${editingItem?.name}`}
         open={editModalOpen}
         onCancel={() => {
           setEditModalOpen(false);
@@ -1395,38 +1395,38 @@ export default function PromptWorkshop() {
         >
           <Form.Item
             name="name"
-            label="名称"
-            rules={[{ required: true, message: '请输入名称' }]}
+            label="Tên"
+            rules={[{ required: true, message: 'Vui lòng nhập tên' }]}
           >
-            <Input placeholder="提示词名称" maxLength={50} />
+            <Input placeholder="Tên prompt" maxLength={50} />
           </Form.Item>
           
           <Form.Item
             name="category"
-            label="分类"
-            rules={[{ required: true, message: '请选择分类' }]}
+            label="Phân loại"
+            rules={[{ required: true, message: 'Vui lòng chọn phân loại' }]}
           >
-            <Select placeholder="选择分类">
+            <Select placeholder="Chọn phân loại">
               {categoryOptions.map(cat => (
                 <Select.Option key={cat.value} value={cat.value}>{cat.label}</Select.Option>
               ))}
             </Select>
           </Form.Item>
           
-          <Form.Item name="description" label="描述">
-            <TextArea rows={2} placeholder="简要描述" maxLength={200} />
+          <Form.Item name="description" label="Mô tả">
+            <TextArea rows={2} placeholder="Mô tả ngắn gọn" maxLength={200} />
           </Form.Item>
           
           <Form.Item
             name="prompt_content"
-            label="提示词内容"
-            rules={[{ required: true, message: '请输入提示词内容' }]}
+            label="Nội dung prompt"
+            rules={[{ required: true, message: 'Vui lòng nhập nội dung prompt' }]}
           >
-            <TextArea rows={8} placeholder="输入完整的提示词内容..." />
+            <TextArea rows={8} placeholder="Nhập nội dung prompt đầy đủ..." />
           </Form.Item>
           
-          <Form.Item name="tags" label="标签">
-            <Input placeholder="逗号分隔，如: 武侠,对话,细腻" />
+          <Form.Item name="tags" label="Thẻ">
+            <Input placeholder="Phân tách bằng dấu phẩy, ví dụ: kiếm hiệp, đối thoại, tinh tế" />
           </Form.Item>
           
           <Form.Item>
@@ -1436,10 +1436,10 @@ export default function PromptWorkshop() {
                 setEditingItem(null);
                 editForm.resetFields();
               }}>
-                取消
+                Hủy
               </Button>
               <Button type="primary" htmlType="submit" loading={editLoading}>
-                保存修改
+                Lưu thay đổi
               </Button>
             </Space>
           </Form.Item>

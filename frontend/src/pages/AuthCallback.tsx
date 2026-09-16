@@ -78,9 +78,9 @@ export default function AuthCallback() {
           }, 1000);
         }
       } catch (error) {
-        console.error('登录失败:', error);
+        console.error('Đăng nhập thất bại:', error);
         setStatus('error');
-        setErrorMessage('登录失败，请重试');
+        setErrorMessage('Đăng nhập thất bại, vui lòng thử lại');
       }
     };
 
@@ -99,7 +99,7 @@ export default function AuthCallback() {
         <div style={{ textAlign: 'center' }}>
           <Spin size="large" />
           <div style={{ marginTop: 20, color: token.colorWhite, fontSize: 16 }}>
-            正在处理登录...
+            Đang xử lý đăng nhập...
           </div>
         </div>
       </div>
@@ -117,11 +117,11 @@ export default function AuthCallback() {
       }}>
         <Result
           status="error"
-          title="登录失败"
+          title="Đăng nhập thất bại"
           subTitle={errorMessage}
           extra={
             <Button type="primary" onClick={() => navigate('/login')}>
-              返回登录
+              Quay lại đăng nhập
             </Button>
           }
           style={{ background: token.colorBgContainer, padding: 40, borderRadius: 8 }}
@@ -153,15 +153,15 @@ export default function AuthCallback() {
     const passwordToSet = newPassword || passwordStatus?.default_password;
     
     if (!passwordToSet) {
-      message.error('请输入新密码');
+      message.error('Vui lòng nhập mật khẩu mới');
       return;
     }
     if (passwordToSet.length < 6) {
-      message.error('密码长度至少为6个字符');
+      message.error('Mật khẩu dài ít nhất 6 ký tự');
       return;
     }
     if (newPassword && newPassword !== confirmPassword) {
-      message.error('两次输入的密码不一致');
+      message.error('Hai lần nhập mật khẩu không khớp');
       return;
     }
 
@@ -171,10 +171,10 @@ export default function AuthCallback() {
       const isFirstLogin = !passwordStatus?.has_password;
       if (isFirstLogin) {
         await authApi.initializePassword(passwordToSet);
-        message.success('密码初始化成功');
+        message.success('Khởi tạo mật khẩu thành công');
       } else {
         await authApi.setPassword(passwordToSet);
-        message.success('密码设置成功');
+        message.success('Đặt mật khẩu thành công');
       }
       setShowPasswordModal(false);
 
@@ -196,7 +196,7 @@ export default function AuthCallback() {
         }, 500);
       }
     } catch {
-      message.error('密码设置失败，请重试');
+      message.error('Đặt mật khẩu thất bại, vui lòng thử lại');
     } finally {
       setSettingPassword(false);
     }
@@ -209,7 +209,7 @@ export default function AuthCallback() {
       try {
         await authApi.initializePassword(passwordStatus.default_password);
       } catch (error) {
-        console.error('初始化默认密码失败:', error);
+        console.error('Khởi tạo mật khẩu mặc định thất bại:', error);
       }
     }
 
@@ -244,19 +244,19 @@ export default function AuthCallback() {
       />
 
       <Modal
-        title="设置账号密码"
+        title="Đặt mật khẩu tài khoản"
         open={showPasswordModal}
         centered
         onOk={handleSetPassword}
         onCancel={handleSkipPasswordSetting}
         confirmLoading={settingPassword}
-        okText="设置密码"
-        cancelText="暂不设置"
+        okText="Đặt mật khẩu"
+        cancelText="Tạm chưa đặt"
         width={500}
       >
         <div style={{ marginBottom: 20 }}>
-          <p>您已成功通过 Linux DO 授权登录！</p>
-          <p>系统已为您自动生成默认密码，您可以选择设置自定义密码或继续使用默认密码。</p>
+          <p>Bạn đã đăng nhập thành công qua ủy quyền Linux DO!</p>
+          <p>Hệ thống đã tạo mật khẩu mặc định; bạn có thể đặt mật khẩu riêng hoặc tiếp tục dùng mặc định.</p>
           {passwordStatus?.default_password && (
             <div style={{
               background: token.colorFillTertiary,
@@ -264,8 +264,8 @@ export default function AuthCallback() {
               borderRadius: 4,
               marginTop: 12
             }}>
-              <strong>账号：</strong>{passwordStatus.username}<br />
-              <strong>默认密码：</strong><code style={{
+              <strong>Tài khoản: </strong>{passwordStatus.username}<br />
+              <strong>Mật khẩu mặc định: </strong><code style={{
                 background: token.colorBgContainer,
                 padding: '2px 8px',
                 borderRadius: 3,
@@ -278,20 +278,20 @@ export default function AuthCallback() {
 
         <div style={{ marginTop: 20 }}>
           <div style={{ marginBottom: 12 }}>
-            <label>新密码（至少6个字符）：</label>
+            <label>Mật khẩu mới (ít nhất 6 ký tự):</label>
             <Input.Password
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="请输入新密码"
+              placeholder="Vui lòng nhập mật khẩu mới"
               style={{ marginTop: 4 }}
             />
           </div>
           <div>
-            <label>确认密码：</label>
+            <label>Xác nhận mật khẩu:</label>
             <Input.Password
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="请再次输入密码"
+              placeholder="Vui lòng nhập lại mật khẩu"
               style={{ marginTop: 4 }}
             />
           </div>
@@ -307,8 +307,8 @@ export default function AuthCallback() {
       }}>
         <Result
           status="success"
-          title="登录成功"
-          subTitle={showPasswordModal ? "请设置账号密码..." : (showAnnouncement ? "欢迎使用..." : "正在跳转...")}
+          title="Đăng nhập thành công"
+          subTitle={showPasswordModal ? "Vui lòng đặt mật khẩu tài khoản..." : (showAnnouncement ? "Chào mừng sử dụng..." : "Đang chuyển hướng...")}
           style={{ background: alphaColor(token.colorBgContainer, 0.96), padding: 40, borderRadius: 8 }}
         />
       </div>

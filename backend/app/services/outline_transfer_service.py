@@ -52,14 +52,14 @@ class OutlineTransferService:
         if outline_ids is not None:
             requested_ids = list(dict.fromkeys(outline_ids))
             if not requested_ids:
-                raise ValueError("请至少选择一个大纲")
+                raise ValueError("Vui lòng chọn ít nhất một dàn ý")
             query = query.where(Outline.id.in_(requested_ids))
 
         result = await db.execute(query.order_by(Outline.order_index, Outline.created_at))
         outlines = result.scalars().all()
 
         if requested_ids is not None and len(outlines) != len(requested_ids):
-            raise ValueError("部分大纲不存在或不属于当前项目")
+            raise ValueError("Một số dàn ý không tồn tại hoặc không thuộc dự án hiện tại")
 
         items = [
             OutlineTransferItem(
@@ -88,14 +88,14 @@ class OutlineTransferService:
         try:
             raw = json.loads(content.decode("utf-8-sig"))
         except UnicodeDecodeError:
-            parsed.errors.append("文件必须使用 UTF-8 编码")
+            parsed.errors.append("Tệp phải dùng mã hóa UTF-8")
             return parsed
         except json.JSONDecodeError as exc:
-            parsed.errors.append(f"JSON 格式错误：第 {exc.lineno} 行第 {exc.colno} 列")
+            parsed.errors.append(f"Lỗi định dạng JSON: dòng {exc.lineno} cột {exc.colno}")
             return parsed
 
         if not isinstance(raw, dict):
-            parsed.errors.append("文件根节点必须是 JSON 对象")
+            parsed.errors.append("Nút gốc của tệp phải là đối tượng JSON")
             return parsed
 
         raw_items: Any = None
@@ -110,8 +110,8 @@ class OutlineTransferService:
             parsed.source_project = cls._parse_source_project(raw.get("source_project"))
             if parsed.version != cls.OUTLINE_FORMAT_VERSION:
                 parsed.errors.append(
-                    f"不支持的大纲文件版本：{parsed.version or '缺失'}，"
-                    f"当前支持 {cls.OUTLINE_FORMAT_VERSION}"
+                    f"Phiên bản tệp dàn ý không được hỗ trợ: {parsed.version or 'thiếu'}, "
+                    f"hiện hỗ trợ {cls.OUTLINE_FORMAT_VERSION}"
                 )
         elif isinstance(raw.get("outlines"), list) and isinstance(raw.get("project"), dict):
             parsed.source_type = "project"
@@ -121,28 +121,28 @@ class OutlineTransferService:
             project_data = raw["project"]
             parsed.source_project = cls._parse_source_project(
                 {
-                    "title": project_data.get("title", "未知项目"),
+                    "title": project_data.get("title", "Dự án chưa rõ"),
                     "outline_mode": project_data.get("outline_mode", "one-to-many"),
                 }
             )
-            parsed.warnings.append("检测到完整项目导出文件，本次仅导入其中的大纲数据")
+            parsed.warnings.append("Phát hiện tệp xuất dự án đầy đủ, lần này chỉ nhập phần dữ liệu dàn ý")
             if parsed.version not in cls.PROJECT_FORMAT_VERSIONS:
                 parsed.errors.append(
-                    f"不支持的项目文件版本：{parsed.version or '缺失'}"
+                    f"Phiên bản tệp dự án không được hỗ trợ: {parsed.version or 'thiếu'}"
                 )
         else:
-            parsed.errors.append("不是有效的大纲导出文件或完整项目导出文件")
+            parsed.errors.append("Không phải tệp xuất dàn ý hợp lệ hoặc tệp xuất dự án đầy đủ")
             return parsed
 
         if not isinstance(raw_items, list):
-            parsed.errors.append("data/outlines 字段必须是数组")
+            parsed.errors.append("Trường data/outlines phải là mảng")
             return parsed
         if len(raw_items) > cls.MAX_ITEMS:
-            parsed.errors.append(f"大纲数量不能超过 {cls.MAX_ITEMS} 条")
+            parsed.errors.append(f"Số lượng dàn ý không được vượt quá {cls.MAX_ITEMS}")
             return parsed
         if declared_count is not None and declared_count != len(raw_items):
             parsed.warnings.append(
-                f"文件声明数量为 {declared_count}，实际包含 {len(raw_items)} 条"
+                f"Tệp khai báo số lượng là {declared_count}, thực tế chứa {len(raw_items)}"
             )
 
         seen_orders: set[int] = set()
@@ -152,14 +152,14 @@ class OutlineTransferService:
             if item is None:
                 continue
             if item.order_index in seen_orders:
-                parsed.errors.append(f"第 {index} 条大纲的序号 {item.order_index} 重复")
+                parsed.errors.append(f"Dàn ý thứ {index} bị trùng số thứ tự {item.order_index}")
                 continue
             seen_orders.add(item.order_index)
             parsed.items.append(item)
 
         parsed.items.sort(key=lambda item: item.order_index)
         if not parsed.items and not parsed.errors:
-            parsed.errors.append("文件中没有可导入的大纲")
+            parsed.errors.append("Tệp không có dàn ý nào có thể nhập")
         return parsed
 
     @staticmethod
@@ -170,7 +170,7 @@ class OutlineTransferService:
         if mode not in {"one-to-one", "one-to-many"}:
             return None
         return OutlineSourceProject(
-            title=str(raw.get("title") or "未知项目"),
+            title=str(raw.get("title") or "Dự án chưa rõ"),
             outline_mode=mode,
         )
 
@@ -178,29 +178,29 @@ class OutlineTransferService:
     def _parse_item(raw: Any, index: int) -> tuple[OutlineTransferItem | None, list[str]]:
         errors: list[str] = []
         if not isinstance(raw, dict):
-            return None, [f"第 {index} 条大纲必须是对象"]
+            return None, [f"Dàn ý thứ {index} phải là đối tượng"]
 
         order_index = raw.get("order_index")
         if isinstance(order_index, bool) or not isinstance(order_index, int) or order_index < 1:
-            errors.append(f"第 {index} 条大纲的 order_index 必须是正整数")
+            errors.append(f"order_index của dàn ý thứ {index} phải là số nguyên dương")
 
         title = raw.get("title")
         if not isinstance(title, str) or not title.strip():
-            errors.append(f"第 {index} 条大纲缺少有效标题")
+            errors.append(f"Dàn ý thứ {index} thiếu tiêu đề hợp lệ")
         elif len(title.strip()) > 200:
-            errors.append(f"第 {index} 条大纲标题不能超过 200 个字符")
+            errors.append(f"Tiêu đề dàn ý thứ {index} không được vượt quá 200 ký tự")
 
         content = raw.get("content", "")
         if content is None:
             content = ""
         elif not isinstance(content, str):
-            errors.append(f"第 {index} 条大纲的 content 必须是字符串")
+            errors.append(f"content của dàn ý thứ {index} phải là chuỗi")
 
         structure = raw.get("structure")
         if isinstance(structure, (dict, list)):
             structure = json.dumps(structure, ensure_ascii=False)
         elif structure is not None and not isinstance(structure, str):
-            errors.append(f"第 {index} 条大纲的 structure 必须是字符串、对象或 null")
+            errors.append(f"structure của dàn ý thứ {index} phải là chuỗi, đối tượng hoặc null")
 
         if errors:
             return None, errors
@@ -251,7 +251,7 @@ class OutlineTransferService:
 
         if parsed.source_project and parsed.source_project.outline_mode != project.outline_mode:
             warnings.append(
-                "源项目大纲模式与目标项目不同，导入时将按目标项目的模式处理章节联动"
+                "Chế độ dàn ý của dự án nguồn khác dự án đích; khi nhập sẽ xử lý liên kết chương theo chế độ của dự án đích"
             )
 
         result = await db.execute(
@@ -283,13 +283,13 @@ class OutlineTransferService:
                     chapter = chapters_by_number.get(item.order_index)
                     if existing_outline is None and chapter is not None:
                         errors.append(
-                            f"序号 {item.order_index} 已存在章节但没有对应大纲，无法按序号合并"
+                            f"Số thứ tự {item.order_index} đã có chương nhưng không có dàn ý tương ứng, không thể gộp theo số thứ tự"
                         )
                     elif chapter is None:
                         will_create_chapters += 1
 
         if mode == "append" and parsed.items:
-            warnings.append("追加模式会保留文件内相对顺序，并从当前末尾重新编号")
+            warnings.append("Chế độ thêm sẽ giữ thứ tự tương đối trong tệp và đánh số lại từ cuối hiện tại")
 
         return OutlineImportPreviewResponse(
             valid=not errors,
@@ -318,7 +318,7 @@ class OutlineTransferService:
     ) -> OutlineImportResult:
         preview = await cls.preview_import(parsed, project, mode, db)
         if not preview.valid:
-            raise ValueError("；".join(preview.errors))
+            raise ValueError("; ".join(preview.errors))
 
         details: list[OutlineImportDetail] = []
         imported = 0
@@ -432,7 +432,7 @@ class OutlineTransferService:
 
         return OutlineImportResult(
             success=True,
-            message=f"导入完成：新增 {imported} 条，更新 {updated} 条",
+            message=f"Nhập hoàn tất: thêm mới {imported}, cập nhật {updated}",
             mode=mode,
             imported=imported,
             updated=updated,

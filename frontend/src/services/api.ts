@@ -102,7 +102,7 @@ api.interceptors.response.use(
     return response.data;
   },
   (error) => {
-    let errorMessage = '请求失败';
+    let errorMessage = 'Yêu cầu thất bại';
 
     if (error.response) {
       const status = error.response.status;
@@ -110,19 +110,19 @@ api.interceptors.response.use(
 
       switch (status) {
         case 400:
-          errorMessage = data?.detail || '请求参数错误';
+          errorMessage = data?.detail || 'Tham số yêu cầu không hợp lệ';
           break;
         case 401: {
           const backendDetail = data?.detail || data?.message;
           const unauthenticatedDetails = [
-            '未登录',
-            '需要登录',
-            '未登录或用户ID缺失',
-            '未登录，无法刷新会话',
+            'Chưa đăng nhập',
+            'Cần đăng nhập',
+            'Chưa đăng nhập hoặc thiếu ID người dùng',
+            'Chưa đăng nhập, không thể làm mới phiên',
           ];
           const isUnauthenticated = unauthenticatedDetails.includes(backendDetail);
 
-          errorMessage = backendDetail || '登录状态已失效，请重新登录';
+          errorMessage = backendDetail || 'Phiên đăng nhập đã hết hiệu lực, vui lòng đăng nhập lại';
 
           if (isUnauthenticated && window.location.pathname !== '/login') {
             window.location.href = '/login';
@@ -130,30 +130,30 @@ api.interceptors.response.use(
           break;
         }
         case 403:
-          errorMessage = data?.detail || '没有权限访问';
+          errorMessage = data?.detail || 'Không có quyền truy cập';
           break;
         case 404:
-          errorMessage = data?.detail || '请求的资源不存在';
+          errorMessage = data?.detail || 'Tài nguyên yêu cầu không tồn tại';
           break;
         case 422:
-          errorMessage = data?.detail || '请求参数验证失败';
+          errorMessage = data?.detail || 'Xác thực tham số yêu cầu thất bại';
           if (data?.errors) {
-            console.error('验证错误详情:', data.errors);
+            console.error('Chi tiết lỗi xác thực:', data.errors);
           }
           break;
         case 500:
-          errorMessage = data?.detail || '服务器内部错误';
+          errorMessage = data?.detail || 'Lỗi máy chủ nội bộ';
           break;
         case 503:
-          errorMessage = '服务暂时不可用，请稍后重试';
+          errorMessage = 'Dịch vụ tạm thời không khả dụng, vui lòng thử lại sau';
           break;
         default:
-          errorMessage = data?.detail || data?.message || `请求失败 (${status})`;
+          errorMessage = data?.detail || data?.message || `Yêu cầu thất bại (${status})`;
       }
     } else if (error.request) {
-      errorMessage = '网络错误，请检查网络连接';
+      errorMessage = 'Lỗi mạng, vui lòng kiểm tra kết nối mạng';
     } else {
-      errorMessage = error.message || '请求失败';
+      errorMessage = error.message || 'Yêu cầu thất bại';
     }
 
     message.error(errorMessage);
@@ -1429,7 +1429,7 @@ export const projectAgentApi = {
       signal,
     });
     if (!response.ok) {
-      let detail = `请求失败 (${response.status})`;
+      let detail = `Yêu cầu thất bại (${response.status})`;
       try {
         const body = await response.json();
         detail = body.detail || detail;
@@ -1438,7 +1438,7 @@ export const projectAgentApi = {
       }
       throw new Error(detail);
     }
-    if (!response.body) throw new Error('无法读取木木创作助手响应流');
+    if (!response.body) throw new Error('Không thể đọc luồng phản hồi của Trợ lý sáng tác MuMu');
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
@@ -1464,8 +1464,8 @@ export const projectAgentApi = {
         else if (event.type === 'final_done') callbacks.onFinalDone?.(event.data);
         else if (event.type === 'result') callbacks.onResult?.(event.data);
         else if (event.type === 'error') {
-          callbacks.onError?.(event.error || '木木创作助手执行失败');
-          throw new Error(event.error || '木木创作助手执行失败');
+          callbacks.onError?.(event.error || 'Trợ lý sáng tác MuMu thực thi thất bại');
+          throw new Error(event.error || 'Trợ lý sáng tác MuMu thực thi thất bại');
         }
       }
     }

@@ -30,7 +30,7 @@ from app.logger import get_logger, safe_preview
 from app.api.settings import get_user_ai_service
 from app.api.common import verify_project_access
 
-router = APIRouter(prefix="/organizations", tags=["组织管理"])
+router = APIRouter(prefix="/organizations", tags=["Quản lý tổ chức"])
 logger = get_logger(__name__)
 
 
@@ -44,7 +44,7 @@ class OrganizationGenerateRequest(BaseModel):
     enable_mcp: bool = Field(True, description="是否启用MCP工具增强（搜索组织架构参考）")
 
 
-@router.get("/project/{project_id}", response_model=List[OrganizationDetailResponse], summary="获取项目的所有组织")
+@router.get("/project/{project_id}", response_model=List[OrganizationDetailResponse], summary="Lấy tất cả tổ chức của dự án")
 async def get_project_organizations(
     project_id: str,
     request: Request,
@@ -90,7 +90,7 @@ async def get_project_organizations(
     return org_list
 
 
-@router.get("/{org_id}", response_model=OrganizationResponse, summary="获取组织详情")
+@router.get("/{org_id}", response_model=OrganizationResponse, summary="Lấy chi tiết tổ chức")
 async def get_organization(
     org_id: str,
     request: Request,
@@ -103,7 +103,7 @@ async def get_organization(
     org = result.scalar_one_or_none()
     
     if not org:
-        raise HTTPException(status_code=404, detail="组织不存在")
+        raise HTTPException(status_code=404, detail="Tổ chức không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -112,7 +112,7 @@ async def get_organization(
     return org
 
 
-@router.post("", response_model=OrganizationResponse, summary="创建组织")
+@router.post("", response_model=OrganizationResponse, summary="Tạo tổ chức")
 async def create_organization(
     organization: OrganizationCreate,
     request: Request,
@@ -135,16 +135,16 @@ async def create_organization(
     char = char_result.scalar_one_or_none()
     
     if not char:
-        raise HTTPException(status_code=404, detail="关联的角色不存在")
+        raise HTTPException(status_code=404, detail="Nhân vật liên kết không tồn tại")
     if not char.is_organization:
-        raise HTTPException(status_code=400, detail="关联的角色不是组织类型")
+        raise HTTPException(status_code=400, detail="Nhân vật liên kết không phải loại tổ chức")
     
     # 检查是否已存在
     existing = await db.execute(
         select(Organization).where(Organization.character_id == organization.character_id)
     )
     if existing.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="该角色已有组织详情记录")
+        raise HTTPException(status_code=400, detail="Nhân vật này đã có bản ghi chi tiết tổ chức")
     
     # 创建组织
     db_org = Organization(**organization.model_dump())
@@ -156,7 +156,7 @@ async def create_organization(
     return db_org
 
 
-@router.put("/{org_id}", response_model=OrganizationResponse, summary="更新组织")
+@router.put("/{org_id}", response_model=OrganizationResponse, summary="Cập nhật tổ chức")
 async def update_organization(
     org_id: str,
     organization: OrganizationUpdate,
@@ -170,7 +170,7 @@ async def update_organization(
     db_org = result.scalar_one_or_none()
     
     if not db_org:
-        raise HTTPException(status_code=404, detail="组织不存在")
+        raise HTTPException(status_code=404, detail="Tổ chức không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -188,7 +188,7 @@ async def update_organization(
     return db_org
 
 
-@router.delete("/{org_id}", summary="删除组织")
+@router.delete("/{org_id}", summary="Xóa tổ chức")
 async def delete_organization(
     org_id: str,
     request: Request,
@@ -201,7 +201,7 @@ async def delete_organization(
     db_org = result.scalar_one_or_none()
     
     if not db_org:
-        raise HTTPException(status_code=404, detail="组织不存在")
+        raise HTTPException(status_code=404, detail="Tổ chức không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -211,12 +211,12 @@ async def delete_organization(
     await db.commit()
     
     logger.info(f"删除组织成功：{org_id}")
-    return {"message": "组织删除成功", "id": org_id}
+    return {"message": "Xóa tổ chức thành công", "id": org_id}
 
 
 # ============ 组织成员管理 ============
 
-@router.get("/{org_id}/members", response_model=List[OrganizationMemberDetailResponse], summary="获取组织成员")
+@router.get("/{org_id}/members", response_model=List[OrganizationMemberDetailResponse], summary="Lấy thành viên tổ chức")
 async def get_organization_members(
     org_id: str,
     request: Request,
@@ -233,7 +233,7 @@ async def get_organization_members(
     )
     org = org_result.scalar_one_or_none()
     if not org:
-        raise HTTPException(status_code=404, detail="组织不存在")
+        raise HTTPException(status_code=404, detail="Tổ chức không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -274,7 +274,7 @@ async def get_organization_members(
     return member_list
 
 
-@router.post("/{org_id}/members", response_model=OrganizationMemberResponse, summary="添加组织成员")
+@router.post("/{org_id}/members", response_model=OrganizationMemberResponse, summary="Thêm thành viên tổ chức")
 async def add_organization_member(
     org_id: str,
     member: OrganizationMemberCreate,
@@ -293,7 +293,7 @@ async def add_organization_member(
     )
     org = org_result.scalar_one_or_none()
     if not org:
-        raise HTTPException(status_code=404, detail="组织不存在")
+        raise HTTPException(status_code=404, detail="Tổ chức không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -305,9 +305,9 @@ async def add_organization_member(
     )
     char = char_result.scalar_one_or_none()
     if not char:
-        raise HTTPException(status_code=404, detail="角色不存在")
+        raise HTTPException(status_code=404, detail="Nhân vật không tồn tại")
     if char.is_organization:
-        raise HTTPException(status_code=400, detail="不能将组织添加为成员")
+        raise HTTPException(status_code=400, detail="Không thể thêm tổ chức làm thành viên")
     
     # 检查是否已存在
     existing = await db.execute(
@@ -319,7 +319,7 @@ async def add_organization_member(
         )
     )
     if existing.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="该角色已在组织中")
+        raise HTTPException(status_code=400, detail="Nhân vật này đã ở trong tổ chức")
     
     # 创建成员关系
     db_member = OrganizationMember(
@@ -339,7 +339,7 @@ async def add_organization_member(
     return db_member
 
 
-@router.put("/members/{member_id}", response_model=OrganizationMemberResponse, summary="更新成员信息")
+@router.put("/members/{member_id}", response_model=OrganizationMemberResponse, summary="Cập nhật thông tin thành viên")
 async def update_organization_member(
     member_id: str,
     member: OrganizationMemberUpdate,
@@ -353,7 +353,7 @@ async def update_organization_member(
     db_member = result.scalar_one_or_none()
     
     if not db_member:
-        raise HTTPException(status_code=404, detail="成员记录不存在")
+        raise HTTPException(status_code=404, detail="Bản ghi thành viên không tồn tại")
     
     # 通过成员所属的组织验证用户权限
     org_result = await db.execute(
@@ -375,7 +375,7 @@ async def update_organization_member(
     return db_member
 
 
-@router.delete("/members/{member_id}", summary="移除组织成员")
+@router.delete("/members/{member_id}", summary="Gỡ thành viên tổ chức")
 async def remove_organization_member(
     member_id: str,
     request: Request,
@@ -392,7 +392,7 @@ async def remove_organization_member(
     db_member = result.scalar_one_or_none()
     
     if not db_member:
-        raise HTTPException(status_code=404, detail="成员记录不存在")
+        raise HTTPException(status_code=404, detail="Bản ghi thành viên không tồn tại")
     
     # 更新组织成员计数
     org_result = await db.execute(
@@ -409,9 +409,9 @@ async def remove_organization_member(
     await db.commit()
     
     logger.info(f"移除成员成功：{member_id}")
-    return {"message": "成员移除成功", "id": member_id}
+    return {"message": "Gỡ thành viên thành công", "id": member_id}
 
-@router.post("/generate-stream", summary="AI生成组织（流式）")
+@router.post("/generate-stream", summary="AI tạo tổ chức (streaming)")
 async def generate_organization_stream(
     gen_request: OrganizationGenerateRequest,
     http_request: Request,
@@ -424,7 +424,7 @@ async def generate_organization_stream(
     通过Server-Sent Events返回实时进度信息
     """
     async def generate() -> AsyncGenerator[str, None]:
-        tracker = WizardProgressTracker("组织")
+        tracker = WizardProgressTracker("Tổ chức")
         try:
             # 验证用户权限和项目是否存在
             user_id = getattr(http_request.state, 'user_id', None)
@@ -433,7 +433,7 @@ async def generate_organization_stream(
             yield await tracker.start()
             
             # 获取已存在的角色和组织列表
-            yield await tracker.loading("获取项目上下文...", 0.3)
+            yield await tracker.loading("Đang lấy ngữ cảnh dự án...", 0.3)
             
             existing_chars_result = await db.execute(
                 select(Character)
@@ -450,38 +450,38 @@ async def generate_organization_stream(
             if existing_characters:
                 for c in existing_characters[:10]:
                     if c.is_organization:
-                        organization_list.append(f"- {c.name} [{c.organization_type or '组织'}]")
+                        organization_list.append(f"- {c.name} [{c.organization_type or 'tổ chức'}]")
                     else:
-                        character_list.append(f"- {c.name}（{c.role_type or '未知'}）")
+                        character_list.append(f"- {c.name} ({c.role_type or 'chưa rõ'})")
                 
                 if character_list:
-                    existing_info += "\n已有角色：\n" + "\n".join(character_list)
+                    existing_info += "\nNhân vật hiện có:\n" + "\n".join(character_list)
                 if organization_list:
-                    existing_info += "\n\n已有组织：\n" + "\n".join(organization_list)
+                    existing_info += "\n\nTổ chức hiện có:\n" + "\n".join(organization_list)
             
             # 构建项目上下文
             project_context = f"""
-项目信息：
-- 书名：{project.title}
-- 主题：{project.theme or '未设定'}
-- 类型：{project.genre or '未设定'}
-- 时间背景：{project.world_time_period or '未设定'}
-- 地理位置：{project.world_location or '未设定'}
-- 氛围基调：{project.world_atmosphere or '未设定'}
-- 世界规则：{project.world_rules or '未设定'}
+Thông tin dự án:
+- Tên sách: {project.title}
+- Chủ đề: {project.theme or 'chưa thiết lập'}
+- Thể loại: {project.genre or 'chưa thiết lập'}
+- Bối cảnh thời gian: {project.world_time_period or 'chưa thiết lập'}
+- Vị trí địa lý: {project.world_location or 'chưa thiết lập'}
+- Không khí/giọng điệu: {project.world_atmosphere or 'chưa thiết lập'}
+- Quy tắc thế giới: {project.world_rules or 'chưa thiết lập'}
 {existing_info}
 """
             
             user_input = f"""
-用户要求：
-- 组织名称：{gen_request.name or '请AI生成'}
-- 组织类型：{gen_request.organization_type or '请AI根据世界观决定'}
-- 背景设定：{gen_request.background or '无特殊要求'}
-- 其他要求：{gen_request.requirements or '无'}
+Yêu cầu của người dùng:
+- Tên tổ chức: {gen_request.name or 'Hãy để AI tạo'}
+- Loại tổ chức: {gen_request.organization_type or 'Hãy để AI quyết định theo bối cảnh thế giới'}
+- Thiết lập nền: {gen_request.background or 'không có yêu cầu đặc biệt'}
+- Yêu cầu khác: {gen_request.requirements or 'không'}
 """
             
-            yield await tracker.loading("项目上下文准备完成", 0.7)
-            yield await tracker.preparing("构建AI提示词...")
+            yield await tracker.loading("Chuẩn bị ngữ cảnh dự án hoàn tất", 0.7)
+            yield await tracker.preparing("Đang dựng prompt AI...")
             
             # 获取自定义提示词模板
             template = await PromptService.get_template("SINGLE_ORGANIZATION_GENERATION", user_id, db)
@@ -492,7 +492,7 @@ async def generate_organization_stream(
                 user_input=user_input
             )
             
-            yield await tracker.generating(0, max(3000, len(prompt) * 8), "调用AI服务生成组织...")
+            yield await tracker.generating(0, max(3000, len(prompt) * 8), "Đang gọi dịch vụ AI tạo tổ chức...")
             logger.info(f"🎯 开始为项目 {gen_request.project_id} 生成组织（SSE流式）")
             
             try:
@@ -526,14 +526,14 @@ async def generate_organization_stream(
                         
             except Exception as ai_error:
                 logger.error(f"❌ AI服务调用异常：{str(ai_error)}")
-                yield await tracker.error(f"AI服务调用失败：{str(ai_error)}")
+                yield await tracker.error(f"Gọi dịch vụ AI thất bại: {str(ai_error)}")
                 return
             
             if not ai_content or not ai_content.strip():
-                yield await tracker.error("AI服务返回空响应")
+                yield await tracker.error("Dịch vụ AI trả về phản hồi trống")
                 return
             
-            yield await tracker.parsing("解析AI响应...", 0.5)
+            yield await tracker.parsing("Đang phân tích phản hồi AI...", 0.5)
             
             # ✅ 使用统一的 JSON 清洗方法
             try:
@@ -543,15 +543,15 @@ async def generate_organization_stream(
             except json.JSONDecodeError as e:
                 logger.error(f"❌ 组织JSON解析失败: {e}")
                 logger.debug(f"   原始响应预览: {safe_preview(ai_content, 200)}")
-                yield await tracker.error(f"AI返回的内容无法解析为JSON：{str(e)}")
+                yield await tracker.error(f"Nội dung AI trả về không thể phân tích thành JSON: {str(e)}")
                 return
             
-            yield await tracker.saving("创建组织记录...", 0.3)
+            yield await tracker.saving("Đang tạo bản ghi tổ chức...", 0.3)
             
             # 创建角色记录（组织也是角色的一种）
             character = Character(
                 project_id=gen_request.project_id,
-                name=organization_data.get("name", gen_request.name or "未命名组织"),
+                name=organization_data.get("name", gen_request.name or "Tổ chức chưa đặt tên"),
                 is_organization=True,
                 role_type="supporting",
                 personality=organization_data.get("personality", ""),
@@ -569,7 +569,7 @@ async def generate_organization_stream(
             
             logger.info(f"✅ 组织角色创建成功：{character.name} (ID: {character.id})")
             
-            yield await tracker.saving("创建组织详情...", 0.6)
+            yield await tracker.saving("Đang tạo chi tiết tổ chức...", 0.6)
             
             # 自动创建Organization详情记录
             organization = Organization(
@@ -586,7 +586,7 @@ async def generate_organization_stream(
             
             logger.info(f"✅ 组织详情创建成功：{character.name} (Org ID: {organization.id})")
             
-            yield await tracker.saving("保存生成历史...", 0.9)
+            yield await tracker.saving("Đang lưu lịch sử tạo...", 0.9)
             
             # 记录生成历史
             history = GenerationHistory(
@@ -602,7 +602,7 @@ async def generate_organization_stream(
             
             logger.info(f"🎉 成功生成组织: {character.name}")
             
-            yield await tracker.complete("组织生成完成！")
+            yield await tracker.complete("Tạo tổ chức hoàn tất!")
             
             # 发送结果数据
             yield await tracker.result({
@@ -621,6 +621,6 @@ async def generate_organization_stream(
             yield await tracker.error(he.detail, he.status_code)
         except Exception as e:
             logger.error(f"生成组织失败: {str(e)}")
-            yield await tracker.error(f"生成组织失败: {str(e)}")
+            yield await tracker.error(f"Tạo tổ chức thất bại: {str(e)}")
     
     return create_sse_response(generate())

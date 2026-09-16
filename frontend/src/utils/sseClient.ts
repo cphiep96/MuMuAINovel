@@ -42,17 +42,17 @@ export class SSEClient {
             const message: SSEMessage = JSON.parse(event.data);
             this.handleMessage(message, resolve, reject);
           } catch (error) {
-            console.error('解析SSE消息失败:', error);
+            console.error('Phân tích thông điệp SSE thất bại:', error);
           }
         };
 
         this.eventSource.onerror = (error) => {
-          console.error('SSE连接错误:', error);
+          console.error('Lỗi kết nối SSE:', error);
           if (this.options.onConnectionError) {
             this.options.onConnectionError(error);
           }
           this.close();
-          reject(new Error('SSE连接失败'));
+          reject(new Error('Kết nối SSE thất bại'));
         };
 
       } catch (error) {
@@ -91,10 +91,10 @@ export class SSEClient {
 
       case 'error':
         if (this.options.onError) {
-          this.options.onError(message.error || '未知错误', message.code);
+          this.options.onError(message.error || 'Lỗi không xác định', message.code);
         }
         this.close();
-        reject(new Error(message.error || '未知错误'));
+        reject(new Error(message.error || 'Lỗi không xác định'));
         break;
 
       case 'done':
@@ -147,7 +147,7 @@ export class SSEPostClient {
   private async connectInternal(resolve: (value: any) => void, reject: (reason?: any) => void) {
       try {
         if (this.options.signal?.aborted) {
-          throw new DOMException('请求已取消', 'AbortError');
+          throw new DOMException('Yêu cầu đã bị hủy', 'AbortError');
         }
 
         this.abortController = new AbortController();
@@ -175,7 +175,7 @@ export class SSEPostClient {
         const decoder = new TextDecoder();
 
         if (!reader) {
-          throw new Error('无法获取响应流');
+          throw new Error('Không thể lấy luồng phản hồi');
         }
 
         let buffer = '';
@@ -207,19 +207,19 @@ export class SSEPostClient {
                 await this.handleMessage(message, resolve, reject);
               }
             } catch (error) {
-              console.error('解析SSE消息失败:', error, line);
+              console.error('Phân tích thông điệp SSE thất bại:', error, line);
             }
           }
         }
 
       } catch (error: any) {
         if (error.name === 'AbortError') {
-          console.log('请求已取消');
+          console.log('Yêu cầu đã bị hủy');
           reject(error);
         } else {
-          console.error('SSE POST请求失败:', error);
+          console.error('Yêu cầu POST SSE thất bại:', error);
           if (this.options.onError) {
-            this.options.onError(error.message || '请求失败');
+            this.options.onError(error.message || 'Yêu cầu thất bại');
           }
           reject(error);
         }
@@ -262,9 +262,9 @@ export class SSEPostClient {
 
       case 'error':
         if (this.options.onError) {
-          this.options.onError(message.error || '未知错误', message.code);
+          this.options.onError(message.error || 'Lỗi không xác định', message.code);
         }
-        reject(new Error(message.error || '未知错误'));
+        reject(new Error(message.error || 'Lỗi không xác định'));
         break;
 
       case 'done':

@@ -48,7 +48,7 @@ export default function FloatingIndexPanel({
 
   return (
     <Drawer
-      title="章节目录"
+      title="Mục lục chương"
       placement="right"
       onClose={onClose}
       open={visible}
@@ -59,7 +59,7 @@ export default function FloatingIndexPanel({
     >
       <div style={{ padding: '16px', borderBottom: `1px solid ${token.colorBorderSecondary}` }}>
         <Input
-          placeholder="搜索章节标题"
+          placeholder="Tìm tiêu đề chương"
           prefix={<SearchOutlined />}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -83,7 +83,7 @@ export default function FloatingIndexPanel({
                 renderItem={chapter => (
                   <List.Item style={{ paddingLeft: 16, borderBlockStart: 'none' }}>
                     <Link onClick={() => handleChapterClick(chapter.id)}>
-                      {`第${chapter.chapter_number}章: ${chapter.title}`}
+                      {`Chương ${chapter.chapter_number}: ${chapter.title}`}
                     </Link>
                   </List.Item>
                 )}
@@ -94,7 +94,7 @@ export default function FloatingIndexPanel({
           style={{ height: 'calc(100vh - 120px)', overflowY: 'auto' }}
         />
       ) : (
-        <Empty description="没有找到匹配的章节" style={{ marginTop: 48 }} />
+        <Empty description="Không tìm thấy chương khớp" style={{ marginTop: 48 }} />
       )}
     </Drawer>
   );

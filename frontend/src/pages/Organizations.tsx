@@ -80,7 +80,7 @@ export default function Organizations() {
         loadMembers(res.data[0].id);
       }
     } catch (error) {
-      message.error('加载组织列表失败');
+      message.error('Tải danh sách tổ chức thất bại');
       console.error(error);
     } finally {
       setLoading(false);
@@ -93,7 +93,7 @@ export default function Organizations() {
       const res = await axios.get(`/api/characters?project_id=${projectId}`);
       setCharacters(res.data.items || []);
     } catch (error) {
-      console.error('加载角色列表失败', error);
+      console.error('Tải danh sách nhân vật thất bại', error);
     }
   }, [projectId]);
 
@@ -123,7 +123,7 @@ export default function Organizations() {
       const res = await axios.get(`/api/organizations/${orgId}/members`);
       setMembers(res.data);
     } catch (error) {
-      message.error('加载成员列表失败');
+      message.error('Tải danh sách thành viên thất bại');
       console.error(error);
     }
   };
@@ -138,35 +138,35 @@ export default function Organizations() {
 
     try {
       await axios.post(`/api/organizations/${selectedOrg.id}/members`, values);
-      message.success('成员添加成功');
+      message.success('Thêm thành viên thành công');
       setIsAddMemberModalOpen(false);
       form.resetFields();
       loadMembers(selectedOrg.id);
       loadOrganizations(); // 刷新成员计数
     } catch (error) {
-      message.error('添加成员失败');
+      message.error('Thêm thành viên thất bại');
       console.error(error);
     }
   };
 
   const handleRemoveMember = async (memberId: string) => {
     modal.confirm({
-      title: '确认移除',
-      content: '确定要移除该成员吗？',
+      title: 'Xác nhận gỡ',
+      content: 'Xác nhận gỡ thành viên này?',
       centered: true,
-      okText: '移除',
+      okText: 'Gỡ',
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: 'Hủy',
       onOk: async () => {
         try {
           await axios.delete(`/api/organizations/members/${memberId}`);
-          message.success('成员移除成功');
+          message.success('Gỡ thành viên thành công');
           if (selectedOrg) {
             loadMembers(selectedOrg.id);
             loadOrganizations(); // 刷新成员计数
           }
         } catch (error) {
-          message.error('移除失败');
+          message.error('Gỡ thất bại');
           console.error(error);
         }
       }
@@ -192,7 +192,7 @@ export default function Organizations() {
 
     try {
       await axios.put(`/api/organizations/members/${editingMember.id}`, values);
-      message.success('成员信息更新成功');
+      message.success('Cập nhật thông tin thành viên thành công');
       setIsEditMemberModalOpen(false);
       editMemberForm.resetFields();
       setEditingMember(null);
@@ -200,7 +200,7 @@ export default function Organizations() {
         loadMembers(selectedOrg.id);
       }
     } catch (error) {
-      message.error('更新失败');
+      message.error('Cập nhật thất bại');
       console.error(error);
     }
   };
@@ -217,17 +217,17 @@ export default function Organizations() {
 
   const getStatusText = (status: string) => {
     const texts: Record<string, string> = {
-      active: '在职',
-      retired: '退休',
-      expelled: '除名',
-      deceased: '已故'
+      active: 'Đang tại chức',
+      retired: 'Nghỉ hưu',
+      expelled: 'Bị khai trừ',
+      deceased: 'Đã mất'
     };
     return texts[status] || status;
   };
 
   const memberColumns = [
     {
-      title: '姓名',
+      title: 'Họ tên',
       dataIndex: 'character_name',
       key: 'name',
       render: (name: string) => (
@@ -239,16 +239,16 @@ export default function Organizations() {
       width: isMobile ? 100 : undefined,
     },
     {
-      title: '职位',
+      title: 'Chức vụ',
       dataIndex: 'position',
       key: 'position',
       render: (position: string, record: OrganizationMember) => (
-        <Tag color="blue">{position} {!isMobile && `(级别 ${record.rank})`}</Tag>
+        <Tag color="blue">{position} {!isMobile && `(cấp ${record.rank})`}</Tag>
       ),
       width: isMobile ? 120 : undefined,
     },
     {
-      title: '忠诚度',
+      title: 'Độ trung thành',
       dataIndex: 'loyalty',
       key: 'loyalty',
       render: (loyalty: number) => (
@@ -259,14 +259,14 @@ export default function Organizations() {
       width: isMobile ? 80 : undefined,
     },
     {
-      title: '贡献度',
+      title: 'Mức đóng góp',
       dataIndex: 'contribution',
       key: 'contribution',
       render: (contribution: number) => `${contribution}%`,
       width: isMobile ? 80 : undefined,
     },
     {
-      title: '状态',
+      title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => (
@@ -275,14 +275,14 @@ export default function Organizations() {
       width: isMobile ? 80 : undefined,
     },
     {
-      title: '加入时间',
+      title: 'Thời gian gia nhập',
       dataIndex: 'joined_at',
       key: 'joined_at',
       render: (time: string) => time || '-',
       width: isMobile ? 120 : undefined,
     },
     {
-      title: '操作',
+      title: 'Thao tác',
       key: 'action',
       render: (_: unknown, record: OrganizationMember) => (
         <Space size={isMobile ? 0 : 'small'}>
@@ -293,7 +293,7 @@ export default function Organizations() {
             onClick={() => handleEditMember(record)}
             style={isMobile ? { padding: '4px' } : undefined}
           >
-            {isMobile ? '' : '编辑'}
+            {isMobile ? '' : 'Chỉnh sửa'}
           </Button>
           <Button
             type="link"
@@ -303,7 +303,7 @@ export default function Organizations() {
             onClick={() => handleRemoveMember(record.id)}
             style={isMobile ? { padding: '4px' } : undefined}
           >
-            {isMobile ? '' : '移除'}
+            {isMobile ? '' : 'Gỡ'}
           </Button>
         </Space>
       ),
@@ -330,7 +330,7 @@ export default function Organizations() {
         }}>
           <h2 style={{ margin: 0, fontSize: 24 }}>
             <BankOutlined style={{ marginRight: 8 }} />
-            组织管理
+            Quản lý tổ chức
           </h2>
         </div>
       )}
@@ -342,17 +342,17 @@ export default function Organizations() {
         flexDirection: isMobile ? 'column' : 'row',
         overflow: 'hidden'
       }}>
-        {/* 左侧组织列表 - 桌面端 */}
+        {/* 左侧组织Danh sách - 桌面端 */}
         {!isMobile && (
         <Card
-          title={`组织列表 (${organizations.length})`}
+          title={`Danh sách tổ chức (${organizations.length})`}
           style={{ width: 300, height: '100%', overflow: 'hidden' }}
           bodyStyle={{ padding: 0, height: 'calc(100% - 57px)', overflow: 'auto' }}
           loading={loading}
         >
           {organizations.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 20px', color: token.colorTextTertiary }}>
-              暂无组织
+              Chưa có tổ chức
             </div>
           ) : (
             <Space direction="vertical" style={{ width: '100%', padding: '12px' }}>
@@ -372,7 +372,7 @@ export default function Organizations() {
                     <strong style={{ fontSize: 14 }}>{org.name}</strong>
                     <Tag color="blue">{org.type}</Tag>
                     <div style={{ fontSize: '12px', color: token.colorTextSecondary }}>
-                      成员: {org.member_count} | 势力: {org.power_level}
+                      Thành viên: {org.member_count} | Thế lực: {org.power_level}
                     </div>
                   </Space>
                 </Card>
@@ -382,10 +382,10 @@ export default function Organizations() {
         </Card>
         )}
 
-        {/* 移动端组织列表抽屉 */}
+        {/* 移动端组织Danh sách抽屉 */}
       {isMobile && (
         <Drawer
-          title="组织列表"
+          title="Danh sách tổ chức"
           placement="left"
           onClose={() => setOrgListVisible(false)}
           open={orgListVisible}
@@ -394,7 +394,7 @@ export default function Organizations() {
         >
           {organizations.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 20px', color: token.colorTextTertiary }}>
-              暂无组织
+              Chưa có tổ chức
             </div>
           ) : (
             <Space direction="vertical" style={{ width: '100%', padding: '12px' }}>
@@ -417,7 +417,7 @@ export default function Organizations() {
                     <strong style={{ fontSize: 14 }}>{org.name}</strong>
                     <Tag color="blue">{org.type}</Tag>
                     <div style={{ fontSize: '12px', color: token.colorTextSecondary }}>
-                      成员: {org.member_count} | 势力: {org.power_level}
+                      Thành viên: {org.member_count} | Thế lực: {org.power_level}
                     </div>
                   </Space>
                 </Card>
@@ -439,22 +439,22 @@ export default function Organizations() {
                   onClick={() => setOrgListVisible(true)}
                   style={{ marginBottom: 20 }}
                 >
-                  选择组织
+                  Chọn tổ chức
                 </Button>
               )}
-              <div>请选择一个组织查看详情</div>
+              <div>Vui lòng chọn một tổ chức để xem chi tiết</div>
             </div>
           </Card>
         ) : (
           <>
-            {/* 工具栏 - 移动端显示项目标题和组织列表按钮 */}
+            {/* 工具栏 - 移动端显示项目标题和组织Danh sách按钮 */}
             {isMobile && (
               <Card size="small" style={{ marginBottom: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Space>
                     <BankOutlined />
                     <span style={{ fontSize: 14, fontWeight: 600 }}>
-                      组织管理
+                      Quản lý tổ chức
                     </span>
                     <Tag color="blue">{currentProject?.title}</Tag>
                   </Space>
@@ -463,7 +463,7 @@ export default function Organizations() {
                     onClick={() => setOrgListVisible(true)}
                     size="small"
                   >
-                    列表
+                    Danh sách
                   </Button>
                 </div>
               </Card>
@@ -482,7 +482,7 @@ export default function Organizations() {
               >
                 <Space direction="vertical" style={{ width: '100%' }} size={isMobile ? 'middle' : 'large'}>
                 <Card
-                  title="组织详情"
+                  title="Chi tiết tổ chức"
                   size="small"
                   extra={
                     <Button
@@ -499,42 +499,42 @@ export default function Organizations() {
                         setIsEditOrgModalOpen(true);
                       }}
                     >
-                      编辑
+                      Chỉnh sửa
                     </Button>
                   }
                 >
                   <Descriptions column={isMobile ? 1 : 2} size="small">
-                    <Descriptions.Item label="组织名称">{selectedOrg.name}</Descriptions.Item>
-                    <Descriptions.Item label="类型">{selectedOrg.type}</Descriptions.Item>
-                    <Descriptions.Item label="成员数量">{selectedOrg.member_count}</Descriptions.Item>
-                    <Descriptions.Item label="势力等级">
+                    <Descriptions.Item label="Tên tổ chức">{selectedOrg.name}</Descriptions.Item>
+                    <Descriptions.Item label="Loại">{selectedOrg.type}</Descriptions.Item>
+                    <Descriptions.Item label="Số thành viên">{selectedOrg.member_count}</Descriptions.Item>
+                    <Descriptions.Item label="Cấp thế lực">
                       <Tag color={selectedOrg.power_level >= 70 ? 'red' : selectedOrg.power_level >= 50 ? 'orange' : 'default'}>
                         {selectedOrg.power_level}
                       </Tag>
                     </Descriptions.Item>
                     {selectedOrg.location && (
-                      <Descriptions.Item label="所在地" span={isMobile ? 1 : 2}>
+                      <Descriptions.Item label="Địa điểm" span={isMobile ? 1 : 2}>
                         {selectedOrg.location}
                       </Descriptions.Item>
                     )}
                     {selectedOrg.color && (
-                      <Descriptions.Item label="代表颜色">
+                      <Descriptions.Item label="Màu đại diện">
                         {selectedOrg.color}
                       </Descriptions.Item>
                     )}
                     {selectedOrg.motto && (
-                      <Descriptions.Item label="格言/口号" span={2}>
+                      <Descriptions.Item label="Châm ngôn/khẩu hiệu" span={2}>
                         {selectedOrg.motto}
                       </Descriptions.Item>
                     )}
-                    <Descriptions.Item label="组织目的" span={2}>
+                    <Descriptions.Item label="Mục đích tổ chức" span={2}>
                       {selectedOrg.purpose}
                     </Descriptions.Item>
                   </Descriptions>
                 </Card>
 
                 <Card
-                  title={`组织成员 (${members.length})`}
+                  title={`Thành viên tổ chức (${members.length})`}
                   extra={
                     <Button
                       type="primary"
@@ -543,7 +543,7 @@ export default function Organizations() {
                       onClick={() => setIsAddMemberModalOpen(true)}
                       disabled={availableCharacters.length === 0}
                     >
-                      添加成员
+                      Thêm thành viên
                     </Button>
                   }
                 >
@@ -557,7 +557,7 @@ export default function Organizations() {
                           defaultPageSize: 5,
                           showSizeChanger: true,
                           showQuickJumper: !isMobile,
-                          showTotal: (total) => `共 ${total} 名成员`,
+                          showTotal: (total) => `Tổng ${total} thành viên`,
                           pageSizeOptions: [5, 10, 20],
                           simple: isMobile,
                           position: ['bottomCenter'],
@@ -579,9 +579,9 @@ export default function Organizations() {
         </div>
       </div>
 
-      {/* 添加成员模态框 */}
+      {/* Thêm thành viên模态框 */}
       <Modal
-        title="添加组织成员"
+        title="Thêm thành viên tổ chức"
         open={isAddMemberModalOpen}
         onCancel={() => {
           setIsAddMemberModalOpen(false);
@@ -600,11 +600,11 @@ export default function Organizations() {
         >
           <Form.Item
             name="character_id"
-            label="选择角色"
-            rules={[{ required: true, message: '请选择角色' }]}
+            label="Chọn nhân vật"
+            rules={[{ required: true, message: 'Vui lòng chọn nhân vật' }]}
           >
             <Select
-              placeholder="选择要加入的角色"
+              placeholder="Chọn nhân vật muốn thêm"
               showSearch
               filterOption={(input, option) =>
                 (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
@@ -618,24 +618,24 @@ export default function Organizations() {
 
           <Form.Item
             name="position"
-            label="职位"
-            rules={[{ required: true, message: '请输入职位' }]}
+            label="Chức vụ"
+            rules={[{ required: true, message: 'Vui lòng nhập chức vụ' }]}
           >
-            <Input placeholder="如：掌门、长老、弟子" />
+            <Input placeholder="VD: chưởng môn, trưởng lão, đệ tử" />
           </Form.Item>
 
           <Form.Item
             name="rank"
-            label="职位等级"
+            label="Cấp chức vụ"
             initialValue={5}
-            tooltip="数字越大等级越高"
+            tooltip="Số càng lớn cấp càng cao"
           >
             <InputNumber min={0} max={10} style={{ width: '100%' }} />
           </Form.Item>
 
           <Form.Item
             name="loyalty"
-            label="初始忠诚度"
+            label="Độ trung thành ban đầu"
             initialValue={50}
           >
             <InputNumber min={0} max={100} style={{ width: '100%' }} addonAfter="%" />
@@ -643,37 +643,37 @@ export default function Organizations() {
 
           <Form.Item
             name="status"
-            label="状态"
+            label="Trạng thái"
             initialValue="active"
           >
             <Select>
-              <Select.Option value="active">在职</Select.Option>
-              <Select.Option value="retired">退休</Select.Option>
-              <Select.Option value="expelled">除名</Select.Option>
+              <Select.Option value="active">Đang tại chức</Select.Option>
+              <Select.Option value="retired">Nghỉ hưu</Select.Option>
+              <Select.Option value="expelled">Bị khai trừ</Select.Option>
             </Select>
           </Form.Item>
 
           <Form.Item
             name="joined_at"
-            label="加入时间"
+            label="Thời gian gia nhập"
           >
-            <Input placeholder="如：开山大典时、三年前、建立之初等" />
+            <Input placeholder="VD: lúc khai sơn, 3 năm trước, lúc thành lập..." />
           </Form.Item>
 
           <Form.Item>
             <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-              <Button onClick={() => setIsAddMemberModalOpen(false)}>取消</Button>
+              <Button onClick={() => setIsAddMemberModalOpen(false)}>Hủy</Button>
               <Button type="primary" htmlType="submit">
-                添加
+                Thêm
               </Button>
             </Space>
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* 编辑成员模态框 */}
+      {/* Chỉnh sửa成员模态框 */}
       <Modal
-        title="编辑成员信息"
+        title="Chỉnh sửa thông tin thành viên"
         open={isEditMemberModalOpen}
         onCancel={() => {
           setIsEditMemberModalOpen(false);
@@ -702,58 +702,58 @@ export default function Organizations() {
         >
           <Form.Item
             name="position"
-            label="职位"
-            rules={[{ required: true, message: '请输入职位' }]}
+            label="Chức vụ"
+            rules={[{ required: true, message: 'Vui lòng nhập chức vụ' }]}
           >
-            <Input placeholder="如：掌门、长老、弟子" />
+            <Input placeholder="VD: chưởng môn, trưởng lão, đệ tử" />
           </Form.Item>
 
           <Form.Item
             name="rank"
-            label="职位等级"
-            tooltip="数字越大等级越高"
+            label="Cấp chức vụ"
+            tooltip="Số càng lớn cấp càng cao"
           >
             <InputNumber min={0} max={10} style={{ width: '100%' }} />
           </Form.Item>
 
           <Form.Item
             name="loyalty"
-            label="忠诚度"
+            label="Độ trung thành"
           >
             <InputNumber min={0} max={100} style={{ width: '100%' }} addonAfter="%" />
           </Form.Item>
 
           <Form.Item
             name="contribution"
-            label="贡献度"
+            label="Mức đóng góp"
           >
             <InputNumber min={0} max={100} style={{ width: '100%' }} addonAfter="%" />
           </Form.Item>
 
           <Form.Item
             name="status"
-            label="状态"
+            label="Trạng thái"
           >
             <Select>
-              <Select.Option value="active">在职</Select.Option>
-              <Select.Option value="retired">退休</Select.Option>
-              <Select.Option value="expelled">除名</Select.Option>
-              <Select.Option value="deceased">已故</Select.Option>
+              <Select.Option value="active">Đang tại chức</Select.Option>
+              <Select.Option value="retired">Nghỉ hưu</Select.Option>
+              <Select.Option value="expelled">Bị khai trừ</Select.Option>
+              <Select.Option value="deceased">Đã mất</Select.Option>
             </Select>
           </Form.Item>
 
           <Form.Item
             name="joined_at"
-            label="加入时间"
+            label="Thời gian gia nhập"
           >
-            <Input placeholder="如：开山大典时、三年前、建立之初等" />
+            <Input placeholder="VD: lúc khai sơn, 3 năm trước, lúc thành lập..." />
           </Form.Item>
 
           <Form.Item
             name="notes"
-            label="备注"
+            label="Ghi chú"
           >
-            <Input.TextArea rows={3} placeholder="成员相关的备注信息" />
+            <Input.TextArea rows={3} placeholder="Ghi chú liên quan thành viên" />
           </Form.Item>
 
           <Form.Item>
@@ -763,19 +763,19 @@ export default function Organizations() {
                 editMemberForm.resetFields();
                 setEditingMember(null);
               }}>
-                取消
+                Hủy
               </Button>
               <Button type="primary" htmlType="submit">
-                保存
+                Lưu
               </Button>
             </Space>
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* 编辑组织模态框 */}
+      {/* Chỉnh sửa组织模态框 */}
       <Modal
-        title="编辑组织信息"
+        title="Chỉnh sửa thông tin tổ chức"
         open={isEditOrgModalOpen}
         onCancel={() => {
           setIsEditOrgModalOpen(false);
@@ -794,11 +794,11 @@ export default function Organizations() {
             if (!selectedOrg) return;
             try {
               await axios.put(`/api/organizations/${selectedOrg.id}`, values);
-              message.success('组织信息更新成功');
+              message.success('Cập nhật thông tin tổ chức thành công');
               setIsEditOrgModalOpen(false);
               editOrgForm.resetFields();
 
-              // 重新获取更新后的组织列表
+              // 重新获取更新后的组织Danh sách
               const res = await axios.get(`/api/organizations/project/${projectId}`);
               setOrganizations(res.data);
 
@@ -811,46 +811,46 @@ export default function Organizations() {
               // 刷新全局 store
               await refreshCharacters();
             } catch (error) {
-              message.error('更新失败');
+              message.error('Cập nhật thất bại');
               console.error(error);
             }
           }}
         >
           <Form.Item
             name="power_level"
-            label="势力等级"
-            rules={[{ required: true, message: '请输入势力等级' }]}
-            tooltip="0-100的数值，表示组织的影响力"
+            label="Cấp thế lực"
+            rules={[{ required: true, message: 'Vui lòng nhập cấp thế lực' }]}
+            tooltip="Giá trị 0-100, thể hiện ảnh hưởng của tổ chức"
           >
             <InputNumber min={0} max={100} style={{ width: '100%' }} />
           </Form.Item>
 
           <Form.Item
             name="location"
-            label="所在地"
+            label="Địa điểm"
           >
-            <Input placeholder="组织的主要活动区域或总部位置" />
+            <Input placeholder="Khu vực hoạt động chính hoặc trụ sở tổ chức" />
           </Form.Item>
 
           <Form.Item
             name="motto"
-            label="格言/口号"
+            label="Châm ngôn/khẩu hiệu"
           >
-            <Input placeholder="组织的宗旨、格言或口号" />
+            <Input placeholder="Tôn chỉ, châm ngôn hoặc khẩu hiệu tổ chức" />
           </Form.Item>
 
           <Form.Item
             name="color"
-            label="代表颜色"
+            label="Màu đại diện"
           >
-            <Input placeholder="如：深红色、金色、黑色等" />
+            <Input placeholder="VD: đỏ thẫm, vàng, đen..." />
           </Form.Item>
 
           <Form.Item>
             <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-              <Button onClick={() => setIsEditOrgModalOpen(false)}>取消</Button>
+              <Button onClick={() => setIsEditOrgModalOpen(false)}>Hủy</Button>
               <Button type="primary" htmlType="submit">
-                保存
+                Lưu
               </Button>
             </Space>
           </Form.Item>

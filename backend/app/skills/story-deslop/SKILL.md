@@ -1,9 +1,20 @@
 ---
 name: story-deslop
+display_name: Gọt chữ khử mùi AI
+category: Skill·Chỉnh sửa
 description: |
-  网文去AI味。检测并清除文本中的AI写作痕迹，让文字回归自然、有人味。
-  触发方式：/story-deslop、/去AI味、「去AI味」「去味」「deslop」「这篇太AI了」
+  Gọt mùi AI trong tiểu thuyết mạng. Phát hiện và loại bỏ dấu vết văn do AI viết, đưa câu chữ trở lại tự nhiên và có hơi người.
+  Kích hoạt: /story-deslop, «khử mùi AI», «gọt chữ», «deslop», «bài này quá AI».
+triggers:
+  - /story-deslop
+  - khử mùi AI
+  - gọt chữ
+  - deslop
+  - bài này quá AI
 ---
+
+> **Yêu cầu ngôn ngữ**: nội dung tạo cho người dùng phải viết bằng tiếng Việt tự nhiên.
+
 
 # story-deslop：网文去AI味
 
@@ -224,7 +235,7 @@ AI写作的结尾特征：总想总结、升华、点题。
 
 ---
 
-## 语言
-
-- 用户用中文就用中文回复，用英文就用英文回复
-- 中文回复遵循《中文文案排版指北》
+## Ngôn ngữ đầu ra
+- Ưu tiên trả lời và viết nội dung bằng **tiếng Việt** tự nhiên.
+- Nếu người dùng dùng tiếng Anh thì có thể trả lời bằng tiếng Anh; mặc định dùng tiếng Việt.
+- Không đổi tên kỹ thuật, đường dẫn lệnh slash (`/story-...`) hay tên file tham chiếu.

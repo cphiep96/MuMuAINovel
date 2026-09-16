@@ -32,7 +32,7 @@ const getCachedWordCount = (): number => {
       }
     }
   } catch (error) {
-    console.warn('读取字数缓存失败:', error);
+    console.warn('Đọc cache số chữ thất bại:', error);
   }
   return DEFAULT_WORD_COUNT;
 };
@@ -42,7 +42,7 @@ const setCachedWordCount = (value: number): void => {
   try {
     localStorage.setItem(WORD_COUNT_CACHE_KEY, String(value));
   } catch (error) {
-    console.warn('保存字数缓存失败:', error);
+    console.warn('Lưu cache số chữ thất bại:', error);
   }
 };
 
@@ -87,11 +87,11 @@ export default function Chapters() {
   const [chapterPage, setChapterPage] = useState(1);
   const [chapterPageSize, setChapterPageSize] = useState(20);
 
-  // 阅读器状态
+  // Đọc器状态
   const [readerVisible, setReaderVisible] = useState(false);
   const [readingChapter, setReadingChapter] = useState<Chapter | null>(null);
 
-  // 规划编辑状态
+  // 规划Chỉnh sửa状态
   const [planEditorVisible, setPlanEditorVisible] = useState(false);
   const [editingPlanChapter, setEditingPlanChapter] = useState<Chapter | null>(null);
 
@@ -134,7 +134,7 @@ export default function Chapters() {
   }, []);
 
   // 读取 textarea 原生选区。textarea 的选区不会出现在 window.getSelection() 中，
-  // 且失焦后 selectionStart/selectionEnd 仍然保留，因此可以稳定支持拖拽出编辑框和点击外部。
+  // 且失焦后 selectionStart/selectionEnd 仍然保留，因此可以稳定支持拖拽出Chỉnh sửa框和点击外部。
   const getTextAreaSelection = useCallback(() => {
     if (!isEditorOpen || isGenerating) return null;
 
@@ -196,7 +196,7 @@ export default function Chapters() {
     });
     setPartialRegenerateToolbarVisible(true);
   }, [getTextAreaSelection]);
-  // 更新工具栏位置的函数（不检测选中，只更新位置）
+  // Cập nhật工具栏位置的函数（不检测选中，只Cập nhật位置）
   const updateToolbarPosition = useCallback(() => {
     if (!partialRegenerateToolbarVisible || !selectedTextForRegenerate) return;
     
@@ -262,7 +262,7 @@ export default function Chapters() {
       handleTextSelection();
     };
     const handleScroll = () => {
-      // 滚动时更新位置（使用 requestAnimationFrame 优化性能）
+      // 滚动时Cập nhật位置（使用 requestAnimationFrame 优化性能）
       requestAnimationFrame(updateToolbarPosition);
     };
 
@@ -377,16 +377,16 @@ export default function Chapters() {
           activeAnalysisPollingIdsRef.current.delete(chapterId);
 
           if (task?.status === 'completed') {
-            message.success('章节分析完成');
+            message.success('Phân tích chương hoàn tất');
           } else if (task?.status === 'failed') {
-            message.error(`章节分析失败: ${task.error_message || '未知错误'}`);
+            message.error(`Phân tích chương thất bại: ${task.error_message || 'Lỗi không xác định'}`);
           }
         }
       });
 
       clearAnalysisPollingIfIdle();
     } catch (error) {
-      console.error('批量轮询分析任务失败:', error);
+      console.error('Thăm dò hàng loạt tác vụ phân tích thất bại:', error);
     } finally {
       if (analysisPollingRequestIdRef.current === requestId) {
         analysisPollingInFlightRef.current = false;
@@ -406,7 +406,7 @@ export default function Chapters() {
   }, [pollActiveAnalysisTasks]);
 
   // 加载所有章节的分析任务状态（批量接口，避免逐章请求风暴）
-  // 接受可选的 chaptersToLoad 参数，解决 React 状态更新延迟导致的问题
+  // 接受可选的 chaptersToLoad 参数，解决 React 状态Cập nhật延迟导致的问题
   const loadAnalysisTasks = useCallback(async (
     chaptersToLoad?: typeof chapters,
     projectId?: string,
@@ -446,7 +446,7 @@ export default function Chapters() {
         clearAnalysisPollingIfIdle();
       }
     } catch (error) {
-      console.error('批量加载分析任务状态失败:', error);
+      console.error('Tải hàng loạt trạng thái tác vụ phân tích thất bại:', error);
     }
   }, [chapters, clearAnalysisPollingIfIdle, ensureAnalysisPolling]);
 
@@ -481,8 +481,8 @@ export default function Chapters() {
         setSelectedStyleId(defaultStyle.id);
       }
     } catch (error) {
-      console.error('加载写作风格失败:', error);
-      message.error('加载写作风格失败');
+      console.error('Tải phong cách viết thất bại:', error);
+      message.error('Không tải được phong cách viết');
     }
   };
 
@@ -497,7 +497,7 @@ export default function Chapters() {
         }
       }
     } catch (error) {
-      console.error('加载 Skill 列表失败:', error);
+      console.error('Tải danh sách Skill thất bại:', error);
     }
   };
 
@@ -524,12 +524,12 @@ export default function Chapters() {
               }
             }
           } catch {
-            console.log('获取模型列表失败，将使用默认模型');
+            console.log('Lấy danh sách model thất bại, sẽ dùng model mặc định');
           }
         }
       }
     } catch (error) {
-      console.error('加载可用模型失败:', error);
+      console.error('Lấy danh sách model khả dụng thất bại:', error);
     }
     return null;
   };
@@ -561,10 +561,10 @@ export default function Chapters() {
         // 启动轮询
         startBatchPolling(task.batch_id);
 
-        message.info('检测到未完成的批量生成任务，请查看任务列表');
+        message.info('Phát hiện tác vụ tạo hàng loạt chưa hoàn tất, vui lòng xem danh sách tác vụ');
       }
     } catch (error) {
-      console.error('检查批量生成任务失败:', error);
+      console.error('Kiểm tra tác vụ tạo hàng loạt thất bại:', error);
     }
   };
 
@@ -572,7 +572,7 @@ export default function Chapters() {
   const showBrowserNotification = (title: string, body: string, type: 'success' | 'error' | 'info' = 'info') => {
     // 检查浏览器是否支持通知
     if (!('Notification' in window)) {
-      console.log('浏览器不支持通知功能');
+      console.log('Trình duyệt không hỗ trợ thông báo');
       return;
     }
 
@@ -627,7 +627,7 @@ export default function Chapters() {
       if (!groups[key]) {
         groups[key] = {
           outlineId: chapter.outline_id || null,
-          outlineTitle: chapter.outline_title || '未分类章节',
+          outlineTitle: chapter.outline_title || 'Chương chưa phân loại',
           outlineOrder: chapter.outline_order ?? 999,
           chapters: []
         };
@@ -673,7 +673,7 @@ export default function Chapters() {
       if (!groups[key]) {
         groups[key] = {
           outlineId: chapter.outline_id || null,
-          outlineTitle: chapter.outline_title || '未分类章节',
+          outlineTitle: chapter.outline_title || 'Chương chưa phân loại',
           outlineOrder: chapter.outline_order ?? 999,
           chapters: []
         };
@@ -707,12 +707,12 @@ export default function Chapters() {
       if (incompleteChapterNumbers.length > 0) {
         gateMap[chapter.id] = {
           canGenerate: false,
-          reason: `需要先完成前置章节：第 ${incompleteChapterNumbers.join('、')} 章`
+          reason: `Cần hoàn thành các chương trước: chương ${incompleteChapterNumbers.join(', ')}`
         };
       } else if (unanalyzedChapters.length > 0) {
         gateMap[chapter.id] = {
           canGenerate: false,
-          reason: `需要先分析前置章节：第 ${unanalyzedChapters.map(c => c.chapterNumber).join('、')} 章 (${unanalyzedChapters.map(c => c.reason).join('、')})`
+          reason: `Cần phân tích các chương trước: chương ${unanalyzedChapters.map(c => c.chapterNumber).join(', ')} (${unanalyzedChapters.map(c => c.reason).join(', ')})`
         };
       } else {
         gateMap[chapter.id] = { canGenerate: true, reason: '' };
@@ -725,15 +725,15 @@ export default function Chapters() {
 
       const task = analysisTasksMap[chapter.id];
       if (!task || !task.has_task) {
-        unanalyzedChapters.push({ chapterNumber: chapter.chapter_number, reason: '未分析' });
+        unanalyzedChapters.push({ chapterNumber: chapter.chapter_number, reason: 'Chưa phân tích' });
       } else if (task.status === 'pending') {
-        unanalyzedChapters.push({ chapterNumber: chapter.chapter_number, reason: '等待分析' });
+        unanalyzedChapters.push({ chapterNumber: chapter.chapter_number, reason: 'Chờ phân tích' });
       } else if (task.status === 'running') {
-        unanalyzedChapters.push({ chapterNumber: chapter.chapter_number, reason: '分析中' });
+        unanalyzedChapters.push({ chapterNumber: chapter.chapter_number, reason: 'Đang phân tích' });
       } else if (task.status === 'failed') {
-        unanalyzedChapters.push({ chapterNumber: chapter.chapter_number, reason: '分析失败' });
+        unanalyzedChapters.push({ chapterNumber: chapter.chapter_number, reason: 'Phân tích thất bại' });
       } else if (task.status !== 'completed') {
-        unanalyzedChapters.push({ chapterNumber: chapter.chapter_number, reason: '状态未知' });
+        unanalyzedChapters.push({ chapterNumber: chapter.chapter_number, reason: 'Trạng thái không xác định' });
       }
     });
 
@@ -756,15 +756,15 @@ export default function Chapters() {
   const getNarrativePerspectiveText = (perspective?: string): string => {
     const texts: Record<string, string> = {
       // 英文值映射（向后兼容）
-      'first_person': '第一人称（我）',
-      'third_person': '第三人称（他/她）',
-      'omniscient': '全知视角',
+      'first_person': 'Ngôi thứ nhất (tôi)',
+      'third_person': 'Ngôi thứ ba (anh/cô ấy)',
+      'omniscient': 'Góc nhìn toàn tri',
       // 中文值映射（项目设置使用）
-      '第一人称': '第一人称（我）',
-      '第三人称': '第三人称（他/她）',
-      '全知视角': '全知视角',
+      '第一人称': 'Ngôi thứ nhất (tôi)',
+      '第三人称': 'Ngôi thứ ba (anh/cô ấy)',
+      '全知视角': 'Góc nhìn toàn tri',
     };
-    return texts[perspective || ''] || '第三人称（默认）';
+    return texts[perspective || ''] || 'Ngôi thứ ba (mặc định)';
   };
 
   const canGenerateChapter = (chapter: Chapter): boolean => {
@@ -793,11 +793,11 @@ export default function Chapters() {
       // 刷新章节列表以获取完整的章节数据（包括outline_title等联查字段）
       await refreshChapters();
 
-      message.success('章节更新成功');
+      message.success('Cập nhật chương thành công');
       setIsModalOpen(false);
       form.resetFields();
     } catch {
-      message.error('操作失败');
+      message.error('Thao tác thất bại');
     }
   };
 
@@ -813,7 +813,7 @@ export default function Chapters() {
       setTemporaryNarrativePerspective(undefined); // 重置人称选择
       setSelectedSkillKey(undefined); // 重置Skill选择
       setIsEditorOpen(true);
-      // 打开编辑窗口时加载模型列表和Skill列表
+      // 打开Chỉnh sửa窗口时加载模型列表和Skill列表
       loadAvailableModels();
       loadAvailableSkills();
     }
@@ -825,14 +825,14 @@ export default function Chapters() {
     try {
       await updateChapter(editingId, values);
 
-      // 刷新项目信息以更新总字数统计
+      // 刷新项目信息以Cập nhật总字数统计
       const updatedProject = await projectApi.getProject(currentProject.id);
       setCurrentProject(updatedProject);
 
-      message.success('章节保存成功');
+      message.success('Lưu chương thành công');
       setIsEditorOpen(false);
     } catch {
-      message.error('保存失败');
+      message.error('Lưu thất bại');
     }
   };
 
@@ -843,7 +843,7 @@ export default function Chapters() {
       setIsContinuing(true);
       setIsGenerating(true);
       setSingleChapterProgress(0);
-      setSingleChapterProgressMessage('准备开始生成...');
+      setSingleChapterProgressMessage('Đang chuẩn bị tạo...');
 
       const result = await generateChapterContentStream(
         editingId,
@@ -869,7 +869,7 @@ export default function Chapters() {
         selectedSkillKey  // 传递选中的Skill
       );
 
-      message.success('AI创作成功，正在分析章节内容...');
+      message.success('AI sáng tác thành công, đang phân tích nội dung chương...');
 
       // 如果返回了分析任务ID，启动轮询
       if (result?.analysis_task_id) {
@@ -890,7 +890,7 @@ export default function Chapters() {
       }
     } catch (error) {
       const apiError = error as ApiError;
-      message.error('AI创作失败：' + (apiError.response?.data?.detail || apiError.message || '未知错误'));
+      message.error('AI sáng tác thất bại: ' + (apiError.response?.data?.detail || apiError.message || 'Lỗi không xác định'));
     } finally {
       setIsContinuing(false);
       setIsGenerating(false);
@@ -907,21 +907,21 @@ export default function Chapters() {
     const selectedStyle = writingStyles.find(s => s.id === selectedStyleId);
 
     const instance = modal.confirm({
-      title: 'AI创作章节内容',
+      title: 'AI sáng tác nội dung chương',
       width: 700,
       centered: true,
       content: (
         <div style={{ marginTop: 16 }}>
-          <p>AI将根据以下信息创作本章内容：</p>
+          <p>AI sẽ dựa trên các thông tin sau để sáng tác chương này:</p>
           <ul>
-            <li>章节大纲和要求</li>
-            <li>项目的世界观设定</li>
-            <li>相关角色信息</li>
-            <li><strong>前面已完成章节的内容（确保剧情连贯）</strong></li>
+            <li>Dàn ý và yêu cầu của chương</li>
+            <li>Thiết lập bối cảnh thế giới của dự án</li>
+            <li>Thông tin nhân vật liên quan</li>
+            <li><strong>Nội dung các chương trước đã hoàn thành (đảm bảo cốt truyện liền mạch)</strong></li>
             {selectedStyle && (
-              <li><strong>写作风格：{selectedStyle.name}</strong></li>
+              <li><strong>Phong cách viết: {selectedStyle.name}</strong></li>
             )}
-            <li><strong>目标字数：{targetWordCount}字</strong></li>
+            <li><strong>Số chữ mục tiêu: {targetWordCount} chữ</strong></li>
           </ul>
 
           {previousChapters.length > 0 && (
@@ -933,29 +933,29 @@ export default function Chapters() {
               border: `1px solid ${token.colorInfoBorder}`
             }}>
               <div style={{ marginBottom: 8, fontWeight: 500, color: token.colorPrimary }}>
-                📚 将引用的前置章节（共{previousChapters.length}章）：
+                📚 Các chương trước sẽ được tham chiếu (tổng {previousChapters.length} chương):
               </div>
               <div style={{ maxHeight: 150, overflowY: 'auto' }}>
                 {previousChapters.map(ch => (
                   <div key={ch.id} style={{ padding: '4px 0', fontSize: 13 }}>
-                    ✓ 第{ch.chapter_number}章：{ch.title} ({ch.word_count || 0}字)
+                    ✓ Chương {ch.chapter_number}: {ch.title} ({ch.word_count || 0} chữ)
                   </div>
                 ))}
               </div>
               <div style={{ marginTop: 8, fontSize: 12, color: token.colorTextSecondary }}>
-                💡 AI会参考这些章节内容，确保情节连贯、角色状态一致
+                💡 AI sẽ tham khảo nội dung các chương này để đảm bảo tình tiết liền mạch, trạng thái nhân vật nhất quán
               </div>
             </div>
           )}
 
           <p style={{ color: token.colorError, marginTop: 16, marginBottom: 0 }}>
-            ⚠️ 注意：此操作将覆盖当前章节内容
+            ⚠️ Lưu ý: thao tác này sẽ ghi đè nội dung chương hiện tại
           </p>
         </div>
       ),
-      okText: '开始创作',
+      okText: 'Bắt đầu sáng tác',
       okButtonProps: { danger: true },
-      cancelText: '取消',
+      cancelText: 'Hủy',
       onOk: async () => {
         instance.update({
           okButtonProps: { danger: true, loading: true },
@@ -967,7 +967,7 @@ export default function Chapters() {
 
         try {
           if (!selectedStyleId) {
-            message.error('请先选择写作风格');
+            message.error('Vui lòng chọn phong cách viết trước');
             instance.update({
               okButtonProps: { danger: true, loading: false },
               cancelButtonProps: { disabled: false },
@@ -991,7 +991,7 @@ export default function Chapters() {
       },
       onCancel: () => {
         if (isGenerating) {
-          message.warning('AI正在创作中，请等待完成');
+          message.warning('AI đang sáng tác, vui lòng đợi hoàn tất');
           return false;
         }
       },
@@ -1004,7 +1004,7 @@ export default function Chapters() {
   const handleBackgroundGenerate = async () => {
     if (!editingId) return;
     if (!selectedStyleId) {
-      message.error("请先选择写作风格");
+      message.error("Vui lòng chọn phong cách viết trước");
       return;
     }
 
@@ -1046,22 +1046,22 @@ export default function Chapters() {
           await loadAnalysisTasks(latestChapters);
         },
         async () => {
-          message.success("后台章节生成和分析完成！");
+          message.success("Tạo và phân tích chương chạy nền đã hoàn tất!");
           const latestChapters = await refreshGeneratedChapter();
           await loadAnalysisTasks(latestChapters);
         },
         async (error) => {
-          message.error("后台章节任务失败: " + error);
+          message.error("Tác vụ chương chạy nền thất bại: " + error);
           const latestChapters = await refreshGeneratedChapter();
           await loadAnalysisTasks(latestChapters);
         }
       );
 
-      message.info("章节生成任务已提交，可在右下角任务面板查看进度");
+      message.info("Đã gửi tác vụ tạo chương, xem tiến độ ở bảng tác vụ góc dưới bên phải");
       // 通知悬浮任务框刷新
       eventBus.emit('background-task-created');
     } catch {
-      message.error("创建后台任务失败");
+      message.error("Tạo tác vụ chạy nền thất bại");
     }
   };
   const getStatusColor = (status: string) => {
@@ -1076,32 +1076,32 @@ export default function Chapters() {
 
   const getStatusText = (status: string) => {
     const texts: Record<string, string> = {
-      'draft': '草稿',
-      'pending': '待处理',
-      'writing': '创作中',
-      'completed': '已完成',
+      'draft': 'Bản nháp',
+      'pending': 'Chờ xử lý',
+      'writing': 'Đang sáng tác',
+      'completed': 'Đã hoàn thành',
     };
     return texts[status] || status;
   };
 
   const handleExport = () => {
     if (chapters.length === 0) {
-      message.warning('当前项目没有章节，无法导出');
+      message.warning('Dự án hiện tại chưa có chương nào, không thể xuất');
       return;
     }
 
     modal.confirm({
-      title: '导出项目章节',
-      content: `确定要将《${currentProject.title}》的所有章节导出为TXT文件吗？`,
+      title: 'Xuất chương của dự án',
+      content: `Bạn có chắc muốn xuất toàn bộ chương của «${currentProject.title}» ra tệp TXT không?`,
       centered: true,
-      okText: '确定导出',
-      cancelText: '取消',
+      okText: 'Xác nhận xuất',
+      cancelText: 'Hủy',
       onOk: () => {
         try {
           projectApi.exportProject(currentProject.id);
-          message.success('开始下载导出文件');
+          message.success('Bắt đầu tải tệp xuất');
         } catch {
-          message.error('导出失败，请重试');
+          message.error('Xuất thất bại, vui lòng thử lại');
         }
       },
     });
@@ -1131,17 +1131,17 @@ export default function Chapters() {
         });
 
         message.success(
-          `已加入 ${result.total_started} 章顺序分析队列（跳过已分析 ${result.total_already_completed} 章，分析中/排队中 ${result.total_skipped_running} 章）`
+          `Đã thêm ${result.total_started} chương vào hàng đợi phân tích theo thứ tự (bỏ qua ${result.total_already_completed} chương đã phân tích, ${result.total_skipped_running} chương đang phân tích/chờ)`
         );
       } else {
-        message.info('没有可启动分析的章节：当前章节要么无内容、要么已分析完成、要么正在分析中');
+        message.info('Không có chương nào có thể bắt đầu phân tích: chương hiện tại không có nội dung, đã phân tích xong hoặc đang được phân tích');
       }
 
       // 刷新一次状态，确保前端与后端一致
       await loadAnalysisTasks();
     } catch (error: unknown) {
       const err = error as Error;
-      message.error(`一键分析失败：${err.message || '未知错误'}`);
+      message.error(`Phân tích hàng loạt thất bại: ${err.message || 'Lỗi không xác định'}`);
     } finally {
       setBatchAnalyzingUnanalyzed(false);
     }
@@ -1159,8 +1159,8 @@ export default function Chapters() {
     if (!currentProject?.id) return;
 
     // 调试日志
-    console.log('[批量生成] 表单values:', values);
-    console.log('[批量生成] batchSelectedModel状态:', batchSelectedModel);
+    console.log('[Tạo hàng loạt] giá trị form:', values);
+    console.log('[Tạo hàng loạt] trạng thái batchSelectedModel:', batchSelectedModel);
 
     // 使用批量生成对话框中选择的风格和字数，如果没有选择则使用默认值
     const styleId = values.styleId || selectedStyleId;
@@ -1169,10 +1169,10 @@ export default function Chapters() {
     // 使用批量生成专用的模型状态
     const model = batchSelectedModel;
 
-    console.log('[批量生成] 最终使用的model:', model);
+    console.log('[Tạo hàng loạt] model dùng cuối cùng:', model);
 
     if (!styleId) {
-      message.error('请选择写作风格');
+      message.error('Vui lòng chọn phong cách viết');
       return;
     }
 
@@ -1199,18 +1199,18 @@ export default function Chapters() {
       // 如果有模型参数，添加到请求体中
       if (model) {
         requestBody.model = model;
-        console.log('[批量生成] 请求体包含model:', model);
+        console.log('[Tạo hàng loạt] body request có model:', model);
       } else {
-        console.log('[批量生成] 请求体不包含model，使用后端默认模型');
+        console.log('[Tạo hàng loạt] body request không có model, dùng model mặc định của backend');
       }
 
       // 如果有 Skill 参数，添加到请求体中
       if (batchSelectedSkillKey) {
         requestBody.skill_key = batchSelectedSkillKey;
-        console.log('[批量生成] 请求体包含skill_key:', batchSelectedSkillKey);
+        console.log('[Tạo hàng loạt] body request có skill_key:', batchSelectedSkillKey);
       }
 
-      console.log('[批量生成] 完整请求体:', JSON.stringify(requestBody, null, 2));
+      console.log('[Tạo hàng loạt] body request đầy đủ:', JSON.stringify(requestBody, null, 2));
 
       const response = await fetch(`/api/chapters/project/${currentProject.id}/batch-generate`, {
         method: 'POST',
@@ -1222,7 +1222,7 @@ export default function Chapters() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || '创建批量生成任务失败');
+        throw new Error(error.detail || 'Tạo tác vụ tạo hàng loạt thất bại');
       }
 
       const result = await response.json();
@@ -1235,14 +1235,14 @@ export default function Chapters() {
         estimated_time_minutes: result.estimated_time_minutes,
       });
 
-      message.success(`批量生成任务已创建，预计需要 ${result.estimated_time_minutes} 分钟，可在右下角任务面板查看进度`);
+      message.success(`Đã tạo tác vụ tạo hàng loạt, dự kiến cần ${result.estimated_time_minutes} phút, xem tiến độ ở bảng tác vụ góc dưới bên phải`);
       // 通知悬浮任务框刷新
       eventBus.emit('background-task-created');
 
       // 🔔 触发浏览器通知（任务开始）
       showBrowserNotification(
-        '批量生成已启动',
-        `开始生成 ${result.chapters_to_generate.length} 章，预计需要 ${result.estimated_time_minutes} 分钟`,
+        'Tạo hàng loạt đã bắt đầu',
+        `Bắt đầu tạo ${result.chapters_to_generate.length} chương, dự kiến cần ${result.estimated_time_minutes} phút`,
         'info'
       );
 
@@ -1251,7 +1251,7 @@ export default function Chapters() {
 
     } catch (error: unknown) {
       const err = error as Error;
-      message.error('创建批量生成任务失败：' + (err.message || '未知错误'));
+      message.error('Tạo tác vụ tạo hàng loạt thất bại: ' + (err.message || 'Lỗi không xác định'));
       setBatchGenerating(false);
       setBatchGenerateVisible(false);
     }
@@ -1282,7 +1282,7 @@ export default function Chapters() {
           const latestChapters = await refreshChapters();
           await loadAnalysisTasks(latestChapters);
 
-          // 刷新项目信息以实时更新总字数统计
+          // 刷新项目信息以实时Cập nhật总字数统计
           if (currentProject?.id) {
             const updatedProject = await projectApi.getProject(currentProject.id);
             setCurrentProject(updatedProject);
@@ -1303,30 +1303,30 @@ export default function Chapters() {
           const finalChapters = await refreshChapters();
           await loadAnalysisTasks(finalChapters);
 
-          // 刷新项目信息以更新总字数统计
+          // 刷新项目信息以Cập nhật总字数统计
           if (currentProject?.id) {
             const updatedProject = await projectApi.getProject(currentProject.id);
             setCurrentProject(updatedProject);
           }
 
           if (status.status === 'completed') {
-            message.success(`批量生成完成！成功生成 ${status.completed} 章`);
+            message.success(`Tạo hàng loạt hoàn tất! Đã tạo thành công ${status.completed} chương`);
             // 🔔 触发浏览器通知
             showBrowserNotification(
-              '批量生成完成',
-              `《${currentProject?.title || '项目'}》成功生成 ${status.completed} 章节`,
+              'Tạo hàng loạt hoàn tất',
+              `«${currentProject?.title || 'Dự án'}» đã tạo thành công ${status.completed} chương`,
               'success'
             );
           } else if (status.status === 'failed') {
-            message.error(`批量生成失败：${status.error_message || '未知错误'}`);
+            message.error(`Tạo hàng loạt thất bại: ${status.error_message || 'Lỗi không xác định'}`);
             // 🔔 触发浏览器通知
             showBrowserNotification(
-              '批量生成失败',
-              status.error_message || '未知错误',
+              'Tạo hàng loạt thất bại',
+              status.error_message || 'Lỗi không xác định',
               'error'
             );
           } else if (status.status === 'cancelled') {
-            message.warning('批量生成已取消');
+            message.warning('Đã hủy tạo hàng loạt');
           }
 
           // 延迟关闭对话框，让用户看到最终状态
@@ -1337,7 +1337,7 @@ export default function Chapters() {
           }, 2000);
         }
       } catch (error) {
-        console.error('轮询批量生成状态失败:', error);
+        console.error('Thăm dò trạng thái tạo hàng loạt thất bại:', error);
       }
     };
 
@@ -1348,7 +1348,7 @@ export default function Chapters() {
     batchPollingIntervalRef.current = window.setInterval(poll, 2000);
   };
 
-  // 取消批量生成
+  // Hủy批量生成
   const handleCancelBatchGenerate = async () => {
     if (!batchTaskId) return;
 
@@ -1358,23 +1358,23 @@ export default function Chapters() {
       });
 
       if (!response.ok) {
-        throw new Error('取消失败');
+        throw new Error('Hủy thất bại');
       }
 
-      message.success('批量生成已取消');
+      message.success('Đã hủy tạo hàng loạt');
 
-      // 取消后立即刷新章节列表和分析任务，显示已生成的章节
+      // Hủy后立即刷新章节列表和分析任务，显示已生成的章节
       await refreshChapters();
       await loadAnalysisTasks();
 
-      // 刷新项目信息以更新总字数统计
+      // 刷新项目信息以Cập nhật总字数统计
       if (currentProject?.id) {
         const updatedProject = await projectApi.getProject(currentProject.id);
         setCurrentProject(updatedProject);
       }
     } catch (error: unknown) {
       const err = error as Error;
-      message.error('取消失败：' + (err.message || '未知错误'));
+      message.error('Hủy thất bại: ' + (err.message || 'Lỗi không xác định'));
     }
   };
 
@@ -1386,7 +1386,7 @@ export default function Chapters() {
     );
 
     if (!firstIncompleteChapter) {
-      message.info('所有章节都已生成内容');
+      message.info('Tất cả chương đều đã có nội dung');
       return;
     }
 
@@ -1401,8 +1401,8 @@ export default function Chapters() {
     const defaultModel = await loadAvailableModels();
     loadAvailableSkills();
 
-    console.log('[打开批量生成] defaultModel:', defaultModel);
-    console.log('[打开批量生成] selectedStyleId:', selectedStyleId);
+    console.log('[Mở tạo hàng loạt] defaultModel:', defaultModel);
+    console.log('[Mở tạo hàng loạt] selectedStyleId:', selectedStyleId);
 
     // 设置批量生成的模型选择状态
     setBatchSelectedModel(defaultModel || undefined);
@@ -1427,7 +1427,7 @@ export default function Chapters() {
       : 1;
 
     modal.confirm({
-      title: '手动创建章节',
+      title: 'Tạo chương thủ công',
       width: 600,
       centered: true,
       content: (
@@ -1441,66 +1441,66 @@ export default function Chapters() {
           style={{ marginTop: 16 }}
         >
           <Form.Item
-            label="章节序号"
+            label="Số thứ tự chương"
             name="chapter_number"
-            rules={[{ required: true, message: '请输入章节序号' }]}
-            tooltip="建议按顺序创建章节，确保内容连贯性"
+            rules={[{ required: true, message: 'Vui lòng nhập số thứ tự chương' }]}
+            tooltip="Nên tạo chương theo thứ tự để đảm bảo nội dung liền mạch"
           >
-            <InputNumber min={1} style={{ width: '100%' }} placeholder="自动计算的下一个序号" />
+            <InputNumber min={1} style={{ width: '100%' }} placeholder="Số thứ tự kế tiếp được tính tự động" />
           </Form.Item>
 
           <Form.Item
-            label="章节标题"
+            label="Tiêu đề chương"
             name="title"
-            rules={[{ required: true, message: '请输入标题' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
           >
-            <Input placeholder="例如：第一章 初遇" />
+            <Input placeholder="Ví dụ: Chương 1 Lần đầu gặp gỡ" />
           </Form.Item>
 
           <Form.Item
-            label="关联大纲"
+            label="Dàn ý liên kết"
             name="outline_id"
-            rules={[{ required: true, message: '请选择关联的大纲' }]}
-            tooltip="one-to-many模式下，章节必须关联到大纲"
+            rules={[{ required: true, message: 'Vui lòng chọn dàn ý liên kết' }]}
+            tooltip="Ở chế độ one-to-many, chương phải được liên kết với dàn ý"
           >
-            <Select placeholder="请选择所属大纲">
+            <Select placeholder="Vui lòng chọn dàn ý">
               {/* 直接使用 store 中的 outlines 数据，而不是从现有章节中提取 */}
               {[...outlines]
                 .sort((a, b) => a.order_index - b.order_index)
                 .map(outline => (
                   <Select.Option key={outline.id} value={outline.id}>
-                    第{outline.order_index}卷：{outline.title}
+                    Tập {outline.order_index}: {outline.title}
                   </Select.Option>
                 ))}
             </Select>
           </Form.Item>
 
           <Form.Item
-            label="章节摘要（可选）"
+            label="Tóm tắt chương (tùy chọn)"
             name="summary"
-            tooltip="简要描述本章的主要内容和情节发展"
+            tooltip="Mô tả ngắn gọn nội dung chính và diễn biến tình tiết của chương này"
           >
             <TextArea
               rows={4}
-              placeholder="简要描述本章内容..."
+              placeholder="Mô tả ngắn gọn nội dung chương..."
             />
           </Form.Item>
 
           <Form.Item
-            label="状态"
+            label="Trạng thái"
             name="status"
           >
             <Select>
-              <Select.Option value="draft">草稿</Select.Option>
-              <Select.Option value="pending">待处理</Select.Option>
-              <Select.Option value="writing">创作中</Select.Option>
-              <Select.Option value="completed">已完成</Select.Option>
+              <Select.Option value="draft">Bản nháp</Select.Option>
+              <Select.Option value="pending">Chờ xử lý</Select.Option>
+              <Select.Option value="writing">Đang sáng tác</Select.Option>
+              <Select.Option value="completed">Đã hoàn thành</Select.Option>
             </Select>
           </Form.Item>
         </Form>
       ),
-      okText: '创建',
-      cancelText: '取消',
+      okText: 'Tạo',
+      cancelText: 'Hủy',
       onOk: async () => {
         const values = await manualCreateForm.validateFields();
 
@@ -1512,14 +1512,14 @@ export default function Chapters() {
         if (conflictChapter) {
           // 显示冲突提示Modal
           modal.confirm({
-            title: '章节序号冲突',
+            title: 'Trùng số thứ tự chương',
             icon: <InfoCircleOutlined style={{ color: token.colorError }} />,
             width: 500,
             centered: true,
             content: (
               <div>
                 <p style={{ marginBottom: 12 }}>
-                  第 <strong>{values.chapter_number}</strong> 章已存在：
+                  Chương <strong>{values.chapter_number}</strong> đã tồn tại:
                 </p>
                 <div style={{
                   padding: 12,
@@ -1528,30 +1528,30 @@ export default function Chapters() {
                   border: `1px solid ${token.colorWarningBorder}`,
                   marginBottom: 12
                 }}>
-                  <div><strong>标题：</strong>{conflictChapter.title}</div>
-                  <div><strong>状态：</strong>{getStatusText(conflictChapter.status)}</div>
-                  <div><strong>字数：</strong>{conflictChapter.word_count || 0}字</div>
+                  <div><strong>Tiêu đề:</strong>{conflictChapter.title}</div>
+                  <div><strong>Trạng thái:</strong>{getStatusText(conflictChapter.status)}</div>
+                  <div><strong>Số chữ:</strong>{conflictChapter.word_count || 0} chữ</div>
                   {conflictChapter.outline_title && (
-                    <div><strong>所属大纲：</strong>{conflictChapter.outline_title}</div>
+                    <div><strong>Thuộc dàn ý:</strong>{conflictChapter.outline_title}</div>
                   )}
                 </div>
                 <p style={{ color: token.colorError, marginBottom: 8 }}>
-                  ⚠️ 是否删除旧章节并创建新章节？
+                  ⚠️ Xóa chương cũ và tạo chương mới?
                 </p>
                 <p style={{ fontSize: 12, color: token.colorTextSecondary, marginBottom: 0 }}>
-                  删除后将无法恢复，章节内容和分析结果都将被删除。
+                  Sau khi xóa sẽ không thể khôi phục, nội dung chương và kết quả phân tích đều sẽ bị xóa.
                 </p>
               </div>
             ),
-            okText: '删除并创建',
+            okText: 'Xóa và tạo mới',
             okButtonProps: { danger: true },
-            cancelText: '取消',
+            cancelText: 'Hủy',
             onOk: async () => {
               try {
-                // 先删除旧章节
+                // 先Xóa旧章节
                 await handleDeleteChapter(conflictChapter.id);
 
-                // 等待一小段时间确保删除完成
+                // 等待一小段时间确保Xóa完成
                 await new Promise(resolve => setTimeout(resolve, 300));
 
                 // 创建新章节
@@ -1560,17 +1560,17 @@ export default function Chapters() {
                   ...values
                 });
 
-                message.success('已删除旧章节并创建新章节');
+                message.success('Đã xóa chương cũ và tạo chương mới');
                 await refreshChapters();
 
-                // 刷新项目信息以更新字数统计
+                // 刷新项目信息以Cập nhật字数统计
                 const updatedProject = await projectApi.getProject(currentProject.id);
                 setCurrentProject(updatedProject);
 
                 manualCreateForm.resetFields();
               } catch (error: unknown) {
                 const err = error as Error;
-                message.error('操作失败：' + (err.message || '未知错误'));
+                message.error('Thao tác thất bại: ' + (err.message || 'Lỗi không xác định'));
                 throw error;
               }
             }
@@ -1586,17 +1586,17 @@ export default function Chapters() {
             project_id: currentProject.id,
             ...values
           });
-          message.success('章节创建成功');
+          message.success('Tạo chương thành công');
           await refreshChapters();
 
-          // 刷新项目信息以更新字数统计
+          // 刷新项目信息以Cập nhật字数统计
           const updatedProject = await projectApi.getProject(currentProject.id);
           setCurrentProject(updatedProject);
 
           manualCreateForm.resetFields();
         } catch (error: unknown) {
           const err = error as Error;
-          message.error('创建失败：' + (err.message || '未知错误'));
+          message.error('Tạo thất bại: ' + (err.message || 'Lỗi không xác định'));
           throw error;
         }
       }
@@ -1615,32 +1615,32 @@ export default function Chapters() {
       case 'pending':
         return (
           <Tag icon={<SyncOutlined spin />} color="processing">
-            等待分析
+            Chờ phân tích
           </Tag>
         );
       case 'running': {
-        // 检查是否正在重试（后端会在error_message中包含"重试"信息）
-        const isRetrying = task.error_message && task.error_message.includes('重试');
+        // 检查是否正在重试（后端会在error_message中包含"thử lại"信息）
+        const isRetrying = task.error_message && (task.error_message.includes('thử lại') || task.error_message.includes('重试'));
         return (
           <Tag
             icon={<SyncOutlined spin />}
             color={isRetrying ? "warning" : "processing"}
             title={task.error_message || undefined}
           >
-            {isRetrying ? `重试中 ${task.progress}%` : `分析中 ${task.progress}%`}
+            {isRetrying ? `Đang thử lại ${task.progress}%` : `Đang phân tích ${task.progress}%`}
           </Tag>
         );
       }
       case 'completed':
         return (
           <Tag icon={<CheckCircleOutlined />} color="success">
-            已分析
+            Đã phân tích
           </Tag>
         );
       case 'failed':
         return (
           <Tag icon={<CloseCircleOutlined />} color="error" title={task.error_message || undefined}>
-            分析失败
+            Phân tích thất bại
           </Tag>
         );
       default:
@@ -1659,7 +1659,7 @@ export default function Chapters() {
         title: (
           <Space style={{ flexWrap: 'wrap' }}>
             <InfoCircleOutlined style={{ color: token.colorPrimary }} />
-            <span style={{ wordBreak: 'break-word' }}>第{chapter.chapter_number}章展开规划</span>
+            <span style={{ wordBreak: 'break-word' }}>Kế hoạch mở rộng chương {chapter.chapter_number}</span>
           </Space>
         ),
         width: isMobile ? 'calc(100vw - 32px)' : 800,
@@ -1692,7 +1692,7 @@ export default function Chapters() {
                 overflowWrap: 'break-word'
               }}
             >
-              <Descriptions.Item label="章节标题">
+              <Descriptions.Item label="Tiêu đề chương">
                 <strong style={{
                   wordBreak: 'break-word',
                   whiteSpace: 'normal',
@@ -1701,7 +1701,7 @@ export default function Chapters() {
                   {chapter.title}
                 </strong>
               </Descriptions.Item>
-              <Descriptions.Item label="情感基调">
+              <Descriptions.Item label="Sắc thái cảm xúc">
                 <Tag
                   color="blue"
                   style={{
@@ -1715,7 +1715,7 @@ export default function Chapters() {
                   {planData.emotional_tone}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="冲突类型">
+              <Descriptions.Item label="Loại xung đột">
                 <Tag
                   color="orange"
                   style={{
@@ -1729,10 +1729,10 @@ export default function Chapters() {
                   {planData.conflict_type}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="预估字数">
-                <Tag color="green">{planData.estimated_words}字</Tag>
+              <Descriptions.Item label="Số chữ ước tính">
+                <Tag color="green">{planData.estimated_words} chữ</Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="叙事目标">
+              <Descriptions.Item label="Mục tiêu tự sự">
                 <span style={{
                   wordBreak: 'break-word',
                   whiteSpace: 'normal',
@@ -1741,7 +1741,7 @@ export default function Chapters() {
                   {planData.narrative_goal}
                 </span>
               </Descriptions.Item>
-              <Descriptions.Item label="关键事件">
+              <Descriptions.Item label="Sự kiện then chốt">
                 <Space direction="vertical" size="small" style={{ width: '100%' }}>
                   {planData.key_events.map((event, idx) => (
                     <div
@@ -1765,7 +1765,7 @@ export default function Chapters() {
                   ))}
                 </Space>
               </Descriptions.Item>
-              <Descriptions.Item label="涉及角色">
+              <Descriptions.Item label="Nhân vật liên quan">
                 <Space wrap style={{ maxWidth: '100%' }}>
                   {planData.character_focus.map((char, idx) => (
                     <Tag
@@ -1784,7 +1784,7 @@ export default function Chapters() {
                 </Space>
               </Descriptions.Item>
               {planData.scenes && planData.scenes.length > 0 && (
-                <Descriptions.Item label="场景规划">
+                <Descriptions.Item label="Kế hoạch cảnh">
                   <Space direction="vertical" size="small" style={{ width: '100%' }}>
                     {planData.scenes.map((scene, idx) => (
                       <Card
@@ -1802,7 +1802,7 @@ export default function Chapters() {
                           whiteSpace: 'normal',
                           overflowWrap: 'break-word'
                         }}>
-                          <strong>📍 地点：</strong>
+                          <strong>📍 Địa điểm:</strong>
                           <span style={{
                             wordBreak: 'break-word',
                             whiteSpace: 'normal',
@@ -1812,7 +1812,7 @@ export default function Chapters() {
                           </span>
                         </div>
                         <div style={{ marginBottom: 4 }}>
-                          <strong>👥 角色：</strong>
+                          <strong>👥 Nhân vật:</strong>
                           <Space
                             size="small"
                             wrap
@@ -1841,7 +1841,7 @@ export default function Chapters() {
                           whiteSpace: 'normal',
                           overflowWrap: 'break-word'
                         }}>
-                          <strong>🎯 目的：</strong>
+                          <strong>🎯 Mục đích:</strong>
                           <span style={{
                             wordBreak: 'break-word',
                             whiteSpace: 'normal',
@@ -1857,23 +1857,23 @@ export default function Chapters() {
               )}
             </Descriptions>
             <Alert
-              message="提示"
-              description="这些是AI在大纲展开时生成的规划信息，可以作为创作章节内容时的参考。"
+              message="Gợi ý"
+              description="Đây là thông tin kế hoạch do AI tạo khi mở rộng dàn ý, có thể dùng làm tham khảo khi sáng tác nội dung chương."
               type="info"
               showIcon
               style={{ marginTop: 16 }}
             />
           </div>
         ),
-        okText: '关闭',
+        okText: 'Đóng',
       });
     } catch (error) {
-      console.error('解析展开规划失败:', error);
-      message.error('展开规划数据格式错误');
+      console.error('Phân tích kế hoạch mở rộng thất bại:', error);
+      message.error('Dữ liệu kế hoạch mở rộng sai định dạng');
     }
   };
 
-  // 删除章节处理函数
+  // Xóa章节处理函数
   const handleDeleteChapter = async (chapterId: string) => {
     try {
       await deleteChapter(chapterId);
@@ -1881,22 +1881,22 @@ export default function Chapters() {
       // 刷新章节列表
       await refreshChapters();
 
-      // 刷新项目信息以更新总字数统计
+      // 刷新项目信息以Cập nhật总字数统计
       if (currentProject) {
         const updatedProject = await projectApi.getProject(currentProject.id);
         setCurrentProject(updatedProject);
       }
 
-      message.success('章节删除成功');
+      message.success('Xóa chương thành công');
     } catch (error: unknown) {
       const err = error as Error;
-      message.error('删除章节失败：' + (err.message || '未知错误'));
+      message.error('Xóa chương thất bại: ' + (err.message || 'Lỗi không xác định'));
     }
   };
 
-  // 打开规划编辑器
+  // 打开规划Chỉnh sửa器
   const handleOpenPlanEditor = (chapter: Chapter) => {
-    // 直接打开编辑器,如果没有规划数据则创建新的
+    // 直接打开Chỉnh sửa器,如果没有规划数据则创建新的
     setEditingPlanChapter(chapter);
     setPlanEditorVisible(true);
   };
@@ -1916,39 +1916,39 @@ export default function Chapters() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || '更新失败');
+        throw new Error(error.detail || 'Cập nhật thất bại');
       }
 
       // 刷新章节列表
       await refreshChapters();
 
-      message.success('规划信息更新成功');
+      message.success('Cập nhật thông tin kế hoạch thành công');
 
-      // 关闭编辑器
+      // 关闭Chỉnh sửa器
       setPlanEditorVisible(false);
       setEditingPlanChapter(null);
     } catch (error: unknown) {
       const err = error as Error;
-      message.error('保存规划失败：' + (err.message || '未知错误'));
+      message.error('Lưu kế hoạch thất bại: ' + (err.message || 'Lỗi không xác định'));
       throw error;
     }
   };
 
-  // 打开阅读器
+  // 打开Đọc器
   const handleOpenReader = (chapter: Chapter) => {
     setReadingChapter(chapter);
     setReaderVisible(true);
   };
 
-  // 阅读器切换章节
+  // Đọc器切换章节
   const handleReaderChapterChange = async (chapterId: string) => {
     try {
       const response = await fetch(`/api/chapters/${chapterId}`);
-      if (!response.ok) throw new Error('获取章节失败');
+      if (!response.ok) throw new Error('Không lấy được chương');
       const newChapter = await response.json();
       setReadingChapter(newChapter);
     } catch {
-      message.error('加载章节失败');
+      message.error('Tải chương thất bại');
     }
   };
 
@@ -1966,13 +1966,13 @@ export default function Chapters() {
     // 替换选中部分
     const newContent = currentContent.substring(0, startPos) + newText + currentContent.substring(endPos);
     
-    // 更新表单
+    // Cập nhật表单
     editorForm.setFieldsValue({ content: newContent });
     
     // 关闭弹窗
     setPartialRegenerateModalVisible(false);
     
-    message.success('局部重写已应用');
+    message.success('Đã áp dụng viết lại cục bộ');
   };
 
   return (
@@ -1995,21 +1995,21 @@ export default function Chapters() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <h2 style={{ margin: 0, fontSize: isMobile ? 18 : 24 }}>
             <BookOutlined style={{ marginRight: 8 }} />
-            章节管理
+            Quản lý chương
           </h2>
           <Tag
             color={currentProject.outline_mode === 'one-to-one' ? 'blue' : 'green'}
             style={{ width: 'fit-content' }}
           >
             {currentProject.outline_mode === 'one-to-one'
-              ? '传统模式：章节由大纲管理，请在大纲页面操作'
-              : '细化模式：章节可在大纲页面展开'}
+              ? 'Chế độ truyền thống: chương do dàn ý quản lý, vui lòng thao tác ở trang dàn ý'
+              : 'Chế độ chi tiết: chương có thể mở rộng ở trang dàn ý'}
           </Tag>
         </div>
         <Space direction={isMobile ? 'vertical' : 'horizontal'} style={{ width: isMobile ? '100%' : 'auto' }}>
           <Input.Search
             allowClear
-            placeholder="搜索章节（序号/标题/大纲）"
+            placeholder="Tìm chương (số thứ tự/tiêu đề/dàn ý)"
             value={chapterSearchKeyword}
             onChange={(e) => setChapterSearchKeyword(e.target.value)}
             style={{ width: isMobile ? '100%' : 280 }}
@@ -2021,7 +2021,7 @@ export default function Chapters() {
               block={isMobile}
               size={isMobile ? 'middle' : 'middle'}
             >
-              手动创建
+              Tạo thủ công
             </Button>
           )}
           <Button
@@ -2033,9 +2033,9 @@ export default function Chapters() {
             block={isMobile}
             size={isMobile ? 'middle' : 'middle'}
             style={{ background: token.colorWarning, borderColor: token.colorWarning }}
-            title={batchAnalyzableChapterCount === 0 ? '暂无可一键分析章节' : `可一键分析 ${batchAnalyzableChapterCount} 章`}
+            title={batchAnalyzableChapterCount === 0 ? 'Chưa có chương nào có thể phân tích hàng loạt' : `Có thể phân tích hàng loạt ${batchAnalyzableChapterCount} chương`}
           >
-            一键分析{batchAnalyzableChapterCount > 0 ? ` (${batchAnalyzableChapterCount})` : ''}
+            Phân tích hàng loạt{batchAnalyzableChapterCount > 0 ? ` (${batchAnalyzableChapterCount})` : ''}
           </Button>
           <Button
             type="primary"
@@ -2047,7 +2047,7 @@ export default function Chapters() {
             size={isMobile ? 'middle' : 'middle'}
             style={batchGenerating ? {} : { background: token.colorInfo, borderColor: token.colorInfo }}
           >
-            {batchGenerating ? '生成中...' : '批量生成'}
+            {batchGenerating ? 'Đang tạo...' : 'Tạo hàng loạt'}
           </Button>
           <Button
             type="default"
@@ -2057,7 +2057,7 @@ export default function Chapters() {
             block={isMobile}
             size={isMobile ? 'middle' : 'middle'}
           >
-            导出为TXT
+            Xuất ra TXT
           </Button>
         </Space>
       </div>
@@ -2065,9 +2065,9 @@ export default function Chapters() {
 
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         {chapters.length === 0 ? (
-          <Empty description="还没有章节，开始创作吧！" />
+          <Empty description="Chưa có chương nào, hãy bắt đầu sáng tác!" />
         ) : filteredSortedChapters.length === 0 ? (
-          <Empty description="未找到匹配章节" />
+          <Empty description="Không tìm thấy chương phù hợp" />
         ) : currentProject.outline_mode === 'one-to-one' ? (
           // one-to-one 模式：直接显示扁平列表
           <List
@@ -2090,16 +2090,16 @@ export default function Chapters() {
                     icon={<ReadOutlined />}
                     onClick={() => handleOpenReader(item)}
                     disabled={!item.content || item.content.trim() === ''}
-                    title={!item.content || item.content.trim() === '' ? '暂无内容' : '沉浸式阅读'}
+                    title={!item.content || item.content.trim() === '' ? 'Chưa có nội dung' : 'Đọc đắm chìm'}
                   >
-                    阅读
+                    Đọc
                   </Button>,
                   <Button
                     type="text"
                     icon={<EditOutlined />}
                     onClick={() => handleOpenEditor(item.id)}
                   >
-                    编辑
+                    Chỉnh sửa
                   </Button>,
                   (() => {
                     const task = analysisTasksMap[item.id];
@@ -2114,12 +2114,12 @@ export default function Chapters() {
                         disabled={!hasContent || isAnalyzing}
                         loading={isAnalyzing}
                         title={
-                          !hasContent ? '请先生成章节内容' :
-                            isAnalyzing ? '分析进行中，请稍候...' :
+                          !hasContent ? 'Hãy tạo nội dung chương trước' :
+                            isAnalyzing ? 'Đang phân tích, vui lòng chờ...' :
                               ''
                         }
                       >
-                        {isAnalyzing ? '分析中' : '分析'}
+                        {isAnalyzing ? 'Đang phân tích' : 'Phân tích'}
                       </Button>
                     );
                   })(),
@@ -2128,7 +2128,7 @@ export default function Chapters() {
                     icon={<SettingOutlined />}
                     onClick={() => handleOpenModal(item.id)}
                   >
-                    修改
+                    Sửa
                   </Button>,
                 ]}
               >
@@ -2144,15 +2144,15 @@ export default function Chapters() {
                         width: '100%'
                       }}>
                         <span style={{ fontSize: isMobile ? 14 : 16, fontWeight: 500, flexShrink: 0 }}>
-                          第{item.chapter_number}章：{item.title}
+                          Chương {item.chapter_number}: {item.title}
                         </span>
                         <Space wrap size={isMobile ? 4 : 8}>
                           <Tag color={getStatusColor(item.status)}>{getStatusText(item.status)}</Tag>
-                          <Badge count={`${item.word_count || 0}字`} style={{ backgroundColor: token.colorSuccess }} />
+                          <Badge count={`${item.word_count || 0} chữ`} style={{ backgroundColor: token.colorSuccess }} />
                           {renderAnalysisStatus(item.id)}
                           {!canGenerateChapter(item) && (
                             <Tag icon={<LockOutlined />} color="warning" title={getGenerateDisabledReason(item)}>
-                              需前置章节
+                              Cần chương trước
                             </Tag>
                           )}
                         </Space>
@@ -2165,7 +2165,7 @@ export default function Chapters() {
                           {item.content.length > (isMobile ? 80 : 150) && '...'}
                         </div>
                       ) : (
-                        <span style={{ color: token.colorTextTertiary, fontSize: isMobile ? 12 : 14 }}>暂无内容</span>
+                        <span style={{ color: token.colorTextTertiary, fontSize: isMobile ? 12 : 14 }}>Chưa có nội dung</span>
                       )
                     }
                   />
@@ -2178,14 +2178,14 @@ export default function Chapters() {
                         onClick={() => handleOpenReader(item)}
                         size="small"
                         disabled={!item.content || item.content.trim() === ''}
-                        title={!item.content || item.content.trim() === '' ? '暂无内容' : '阅读'}
+                        title={!item.content || item.content.trim() === '' ? 'Chưa có nội dung' : 'Đọc'}
                       />
                       <Button
                         type="text"
                         icon={<EditOutlined />}
                         onClick={() => handleOpenEditor(item.id)}
                         size="small"
-                        title="编辑"
+                        title="Chỉnh sửa"
                       />
                       {(() => {
                         const task = analysisTasksMap[item.id];
@@ -2201,9 +2201,9 @@ export default function Chapters() {
                             disabled={!hasContent || isAnalyzing}
                             loading={isAnalyzing}
                             title={
-                              !hasContent ? '请先生成章节内容' :
-                                isAnalyzing ? '分析中' :
-                                  '分析'
+                              !hasContent ? 'Hãy tạo nội dung chương trước' :
+                                isAnalyzing ? 'Đang phân tích' :
+                                  'Phân tích'
                             }
                           />
                         );
@@ -2213,7 +2213,7 @@ export default function Chapters() {
                         icon={<SettingOutlined />}
                         onClick={() => handleOpenModal(item.id)}
                         size="small"
-                        title="修改"
+                        title="Sửa"
                       />
                     </Space>
                   )}
@@ -2236,17 +2236,17 @@ export default function Chapters() {
                 header={
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Tag color={group.outlineId ? 'blue' : 'default'} style={{ margin: 0 }}>
-                      {group.outlineId ? `📖 大纲 ${group.outlineOrder}` : '📝 未分类'}
+                      {group.outlineId ? `📖 Dàn ý ${group.outlineOrder}` : '📝 Chưa phân loại'}
                     </Tag>
                     <span style={{ fontWeight: 600, fontSize: 16 }}>
                       {group.outlineTitle}
                     </span>
                     <Badge
-                      count={`${group.chapters.length} 章`}
+                      count={`${group.chapters.length} chương`}
                       style={{ backgroundColor: token.colorSuccess }}
                     />
                     <Badge
-                      count={`${group.chapters.reduce((sum, ch) => sum + (ch.word_count || 0), 0)} 字`}
+                      count={`${group.chapters.reduce((sum, ch) => sum + (ch.word_count || 0), 0)} chữ`}
                       style={{ backgroundColor: token.colorPrimary }}
                     />
                   </div>
@@ -2276,16 +2276,16 @@ export default function Chapters() {
                           icon={<ReadOutlined />}
                           onClick={() => handleOpenReader(item)}
                           disabled={!item.content || item.content.trim() === ''}
-                          title={!item.content || item.content.trim() === '' ? '暂无内容' : '沉浸式阅读'}
+                          title={!item.content || item.content.trim() === '' ? 'Chưa có nội dung' : 'Đọc đắm chìm'}
                         >
-                          阅读
+                          Đọc
                         </Button>,
                         <Button
                           type="text"
                           icon={<EditOutlined />}
                           onClick={() => handleOpenEditor(item.id)}
                         >
-                          编辑
+                          Chỉnh sửa
                         </Button>,
                         (() => {
                           const task = analysisTasksMap[item.id];
@@ -2300,12 +2300,12 @@ export default function Chapters() {
                               disabled={!hasContent || isAnalyzing}
                               loading={isAnalyzing}
                               title={
-                                !hasContent ? '请先生成章节内容' :
-                                  isAnalyzing ? '分析进行中，请稍候...' :
+                                !hasContent ? 'Hãy tạo nội dung chương trước' :
+                                  isAnalyzing ? 'Đang phân tích, vui lòng chờ...' :
                                     ''
                               }
                             >
-                              {isAnalyzing ? '分析中' : '分析'}
+                              {isAnalyzing ? 'Đang phân tích' : 'Phân tích'}
                             </Button>
                           );
                         })(),
@@ -2314,16 +2314,16 @@ export default function Chapters() {
                           icon={<SettingOutlined />}
                           onClick={() => handleOpenModal(item.id)}
                         >
-                          修改
+                          Sửa
                         </Button>,
-                        // 只在 one-to-many 模式下显示删除按钮
+                        // 只在 one-to-many 模式下显示Xóa按钮
                         ...(currentProject.outline_mode === 'one-to-many' ? [
                           <Popconfirm
-                            title="确定删除这个章节吗？"
-                            description="删除后将无法恢复，章节内容和分析结果都将被删除。"
+                            title="Xác nhận xóa chương này?"
+                            description="Không thể khôi phục sau khi xóa; nội dung chương và kết quả phân tích sẽ bị xóa."
                             onConfirm={() => handleDeleteChapter(item.id)}
-                            okText="确定删除"
-                            cancelText="取消"
+                            okText="Xác nhận xóa"
+                            cancelText="Hủy"
                             okButtonProps={{ danger: true }}
                           >
                             <Button
@@ -2331,7 +2331,7 @@ export default function Chapters() {
                               danger
                               icon={<DeleteOutlined />}
                             >
-                              删除
+                              Xóa
                             </Button>
                           </Popconfirm>
                         ] : []),
@@ -2349,21 +2349,21 @@ export default function Chapters() {
                               width: '100%'
                             }}>
                               <span style={{ fontSize: isMobile ? 14 : 16, fontWeight: 500, flexShrink: 0 }}>
-                                第{item.chapter_number}章：{item.title}
+                                Chương {item.chapter_number}: {item.title}
                               </span>
                               <Space wrap size={isMobile ? 4 : 8}>
                                 <Tag color={getStatusColor(item.status)}>{getStatusText(item.status)}</Tag>
-                                <Badge count={`${item.word_count || 0}字`} style={{ backgroundColor: token.colorSuccess }} />
+                                <Badge count={`${item.word_count || 0} chữ`} style={{ backgroundColor: token.colorSuccess }} />
                                 {renderAnalysisStatus(item.id)}
                                 {!canGenerateChapter(item) && (
                                   <Tag icon={<LockOutlined />} color="warning" title={getGenerateDisabledReason(item)}>
-                                    需前置章节
+                                    Cần chương trước
                                   </Tag>
                                 )}
                                 <Space size={4}>
                                   {item.expansion_plan && (
                                     <InfoCircleOutlined
-                                      title="查看展开详情"
+                                      title="Xem chi tiết mở rộng"
                                       style={{ color: token.colorPrimary, cursor: 'pointer', fontSize: 16 }}
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -2372,7 +2372,7 @@ export default function Chapters() {
                                     />
                                   )}
                                   <FormOutlined
-                                    title={item.expansion_plan ? "编辑规划信息" : "创建规划信息"}
+                                    title={item.expansion_plan ? "Chỉnh sửa thông tin kế hoạch" : "Tạo thông tin kế hoạch"}
                                     style={{ color: token.colorSuccess, cursor: 'pointer', fontSize: 16 }}
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -2390,7 +2390,7 @@ export default function Chapters() {
                                 {item.content.length > (isMobile ? 80 : 150) && '...'}
                               </div>
                             ) : (
-                              <span style={{ color: token.colorTextTertiary, fontSize: isMobile ? 12 : 14 }}>暂无内容</span>
+                              <span style={{ color: token.colorTextTertiary, fontSize: isMobile ? 12 : 14 }}>Chưa có nội dung</span>
                             )
                           }
                         />
@@ -2403,14 +2403,14 @@ export default function Chapters() {
                               onClick={() => handleOpenReader(item)}
                               size="small"
                               disabled={!item.content || item.content.trim() === ''}
-                              title={!item.content || item.content.trim() === '' ? '暂无内容' : '阅读'}
+                              title={!item.content || item.content.trim() === '' ? 'Chưa có nội dung' : 'Đọc'}
                             />
                             <Button
                               type="text"
                               icon={<EditOutlined />}
                               onClick={() => handleOpenEditor(item.id)}
                               size="small"
-                              title="编辑"
+                              title="Chỉnh sửa"
                             />
                             {(() => {
                               const task = analysisTasksMap[item.id];
@@ -2426,9 +2426,9 @@ export default function Chapters() {
                                   disabled={!hasContent || isAnalyzing}
                                   loading={isAnalyzing}
                                   title={
-                                    !hasContent ? '请先生成章节内容' :
-                                      isAnalyzing ? '分析中' :
-                                        '分析'
+                                    !hasContent ? 'Hãy tạo nội dung chương trước' :
+                                      isAnalyzing ? 'Đang phân tích' :
+                                        'Phân tích'
                                   }
                                 />
                               );
@@ -2438,16 +2438,16 @@ export default function Chapters() {
                               icon={<SettingOutlined />}
                               onClick={() => handleOpenModal(item.id)}
                               size="small"
-                              title="修改"
+                              title="Sửa"
                             />
-                            {/* 只在 one-to-many 模式下显示删除按钮 */}
+                            {/* 只在 one-to-many 模式下显示Xóa按钮 */}
                             {currentProject.outline_mode === 'one-to-many' && (
                               <Popconfirm
-                                title="确定删除？"
-                                description="删除后无法恢复"
+                                title="Xác nhận xóa?"
+                                description="Không thể khôi phục sau khi xóa"
                                 onConfirm={() => handleDeleteChapter(item.id)}
-                                okText="删除"
-                                cancelText="取消"
+                                okText="Xóa"
+                                cancelText="Hủy"
                                 okButtonProps={{ danger: true }}
                               >
                                 <Button
@@ -2455,7 +2455,7 @@ export default function Chapters() {
                                   danger
                                   icon={<DeleteOutlined />}
                                   size="small"
-                                  title="删除章节"
+                                  title="Xóa chương"
                                 />
                               </Popconfirm>
                             )}
@@ -2486,14 +2486,14 @@ export default function Chapters() {
                 setChapterPage(1);
               }
             }}
-            showTotal={(total) => `共 ${total} 条`}
+            showTotal={(total) => `Tổng ${total} mục`}
             size={isMobile ? 'small' : 'default'}
           />
         </div>
       )}
 
       <Modal
-        title={editingId ? '编辑章节信息' : '添加章节'}
+        title={editingId ? 'Chỉnh sửa thông tin chương' : 'Thêm chương'}
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
@@ -2513,47 +2513,47 @@ export default function Chapters() {
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
-            label="章节标题"
+            label="Tiêu đề chương"
             name="title"
             tooltip={
               currentProject.outline_mode === 'one-to-one'
-                ? "章节标题由大纲管理，请在大纲页面修改"
-                : "一对多模式下可以修改章节标题"
+                ? "Tiêu đề chương do dàn ý quản lý, hãy sửa ở trang dàn ý"
+                 : "Ở chế độ một-nhiều có thể sửa tiêu đề chương"
             }
             rules={
               currentProject.outline_mode === 'one-to-many'
-                ? [{ required: true, message: '请输入章节标题' }]
+                ? [{ required: true, message: 'Vui lòng nhập tiêu đề chương' }]
                 : undefined
             }
           >
             <Input
-              placeholder="输入章节标题"
+              placeholder="Nhập tiêu đề chương"
               disabled={currentProject.outline_mode === 'one-to-one'}
             />
           </Form.Item>
 
           <Form.Item
-            label="章节序号"
+            label="Số thứ tự chương"
             name="chapter_number"
-            tooltip="章节序号不允许修改，请删除对应大纲，重新生成"
+            tooltip="Không cho sửa số thứ tự chương; hãy xóa dàn ý tương ứng rồi tạo lại"
           >
-            <Input type="number" placeholder="章节排序序号" disabled />
+            <Input type="number" placeholder="Số thứ tự sắp xếp chương" disabled />
           </Form.Item>
 
-          <Form.Item label="状态" name="status">
-            <Select placeholder="选择状态">
-              <Select.Option value="draft">草稿</Select.Option>
-              <Select.Option value="pending">待处理</Select.Option>
-              <Select.Option value="writing">创作中</Select.Option>
-              <Select.Option value="completed">已完成</Select.Option>
+          <Form.Item label="Trạng thái" name="status">
+            <Select placeholder="Chọn trạng thái">
+              <Select.Option value="draft">Bản nháp</Select.Option>
+              <Select.Option value="pending">Chờ xử lý</Select.Option>
+              <Select.Option value="writing">Đang sáng tác</Select.Option>
+              <Select.Option value="completed">Đã hoàn tất</Select.Option>
             </Select>
           </Form.Item>
 
           <Form.Item>
             <Space style={{ float: 'right' }}>
-              <Button onClick={() => setIsModalOpen(false)}>取消</Button>
+              <Button onClick={() => setIsModalOpen(false)}>Hủy</Button>
               <Button type="primary" htmlType="submit">
-                更新
+                Cập nhật
               </Button>
             </Space>
           </Form.Item>
@@ -2561,11 +2561,11 @@ export default function Chapters() {
       </Modal>
 
       <Modal
-        title="编辑章节内容"
+        title="Chỉnh sửa nội dung chương"
         open={isEditorOpen}
         onCancel={() => {
           if (isGenerating) {
-            message.warning('AI正在创作中，请等待完成后再关闭');
+            message.warning('AI đang sáng tác, hãy đợi xong rồi đóng');
             return;
           }
           setIsEditorOpen(false);
@@ -2592,8 +2592,8 @@ export default function Chapters() {
         <Form form={editorForm} layout="vertical" onFinish={handleEditorSubmit}>
           {/* 章节标题和AI创作按钮 */}
           <Form.Item
-            label="章节标题"
-            tooltip="（1-1模式请在大纲修改，1-N模式请使用修改按钮编辑）"
+            label="Tiêu đề chương"
+            tooltip="(Chế độ 1-1 sửa ở dàn ý; chế độ 1-N dùng nút Sửa để chỉnh)"
             style={{ marginBottom: isMobile ? 16 : 12 }}
           >
             <Space.Compact style={{ width: '100%' }}>
@@ -2615,18 +2615,18 @@ export default function Chapters() {
                     disabled={!canGenerate}
                     danger={!canGenerate}
                     style={{ fontWeight: 'bold' }}
-                    title={!canGenerate ? disabledReason : '根据大纲和前置章节内容创作（流式）'}
+                    title={!canGenerate ? disabledReason : 'Sáng tác theo dàn ý và chương trước (stream)'}
                   >
-                    {isMobile ? 'AI' : 'AI创作'}
+                    {isMobile ? 'AI' : 'AI sáng tác'}
                   </Button>
                   <Button
                     icon={<RocketOutlined />}
                     onClick={handleBackgroundGenerate}
                     disabled={!canGenerate || isContinuing}
                     style={{ fontWeight: 'bold' }}
-                    title={!canGenerate ? disabledReason : '后台生成：关闭浏览器也不影响，完成后自动保存'}
+                    title={!canGenerate ? disabledReason : 'Tạo nền: đóng trình duyệt cũng không ảnh hưởng, xong sẽ tự lưu'}
                   >
-                    {isMobile ? '后台' : '后台生成'}
+                    {isMobile ? 'Nền' : 'Tạo nền'}
                   </Button>
                   </>
                 );
@@ -2642,13 +2642,13 @@ export default function Chapters() {
             marginBottom: isMobile ? 0 : 12
           }}>
             <Form.Item
-              label="写作风格"
-              tooltip="选择AI创作时使用的写作风格"
+              label="Phong cách viết"
+              tooltip="Chọn phong cách viết dùng khi AI sáng tác"
               required
               style={{ flex: 1, marginBottom: isMobile ? 16 : 0 }}
             >
               <Select
-                placeholder="请选择写作风格"
+                placeholder="Vui lòng chọn phong cách viết"
                 value={selectedStyleId}
                 onChange={setSelectedStyleId}
                 disabled={isGenerating}
@@ -2656,30 +2656,30 @@ export default function Chapters() {
               >
                 {writingStyles.map(style => (
                   <Select.Option key={style.id} value={style.id}>
-                    {style.name}{style.is_default && ' (默认)'}
+                    {style.name}{style.is_default && ' (mặc định)'}
                   </Select.Option>
                 ))}
               </Select>
               {!selectedStyleId && (
-                <div style={{ color: token.colorError, fontSize: 12, marginTop: 4 }}>请选择写作风格</div>
+                <div style={{ color: token.colorError, fontSize: 12, marginTop: 4 }}>Vui lòng chọn phong cách viết</div>
               )}
             </Form.Item>
 
             <Form.Item
-              label="叙事角度"
-              tooltip="第一人称(我)代入感强；第三人称(他/她)更客观；全知视角洞悉一切"
+              label="Góc kể chuyện"
+              tooltip="Ngôi thứ nhất (tôi) nhập vai mạnh; ngôi thứ ba (anh/cô ấy) khách quan hơn; toàn tri nhìn thấu mọi thứ"
               style={{ flex: 1, marginBottom: isMobile ? 16 : 0 }}
             >
               <Select
-                placeholder={`项目默认: ${getNarrativePerspectiveText(currentProject?.narrative_perspective)}`}
+                placeholder={`Mặc định dự án: ${getNarrativePerspectiveText(currentProject?.narrative_perspective)}`}
                 value={temporaryNarrativePerspective}
                 onChange={setTemporaryNarrativePerspective}
                 allowClear
                 disabled={isGenerating}
               >
-                <Select.Option value="第一人称">第一人称(我)</Select.Option>
-                <Select.Option value="第三人称">第三人称(他/她)</Select.Option>
-                <Select.Option value="全知视角">全知视角</Select.Option>
+                <Select.Option value="第一人称">Ngôi thứ nhất (tôi)</Select.Option>
+                <Select.Option value="第三人称">Ngôi thứ ba (anh/cô ấy)</Select.Option>
+                <Select.Option value="全知视角">Toàn tri</Select.Option>
               </Select>
               {temporaryNarrativePerspective && (
                 <div style={{ color: token.colorSuccess, fontSize: 12, marginTop: 4 }}>
@@ -2696,12 +2696,12 @@ export default function Chapters() {
             marginBottom: isMobile ? 16 : 12
           }}>
             <Form.Item
-              label="应用 Skill"
-              tooltip="选择一个 Skill 工作流指导 AI 创作，不选则使用标准创作流程"
+              label="Áp dụng Skill"
+              tooltip="Chọn một Skill workflow để hướng dẫn AI sáng tác; không chọn thì dùng quy trình chuẩn"
               style={{ flex: 1, marginBottom: isMobile ? 16 : 0 }}
             >
               <Select
-                placeholder="不使用 Skill（标准创作）"
+                placeholder="Không dùng Skill (sáng tác chuẩn)"
                 value={selectedSkillKey}
                 onChange={setSelectedSkillKey}
                 allowClear
@@ -2729,8 +2729,8 @@ export default function Chapters() {
             </Form.Item>
 
             <Form.Item
-              label="目标字数"
-              tooltip="AI生成章节时的目标字数，实际可能略有偏差（修改后会自动记住）"
+              label="Số chữ mục tiêu"
+              tooltip="Số chữ mục tiêu khi AI tạo chương; thực tế có thể lệch nhẹ (sau khi sửa sẽ tự nhớ)"
               style={{ flex: 1, marginBottom: isMobile ? 16 : 0 }}
             >
               <InputNumber
@@ -2745,18 +2745,18 @@ export default function Chapters() {
                 }}
                 disabled={isGenerating}
                 style={{ width: '100%' }}
-                formatter={(value) => `${value} 字`}
-                parser={(value) => parseInt(value?.replace(' 字', '') || '0', 10) as unknown as 500}
+                formatter={(value) => `${value} chữ`}
+                parser={(value) => parseInt(value?.replace(' chữ', '') || '0', 10) as unknown as 500}
               />
             </Form.Item>
 
             <Form.Item
-              label="AI模型"
-              tooltip="选择用于生成章节内容的AI模型，不选择则使用默认模型"
+              label="Mô hình AI"
+              tooltip="Chọn mô hình AI để tạo nội dung chương; không chọn thì dùng mặc định"
               style={{ flex: 1, marginBottom: isMobile ? 16 : 0 }}
             >
               <Select
-                placeholder={selectedModel ? `默认: ${availableModels.find(m => m.value === selectedModel)?.label || selectedModel}` : "使用默认模型"}
+                placeholder={selectedModel ? `Mặc định: ${availableModels.find(m => m.value === selectedModel)?.label || selectedModel}` : "Dùng mô hình mặc định"}
                 value={selectedModel}
                 onChange={setSelectedModel}
                 allowClear
@@ -2773,11 +2773,11 @@ export default function Chapters() {
             </Form.Item>
           </div>
 
-          <Form.Item label="章节内容" name="content">
+          <Form.Item label="Nội dung chương" name="content">
             <TextArea
               ref={contentTextAreaRef}
               rows={isMobile ? 12 : 20}
-              placeholder="开始写作..."
+              placeholder="Bắt đầu viết..."
               style={{ fontFamily: 'monospace', fontSize: isMobile ? 12 : 14 }}
               disabled={isGenerating}
             />
@@ -2799,7 +2799,7 @@ export default function Chapters() {
                 <Button
                   onClick={() => {
                     if (isGenerating) {
-                      message.warning('AI正在创作中，请等待完成后再关闭');
+                      message.warning('AI đang sáng tác, hãy đợi xong rồi đóng');
                       return;
                     }
                     setIsEditorOpen(false);
@@ -2807,7 +2807,7 @@ export default function Chapters() {
                   block={isMobile}
                   disabled={isGenerating}
                 >
-                  取消
+                  Hủy
                 </Button>
                 <Button
                   type="primary"
@@ -2815,7 +2815,7 @@ export default function Chapters() {
                   block={isMobile}
                   disabled={isGenerating}
                 >
-                  保存章节
+                  Lưu chương
                 </Button>
               </Space>
             </Space>
@@ -2833,14 +2833,14 @@ export default function Chapters() {
             // 刷新章节列表以显示最新内容
             refreshChapters();
 
-            // 刷新项目信息以更新字数统计
+            // 刷新项目信息以Cập nhật字数统计
             if (currentProject) {
               projectApi.getProject(currentProject.id)
                 .then(updatedProject => {
                   setCurrentProject(updatedProject);
                 })
                 .catch(error => {
-                  console.error('刷新项目信息失败:', error);
+                  console.error('Làm mới thông tin dự án thất bại:', error);
                 });
             }
 
@@ -2859,17 +2859,17 @@ export default function Chapters() {
         title={
           <Space>
             <RocketOutlined style={{ color: token.colorInfo }} />
-            <span>批量生成章节内容</span>
+            <span>Tạo hàng loạt nội dung chương</span>
           </Space>
         }
         open={batchGenerateVisible}
         onCancel={() => {
           if (batchGenerating) {
             modal.confirm({
-              title: '确认取消',
-              content: '批量生成正在进行中，确定要取消吗？',
-              okText: '确定取消',
-              cancelText: '继续生成',
+              title: 'Xác nhận hủy',
+              content: 'Đang tạo hàng loạt, xác nhận hủy?',
+              okText: 'Xác nhận hủy',
+              cancelText: 'Tiếp tục tạo',
               centered: true,
               onOk: () => {
                 handleCancelBatchGenerate();
@@ -2883,10 +2883,10 @@ export default function Chapters() {
         footer={!batchGenerating ? (
           <Space style={{ width: '100%', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
             <Button onClick={() => setBatchGenerateVisible(false)}>
-              取消
+              Hủy
             </Button>
             <Button type="primary" icon={<RocketOutlined />} onClick={() => batchForm.submit()}>
-              开始批量生成
+              Bắt đầu tạo hàng loạt
             </Button>
           </Space>
         ) : null}
@@ -2922,7 +2922,7 @@ export default function Chapters() {
             }}
           >
             <Alert
-              message="批量生成说明：严格按序生成 | 统一风格字数 | 任一失败则终止"
+              message="Hướng dẫn tạo hàng loạt: tạo đúng thứ tự | thống nhất phong cách/số chữ | lỗi bất kỳ sẽ dừng"
               type="info"
               showIcon
               style={{ marginBottom: 16 }}
@@ -2931,34 +2931,34 @@ export default function Chapters() {
             {/* 第一行：起始章节 + 生成数量 */}
             <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 0 : 16 }}>
               <Form.Item
-                label="起始章节"
+                label="Chương bắt đầu"
                 name="startChapterNumber"
-                rules={[{ required: true, message: '请选择' }]}
+                rules={[{ required: true, message: 'Vui lòng chọn' }]}
                 style={{ flex: 1, marginBottom: 12 }}
               >
-                <Select placeholder="选择起始章节">
+                <Select placeholder="Chọn chương bắt đầu">
                   {sortedChapters
                     .filter(ch => !ch.content || ch.content.trim() === '')
                     .filter(ch => canGenerateChapter(ch))
                     .map(ch => (
                       <Select.Option key={ch.id} value={ch.chapter_number}>
-                        第{ch.chapter_number}章：{ch.title}
+                        Chương {ch.chapter_number}: {ch.title}
                       </Select.Option>
                     ))}
                 </Select>
               </Form.Item>
 
               <Form.Item
-                label="生成数量"
+                label="Số lượng tạo"
                 name="count"
-                rules={[{ required: true, message: '请选择' }]}
+                rules={[{ required: true, message: 'Vui lòng chọn' }]}
                 style={{ marginBottom: 12 }}
               >
                 <Radio.Group buttonStyle="solid" size={isMobile ? 'small' : 'middle'}>
-                  <Radio.Button value={5}>5章</Radio.Button>
-                  <Radio.Button value={10}>10章</Radio.Button>
-                  <Radio.Button value={15}>15章</Radio.Button>
-                  <Radio.Button value={20}>20章</Radio.Button>
+                  <Radio.Button value={5}>5 chương</Radio.Button>
+                  <Radio.Button value={10}>10 chương</Radio.Button>
+                  <Radio.Button value={15}>15 chương</Radio.Button>
+                  <Radio.Button value={20}>20 chương</Radio.Button>
                 </Radio.Group>
               </Form.Item>
             </div>
@@ -2966,25 +2966,25 @@ export default function Chapters() {
             {/* 第二行：写作风格 + 目标字数 */}
             <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 0 : 16 }}>
               <Form.Item
-                label="写作风格"
+                label="Phong cách viết"
                 name="styleId"
-                rules={[{ required: true, message: '请选择' }]}
+                rules={[{ required: true, message: 'Vui lòng chọn' }]}
                 style={{ flex: 1, marginBottom: 12 }}
               >
-                <Select placeholder="请选择写作风格" showSearch optionFilterProp="children">
+                <Select placeholder="Vui lòng chọn phong cách viết" showSearch optionFilterProp="children">
                   {writingStyles.map(style => (
                     <Select.Option key={style.id} value={style.id}>
-                      {style.name}{style.is_default && ' (默认)'}
+                      {style.name}{style.is_default && ' (mặc định)'}
                     </Select.Option>
                   ))}
                 </Select>
               </Form.Item>
 
               <Form.Item
-                label="目标字数"
+                label="Số chữ mục tiêu"
                 name="targetWordCount"
-                rules={[{ required: true, message: '请设置' }]}
-                tooltip="修改后自动记住"
+                rules={[{ required: true, message: 'Vui lòng đặt' }]}
+                tooltip="Sau khi sửa sẽ tự nhớ"
                 style={{ flex: 1, marginBottom: 12 }}
               >
                 <InputNumber
@@ -2992,8 +2992,8 @@ export default function Chapters() {
                   max={10000}
                   step={100}
                   style={{ width: '100%' }}
-                  formatter={(value) => `${value} 字`}
-                  parser={(value) => parseInt(value?.replace(' 字', '') || '0', 10) as unknown as 500}
+                  formatter={(value) => `${value} chữ`}
+                  parser={(value) => parseInt(value?.replace(' chữ', '') || '0', 10) as unknown as 500}
                   onChange={(value) => {
                     if (value) {
                       setCachedWordCount(value);
@@ -3006,12 +3006,12 @@ export default function Chapters() {
             {/* 第三行：AI模型 + Skill */}
             <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 0 : 16 }}>
               <Form.Item
-                label="AI模型"
-                tooltip="不选则使用默认模型"
+                label="Mô hình AI"
+                tooltip="Không chọn thì dùng mô hình mặc định"
                 style={{ flex: 1, marginBottom: 12 }}
               >
                 <Select
-                  placeholder={batchSelectedModel ? `默认: ${availableModels.find(m => m.value === batchSelectedModel)?.label || batchSelectedModel}` : "使用默认模型"}
+                  placeholder={batchSelectedModel ? `Mặc định: ${availableModels.find(m => m.value === batchSelectedModel)?.label || batchSelectedModel}` : "Dùng mô hình mặc định"}
                   value={batchSelectedModel}
                   onChange={setBatchSelectedModel}
                   allowClear
@@ -3027,12 +3027,12 @@ export default function Chapters() {
               </Form.Item>
 
               <Form.Item
-                label="应用 Skill"
-                tooltip="选择一个 Skill 工作流指导批量创作，不选则使用标准创作流程"
+                label="Áp dụng Skill"
+                tooltip="Chọn một Skill workflow để hướng dẫn sáng tác hàng loạt; không chọn thì dùng quy trình chuẩn"
                 style={{ flex: 1, marginBottom: 12 }}
               >
                 <Select
-                  placeholder="不使用 Skill（标准创作）"
+                  placeholder="Không dùng Skill (sáng tác chuẩn)"
                   value={batchSelectedSkillKey}
                   onChange={setBatchSelectedSkillKey}
                   allowClear
@@ -3053,14 +3053,14 @@ export default function Chapters() {
 
             {/* 同步分析（固定开启） */}
             <Form.Item
-              label="同步分析"
+              label="Phân tích đồng bộ"
               name="enableAnalysis"
-              tooltip="必须开启，确保剧情连贯"
+              tooltip="Bắt buộc bật để đảm bảo cốt truyện mạch lạc"
               style={{ marginBottom: 12 }}
             >
               <Radio.Group disabled>
                 <Radio value={true}>
-                  <span style={{ fontSize: 12, color: token.colorSuccess }}>✓ 自动更新角色状态</span>
+                  <span style={{ fontSize: 12, color: token.colorSuccess }}>✓ Tự cập nhật trạng thái nhân vật</span>
                 </Radio>
               </Radio.Group>
             </Form.Item>
@@ -3068,14 +3068,14 @@ export default function Chapters() {
         ) : (
           <div>
             <Alert
-              message="温馨提示"
+              message="Lưu ý nhẹ"
               description={
                 <ul style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
-                  <li>批量生成需要一定时间，可以切换到其他页面</li>
-                  <li>关闭页面后重新打开，会自动恢复任务进度</li>
-                  <li>可以随时点击"取消任务"按钮中止生成</li>
+                  <li>Tạo hàng loạt cần thời gian, có thể chuyển sang trang khác</li>
+                  <li>Đóng rồi mở lại trang sẽ tự khôi phục tiến độ nhiệm vụ</li>
+                  <li>Có thể nhấn "Hủy nhiệm vụ" bất cứ lúc nào để dừng tạo</li>
                   {batchProgress?.estimated_time_minutes && batchProgress.completed === 0 && (
-                    <li>⏱️ 预计耗时：约 {batchProgress.estimated_time_minutes} 分钟</li>
+                    <li>⏱️ Thời gian dự kiến: khoảng {batchProgress.estimated_time_minutes} phút</li>
                   )}
                 </ul>
               }
@@ -3090,16 +3090,16 @@ export default function Chapters() {
                 icon={<StopOutlined />}
                 onClick={() => {
                   modal.confirm({
-                    title: '确认取消',
-                    content: '确定要取消批量生成吗？已生成的章节将保留。',
-                    okText: '确定取消',
-                    cancelText: '继续生成',
+                    title: 'Xác nhận hủy',
+                    content: 'Xác nhận hủy tạo hàng loạt? Các chương đã tạo sẽ được giữ.',
+                    okText: 'Xác nhận hủy',
+                    cancelText: 'Tiếp tục tạo',
                     okButtonProps: { danger: true },
                     onOk: handleCancelBatchGenerate,
                   });
                 }}
               >
-                取消任务
+                Hủy nhiệm vụ
               </Button>
             </div>
           </div>
@@ -3113,7 +3113,7 @@ export default function Chapters() {
         message={singleChapterProgressMessage}
       />
 
-      {/* 章节阅读器 */}
+      {/* 章节Đọc器 */}
       {readingChapter && (
         <ChapterReader
           visible={readerVisible}
@@ -3140,7 +3140,7 @@ export default function Chapters() {
         />
       )}
 
-      {/* 规划编辑器 */}
+      {/* 规划Chỉnh sửa器 */}
       {editingPlanChapter && currentProject && (() => {
         let parsedPlanData = null;
         try {
@@ -3148,7 +3148,7 @@ export default function Chapters() {
             parsedPlanData = JSON.parse(editingPlanChapter.expansion_plan);
           }
         } catch (error) {
-          console.error('解析规划数据失败:', error);
+          console.error('Phân tích dữ liệu kế hoạch thất bại:', error);
         }
 
         return (

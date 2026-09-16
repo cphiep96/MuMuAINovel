@@ -28,7 +28,7 @@ from app.logger import get_logger, safe_preview
 from app.api.settings import get_user_ai_service
 from app.api.common import verify_project_access
 
-router = APIRouter(prefix="/characters", tags=["角色管理"])
+router = APIRouter(prefix="/characters", tags=["Quản lý nhân vật"])
 logger = get_logger(__name__)
 
 
@@ -71,12 +71,12 @@ async def _build_relationships_summary(character_id: str, project_id: str, db: A
     parts = []
     for r in rels:
         if r.character_from_id == character_id:
-            target_name = name_map.get(r.character_to_id, "未知")
-            rel_name = r.relationship_name or "相关"
+            target_name = name_map.get(r.character_to_id, "Chưa rõ")
+            rel_name = r.relationship_name or "Liên quan"
         else:
-            target_name = name_map.get(r.character_from_id, "未知")
-            rel_name = r.relationship_name or "相关"
-        parts.append(f"与{target_name}：{rel_name}")
+            target_name = name_map.get(r.character_from_id, "Chưa rõ")
+            rel_name = r.relationship_name or "Liên quan"
+        parts.append(f"Với {target_name}: {rel_name}")
     
     return "；".join(parts)
 
@@ -111,14 +111,14 @@ async def _build_org_members_summary(character_id: str, db: AsyncSession) -> str
     # 返回 JSON 字符串数组，避免前端 JSON.parse 报错
     member_items = []
     for m in members:
-        name = name_map.get(m.character_id, "未知")
-        position = m.position or "成员"
+        name = name_map.get(m.character_id, "Chưa rõ")
+        position = m.position or "Thành viên"
         member_items.append(f"{name}（{position}）")
 
     return json.dumps(member_items, ensure_ascii=False)
 
 
-@router.get("", response_model=CharacterListResponse, summary="获取角色列表")
+@router.get("", response_model=CharacterListResponse, summary="Lấy danh sách nhân vật")
 async def get_characters(
     project_id: str,
     request: Request,
@@ -195,7 +195,7 @@ async def get_characters(
     return CharacterListResponse(total=total, items=enriched_characters)
 
 
-@router.get("/project/{project_id}", response_model=CharacterListResponse, summary="获取项目的所有角色")
+@router.get("/project/{project_id}", response_model=CharacterListResponse, summary="Lấy tất cả nhân vật của dự án")
 async def get_project_characters(
     project_id: str,
     request: Request,
@@ -272,7 +272,7 @@ async def get_project_characters(
     return CharacterListResponse(total=total, items=enriched_characters)
 
 
-@router.get("/{character_id}", response_model=CharacterResponse, summary="获取角色详情")
+@router.get("/{character_id}", response_model=CharacterResponse, summary="Lấy chi tiết nhân vật")
 async def get_character(
     character_id: str,
     request: Request,
@@ -285,7 +285,7 @@ async def get_character(
     character = result.scalar_one_or_none()
     
     if not character:
-        raise HTTPException(status_code=404, detail="角色不存在")
+        raise HTTPException(status_code=404, detail="Nhân vật không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -338,7 +338,7 @@ async def get_character(
     return char_dict
 
 
-@router.put("/{character_id}", response_model=CharacterResponse, summary="更新角色")
+@router.put("/{character_id}", response_model=CharacterResponse, summary="Cập nhật nhân vật")
 async def update_character(
     character_id: str,
     character_update: CharacterUpdate,
@@ -354,7 +354,7 @@ async def update_character(
     character = result.scalar_one_or_none()
     
     if not character:
-        raise HTTPException(status_code=404, detail="角色不存在")
+        raise HTTPException(status_code=404, detail="Nhân vật không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -394,11 +394,11 @@ async def update_character(
             career = career_result.scalar_one_or_none()
             
             if not career:
-                raise HTTPException(status_code=400, detail="主职业不存在或类型错误")
+                raise HTTPException(status_code=400, detail="Nghề chính không tồn tại hoặc sai loại")
             
             # 验证阶段有效性
             if main_career_stage and main_career_stage > career.max_stage:
-                raise HTTPException(status_code=400, detail=f"阶段超出范围，该职业最大阶段为{career.max_stage}")
+                raise HTTPException(status_code=400, detail=f"Giai đoạn vượt phạm vi, giai đoạn tối đa của nghề này là {career.max_stage}")
             
             # 更新或创建CharacterCareer关联
             char_career_result = await db.execute(
@@ -589,7 +589,7 @@ async def update_character(
     return response_data
 
 
-@router.delete("/{character_id}", summary="删除角色")
+@router.delete("/{character_id}", summary="Xóa nhân vật")
 async def delete_character(
     character_id: str,
     request: Request,
@@ -604,7 +604,7 @@ async def delete_character(
     character = result.scalar_one_or_none()
     
     if not character:
-        raise HTTPException(status_code=404, detail="角色不存在")
+        raise HTTPException(status_code=404, detail="Nhân vật không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -626,10 +626,10 @@ async def delete_character(
     
     logger.info(f"删除角色成功：{character.name} (ID: {character_id}), 清理了 {len(career_relations)} 条职业关联")
     
-    return {"message": "角色删除成功"}
+    return {"message": "Xóa nhân vật thành công"}
 
 
-@router.post("", response_model=CharacterResponse, summary="手动创建角色")
+@router.post("", response_model=CharacterResponse, summary="Tạo nhân vật thủ công")
 async def create_character(
     character_data: CharacterCreate,
     request: Request,
@@ -807,10 +807,10 @@ async def create_character(
         
     except Exception as e:
         logger.error(f"手动创建角色失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"创建角色失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Tạo nhân vật thất bại: {str(e)}")
 
 
-@router.post("/generate-stream", summary="AI生成角色（流式）")
+@router.post("/generate-stream", summary="AI tạo nhân vật (dạng luồng)")
 async def generate_character_stream(
     request: CharacterGenerateRequest,
     http_request: Request,
@@ -823,7 +823,7 @@ async def generate_character_stream(
     通过Server-Sent Events返回实时进度信息
     """
     async def generate() -> AsyncGenerator[str, None]:
-        tracker = WizardProgressTracker("角色")
+        tracker = WizardProgressTracker("Nhân vật")
         try:
             # 验证用户权限和项目是否存在
             user_id = getattr(http_request.state, 'user_id', None)
@@ -832,7 +832,7 @@ async def generate_character_stream(
             yield await tracker.start()
             
             # 获取已存在的角色列表
-            yield await tracker.loading("获取项目上下文...", 0.3)
+            yield await tracker.loading("Đang lấy ngữ cảnh dự án...", 0.3)
             
             existing_chars_result = await db.execute(
                 select(Character)
@@ -849,14 +849,14 @@ async def generate_character_stream(
             if existing_characters:
                 for c in existing_characters[:10]:
                     if c.is_organization:
-                        organization_list.append(f"- {c.name} [{c.organization_type or '组织'}]")
+                        organization_list.append(f"- {c.name} [{c.organization_type or 'Tổ chức'}]")
                     else:
-                        character_list.append(f"- {c.name}（{c.role_type or '未知'}）")
+                        character_list.append(f"- {c.name}（{c.role_type or 'Chưa rõ'}）")
                 
                 if character_list:
-                    existing_chars_info += "\n已有角色：\n" + "\n".join(character_list)
+                    existing_chars_info += "\nNhân vật hiện có:\n" + "\n".join(character_list)
                 if organization_list:
-                    existing_chars_info += "\n\n已有组织：\n" + "\n".join(organization_list)
+                    existing_chars_info += "\n\nTổ chức hiện có:\n" + "\n".join(organization_list)
             
             # 🎯 获取项目职业列表
             from app.models.career import Career
@@ -874,58 +874,58 @@ async def generate_character_stream(
                 sub_careers = [c for c in careers if c.type == 'sub']
                 
                 if main_careers:
-                    careers_info += "\n\n可用主职业列表（请在career_info中填写职业名称，系统会自动匹配ID）：\n"
+                    careers_info += "\n\nDanh sách nghề chính có thể dùng (hãy điền tên nghề vào career_info, hệ thống sẽ tự động đối chiếu ID):\n"
                     for career in main_careers:
                         # 解析阶段信息
                         import json as json_lib
                         try:
                             stages = json_lib.loads(career.stages) if career.stages else []
-                            stage_names = [s.get('name', f'阶段{s.get("level")}') for s in stages[:3]]  # 只显示前3个阶段
+                            stage_names = [s.get('name', f'Giai đoạn {s.get("level")}') for s in stages[:3]]  # 只显示前3个阶段
                             stage_info = " → ".join(stage_names)
                             if len(stages) > 3:
                                 stage_info += " → ..."
                         except Exception:
-                            stage_info = f"共{career.max_stage}个阶段"
+                            stage_info = f"Tổng cộng {career.max_stage} giai đoạn"
                         
-                        careers_info += f"- 名称: {career.name}"
+                        careers_info += f"- Tên: {career.name}"
                         if career.description:
-                            careers_info += f", 描述: {career.description[:50]}"
-                        careers_info += f", 阶段: {stage_info}\n"
+                            careers_info += f", Mô tả: {career.description[:50]}"
+                        careers_info += f", Giai đoạn: {stage_info}\n"
                 
                 if sub_careers:
-                    careers_info += "\n可用副职业列表（请在career_info中填写职业名称，系统会自动匹配ID）：\n"
+                    careers_info += "\nDanh sách nghề phụ có thể dùng (hãy điền tên nghề vào career_info, hệ thống sẽ tự động đối chiếu ID):\n"
                     for career in sub_careers[:5]:  # 最多显示5个副职业
-                        careers_info += f"- 名称: {career.name}"
+                        careers_info += f"- Tên: {career.name}"
                         if career.description:
-                            careers_info += f", 描述: {career.description[:50]}"
+                            careers_info += f", Mô tả: {career.description[:50]}"
                         careers_info += "\n"
             else:
-                careers_info = "\n\n⚠️ 项目中暂无职业设定"
+                careers_info = "\n\n⚠️ Dự án hiện chưa có thiết lập nghề nghiệp"
             
             # 构建项目上下文
             project_context = f"""
-项目信息：
-- 书名：{project.title}
-- 主题：{project.theme or '未设定'}
-- 类型：{project.genre or '未设定'}
-- 时间背景：{project.world_time_period or '未设定'}
-- 地理位置：{project.world_location or '未设定'}
-- 氛围基调：{project.world_atmosphere or '未设定'}
-- 世界规则：{project.world_rules or '未设定'}
+Thông tin dự án:
+- Tên sách: {project.title}
+- Chủ đề: {project.theme or 'Chưa thiết lập'}
+- Thể loại: {project.genre or 'Chưa thiết lập'}
+- Bối cảnh thời gian: {project.world_time_period or 'Chưa thiết lập'}
+- Địa điểm: {project.world_location or 'Chưa thiết lập'}
+- Sắc thái: {project.world_atmosphere or 'Chưa thiết lập'}
+- Quy tắc thế giới: {project.world_rules or 'Chưa thiết lập'}
 {existing_chars_info}
 {careers_info}
 """
             
             user_input = f"""
-用户要求：
-- 角色名称：{request.name or '请AI生成'}
-- 角色定位：{request.role_type or 'supporting'}
-- 背景设定：{request.background or '无特殊要求'}
-- 其他要求：{request.requirements or '无'}
+Yêu cầu của người dùng:
+- Tên nhân vật: {request.name or 'Hãy để AI tạo'}
+- Định vị nhân vật: {request.role_type or 'supporting'}
+- Thiết lập bối cảnh: {request.background or 'Không có yêu cầu đặc biệt'}
+- Yêu cầu khác: {request.requirements or 'Không có'}
 """
             
-            yield await tracker.loading("项目上下文准备完成", 0.7)
-            yield await tracker.preparing("构建AI提示词...")
+            yield await tracker.loading("Chuẩn bị ngữ cảnh dự án hoàn tất", 0.7)
+            yield await tracker.preparing("Đang dựng prompt AI...")
             
             # 获取自定义提示词模板
             template = await PromptService.get_template("SINGLE_CHARACTER_GENERATION", user_id, db)
@@ -936,7 +936,7 @@ async def generate_character_stream(
                 user_input=user_input
             )
             
-            yield await tracker.generating(0, max(3000, len(prompt) * 8), "调用AI服务生成角色...")
+            yield await tracker.generating(0, max(3000, len(prompt) * 8), "Đang gọi dịch vụ AI tạo nhân vật...")
             logger.info(f"🎯 开始为项目 {request.project_id} 生成角色（SSE流式）")
             
             try:
@@ -946,7 +946,7 @@ async def generate_character_stream(
                 estimated_total = max(3000, len(prompt) * 8)
                 
                 logger.info(f"🎯 开始生成角色（流式模式）...")
-                yield await tracker.generating(0, estimated_total, "开始生成角色...")
+                yield await tracker.generating(0, estimated_total, "Bắt đầu tạo nhân vật...")
                 
                 async for chunk in wrap_stream_with_heartbeat(
                     user_ai_service.generate_text_stream(
@@ -984,17 +984,17 @@ async def generate_character_stream(
                         
             except Exception as ai_error:
                 logger.error(f"❌ AI服务调用异常：{str(ai_error)}")
-                yield await tracker.error(f"AI服务调用失败：{str(ai_error)}")
+                yield await tracker.error(f"Gọi dịch vụ AI thất bại: {str(ai_error)}")
                 return
             
             if not ai_response or not ai_response.strip():
                 logger.error(
                     "❌ AI服务返回空响应：未收到正文。若使用推理模型，思考内容不会写入角色 JSON，请检查模型是否输出了最终 JSON。"
                 )
-                yield await tracker.error("AI服务返回空响应")
+                yield await tracker.error("Dịch vụ AI trả về phản hồi trống")
                 return
             
-            yield await tracker.parsing("解析AI响应...", 0.5)
+            yield await tracker.parsing("Đang phân tích phản hồi AI...", 0.5)
             
             # ✅ 使用统一的 JSON 清洗方法
             try:
@@ -1004,10 +1004,10 @@ async def generate_character_stream(
             except json.JSONDecodeError as e:
                 logger.error(f"❌ 角色JSON解析失败: {e}")
                 logger.debug(f"   原始响应预览: {safe_preview(ai_response, 200)}")
-                yield await tracker.error(f"AI返回的内容无法解析为JSON：{str(e)}")
+                yield await tracker.error(f"Nội dung AI trả về không thể phân tích thành JSON: {str(e)}")
                 return
             
-            yield await tracker.saving("创建角色记录...", 0.3)
+            yield await tracker.saving("Đang tạo bản ghi nhân vật...", 0.3)
             
             # 转换traits
             traits_json = json.dumps(character_data.get("traits", []), ensure_ascii=False) if character_data.get("traits") else None
@@ -1072,7 +1072,7 @@ async def generate_character_stream(
             # 创建角色（不再写入 relationships 文本字段，关系统一由 character_relationships 表管理）
             character = Character(
                 project_id=request.project_id,
-                name=character_data.get("name", request.name or "未命名角色"),
+                name=character_data.get("name", request.name or "Nhân vật chưa đặt tên"),
                 age=str(character_data.get("age", "")),
                 gender=character_data.get("gender"),
                 is_organization=is_organization,
@@ -1170,7 +1170,7 @@ async def generate_character_stream(
             
             # 如果是组织，创建Organization详情
             if is_organization:
-                yield await tracker.saving("创建组织详情...", 0.6)
+                yield await tracker.saving("Đang tạo chi tiết tổ chức...", 0.6)
                 
                 org_check = await db.execute(
                     select(Organization).where(Organization.character_id == character.id)
@@ -1229,7 +1229,7 @@ async def generate_character_stream(
                                     project_id=request.project_id,
                                     character_from_id=character.id,
                                     character_to_id=target_char.id,
-                                    relationship_name=rel.get("relationship_type", "未知关系"),
+                                    relationship_name=rel.get("relationship_type", "Quan hệ chưa xác định"),
                                     intimacy_level=rel.get("intimacy_level", 50),
                                     description=rel.get("description", ""),
                                     started_at=rel.get("started_at"),
@@ -1314,7 +1314,7 @@ async def generate_character_stream(
                                 member = OrganizationMember(
                                     organization_id=org.id,
                                     character_id=character.id,
-                                    position=membership.get("position", "成员"),
+                                    position=membership.get("position", "Thành viên"),
                                     rank=membership.get("rank", 0),
                                     loyalty=membership.get("loyalty", 50),
                                     joined_at=membership.get("joined_at"),
@@ -1337,7 +1337,7 @@ async def generate_character_stream(
                     
                     logger.info(f"✅ 成功创建 {created_members} 条组织成员记录")
             
-            yield await tracker.saving("保存生成历史...", 0.9)
+            yield await tracker.saving("Đang lưu lịch sử tạo...", 0.9)
             
             # 记录生成历史
             history = GenerationHistory(
@@ -1353,7 +1353,7 @@ async def generate_character_stream(
             
             logger.info(f"🎉 成功生成角色: {character.name}")
             
-            yield await tracker.complete("角色生成完成！")
+            yield await tracker.complete("Tạo nhân vật hoàn tất!")
             
             # 发送结果数据
             yield await tracker.result({
@@ -1372,12 +1372,12 @@ async def generate_character_stream(
             yield await tracker.error(he.detail, he.status_code)
         except Exception as e:
             logger.error(f"生成角色失败: {str(e)}")
-            yield await tracker.error(f"生成角色失败: {str(e)}")
+            yield await tracker.error(f"Tạo nhân vật thất bại: {str(e)}")
     
     return create_sse_response(generate())
 
 
-@router.post("/export", summary="批量导出角色/组织")
+@router.post("/export", summary="Xuất hàng loạt nhân vật/tổ chức")
 async def export_characters(
     export_request: CharactersExportRequest,
     request: Request,
@@ -1392,10 +1392,10 @@ async def export_characters(
     """
     user_id = getattr(request.state, 'user_id', None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
     
     if not export_request.character_ids:
-        raise HTTPException(status_code=400, detail="请至少选择一个角色/组织")
+        raise HTTPException(status_code=400, detail="Vui lòng chọn ít nhất một nhân vật/tổ chức")
     
     try:
         # 验证所有角色的权限
@@ -1406,7 +1406,7 @@ async def export_characters(
             character = result.scalar_one_or_none()
             
             if not character:
-                raise HTTPException(status_code=404, detail=f"角色不存在: {char_id}")
+                raise HTTPException(status_code=404, detail=f"Nhân vật không tồn tại: {char_id}")
             
             # 验证项目权限
             await verify_project_access(character.project_id, user_id, db)
@@ -1438,10 +1438,10 @@ async def export_characters(
         raise
     except Exception as e:
         logger.error(f"导出角色/组织失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"导出失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Xuất thất bại: {str(e)}")
 
 
-@router.post("/import", response_model=CharactersImportResult, summary="导入角色/组织")
+@router.post("/import", response_model=CharactersImportResult, summary="Nhập nhân vật/tổ chức")
 async def import_characters(
     project_id: str,
     file: UploadFile = File(...),
@@ -1458,14 +1458,14 @@ async def import_characters(
     """
     user_id = getattr(request.state, 'user_id', None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
     
     # 验证项目权限
     await verify_project_access(project_id, user_id, db)
     
     # 验证文件类型
     if not file.filename.endswith('.json'):
-        raise HTTPException(status_code=400, detail="只支持JSON格式文件")
+        raise HTTPException(status_code=400, detail="Chỉ hỗ trợ tệp định dạng JSON")
     
     try:
         # 读取文件内容
@@ -1485,13 +1485,13 @@ async def import_characters(
         return result
         
     except json.JSONDecodeError as e:
-        raise HTTPException(status_code=400, detail=f"JSON格式错误: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Lỗi định dạng JSON: {str(e)}")
     except Exception as e:
         logger.error(f"导入角色/组织失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"导入失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Nhập thất bại: {str(e)}")
 
 
-@router.post("/validate-import", summary="验证导入文件")
+@router.post("/validate-import", summary="Xác minh tệp nhập")
 async def validate_import(
     file: UploadFile = File(...),
     request: Request = None
@@ -1506,11 +1506,11 @@ async def validate_import(
     """
     user_id = getattr(request.state, 'user_id', None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
     
     # 验证文件类型
     if not file.filename.endswith('.json'):
-        raise HTTPException(status_code=400, detail="只支持JSON格式文件")
+        raise HTTPException(status_code=400, detail="Chỉ hỗ trợ tệp định dạng JSON")
     
     try:
         # 读取文件内容
@@ -1529,9 +1529,9 @@ async def validate_import(
             "valid": False,
             "version": "",
             "statistics": {"characters": 0, "organizations": 0},
-            "errors": [f"JSON格式错误: {str(e)}"],
+            "errors": [f"Định dạng JSON không đúng: {str(e)}"],
             "warnings": []
         }
     except Exception as e:
         logger.error(f"验证导入文件失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"验证失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Xác minh thất bại: {str(e)}")

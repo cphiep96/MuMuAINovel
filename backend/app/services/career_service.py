@@ -33,75 +33,76 @@ class CareerService:
             完整的提示词
         """
         project_context = f"""
-项目信息：
-- 书名：{project.title}
-- 类型：{project.genre or '未设定'}
-- 主题：{project.theme or '未设定'}
-- 时间背景：{project.world_time_period or '未设定'}
-- 地理位置：{project.world_location or '未设定'}
-- 氛围基调：{project.world_atmosphere or '未设定'}
-- 世界规则：{project.world_rules or '未设定'}
+Thông tin dự án:
+- Tên sách: {project.title}
+- Thể loại: {project.genre or 'Chưa thiết lập'}
+- Chủ đề: {project.theme or 'Chưa thiết lập'}
+- Bối cảnh thời gian: {project.world_time_period or 'Chưa thiết lập'}
+- Vị trí địa lý: {project.world_location or 'Chưa thiết lập'}
+- Gam bầu không khí: {project.world_atmosphere or 'Chưa thiết lập'}
+- Quy tắc thế giới: {project.world_rules or 'Chưa thiết lập'}
 """
         
         user_requirements = f"""
-生成要求：
-- 主职业数量：{main_career_count}个
-- 副职业数量：{sub_career_count}个
-- 主职业必须严格符合世界观规则，体现核心能力体系
-- 副职业可以更加自由灵活，包含生产、辅助、特殊类型
+Yêu cầu tạo:
+- Số nghề chính: {main_career_count}
+- Số nghề phụ: {sub_career_count}
+- Nghề chính phải khớp nghiêm quy tắc bối cảnh thế giới, thể hiện hệ năng lực cốt lõi
+- Nghề phụ có thể tự do linh hoạt hơn, gồm sản xuất, hỗ trợ, loại đặc biệt
 """
         
-        prompt = f"""{project_context}
+        prompt = f"""【Yêu cầu ngôn ngữ】Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
+{project_context}
 
 {user_requirements}
 
-请为这个小说项目生成完整的职业体系。返回JSON格式，结构如下：
+Hãy tạo hệ nghề hoàn chỉnh cho dự án tiểu thuyết này. Trả về JSON với cấu trúc sau:
 
 {{
   "main_careers": [
     {{
-      "name": "职业名称",
-      "description": "职业描述（100-200字）",
-      "category": "职业分类（如：战斗系、法术系、体修系等）",
+      "name": "Tên nghề",
+      "description": "Mô tả nghề (100-200 chữ)",
+      "category": "Phân loại nghề (vd: hệ chiến đấu, hệ pháp thuật, hệ thể tu...)",
       "stages": [
-        {{"level": 1, "name": "阶段名称", "description": "阶段描述"}},
-        {{"level": 2, "name": "阶段名称", "description": "阶段描述"}},
-        ...（共10个阶段）
+        {{"level": 1, "name": "Tên giai đoạn", "description": "Mô tả giai đoạn"}},
+        {{"level": 2, "name": "Tên giai đoạn", "description": "Mô tả giai đoạn"}},
+        ... (tổng 10 giai đoạn)
       ],
       "max_stage": 10,
-      "requirements": "职业要求（如：需要特定天赋、资质等）",
-      "special_abilities": "特殊能力描述",
-      "worldview_rules": "世界观规则关联（说明该职业如何融入世界观）",
+      "requirements": "Yêu cầu nghề (vd: cần thiên phú/tư chất cụ thể)",
+      "special_abilities": "Mô tả năng lực đặc biệt",
+      "worldview_rules": "Liên kết quy tắc bối cảnh (giải thích nghề hòa vào thế giới thế nào)",
       "attribute_bonuses": {{"strength": "+10%", "intelligence": "+5%"}}
     }}
   ],
   "sub_careers": [
     {{
-      "name": "副职业名称",
-      "description": "职业描述",
-      "category": "生产系/辅助系/特殊系",
+      "name": "Tên nghề phụ",
+      "description": "Mô tả nghề",
+      "category": "Hệ sản xuất/hệ hỗ trợ/hệ đặc biệt",
       "stages": [
-        {{"level": 1, "name": "阶段名称", "description": "阶段描述"}},
-        ...（5-8个阶段）
+        {{"level": 1, "name": "Tên giai đoạn", "description": "Mô tả giai đoạn"}},
+        ... (5-8 giai đoạn)
       ],
       "max_stage": 5,
-      "requirements": "职业要求",
-      "special_abilities": "特殊能力"
+      "requirements": "Yêu cầu nghề",
+      "special_abilities": "Năng lực đặc biệt"
     }}
   ]
 }}
 
-重要注意事项：
-1. 主职业的阶段设定要详细，体现明确的成长路径，阶段名称要有特色
-2. 根据小说类型选择合适的职业：
-   - 修仙类：剑修、体修、法修、符修等，阶段如：炼气、筑基、金丹、元婴...
-   - 玄幻类：战士、法师、刺客等，阶段如：见习、初级、中级、高级...
-   - 都市异能：异能者分类，阶段如：觉醒、初阶、中阶、高阶...
-   - 科幻未来：基因战士、机甲师等，阶段如：E级、D级、C级、B级...
-3. 副职业要有实用性和趣味性，如：炼丹师、炼器师、阵法师、驯兽师、医师等
-4. 所有职业都要符合项目的整体世界观设定
-5. 阶段描述要简洁明了，体现该阶段的核心特征
-6. **只返回纯JSON对象，不要添加任何解释文字或markdown标记**
+Lưu ý quan trọng:
+1. Thiết lập giai đoạn nghề chính phải chi tiết, thể hiện lộ trình trưởng thành rõ ràng; tên giai đoạn cần có bản sắc
+2. Chọn nghề phù hợp thể loại tiểu thuyết:
+   - Tu tiên: kiếm tu, thể tu, pháp tu, phù tu...; giai đoạn như: luyện khí, trúc cơ, kim đan, nguyên anh...
+   - Huyền huyễn: chiến sĩ, pháp sư, thích khách...; giai đoạn như: kiến tập, sơ cấp, trung cấp, cao cấp...
+   - Đô thị dị năng: phân loại dị năng giả; giai đoạn như: thức tỉnh, sơ giai, trung giai, cao giai...
+   - Khoa huyễn tương lai: chiến sĩ gene, sư cơ giáp...; giai đoạn như: cấp E, D, C, B...
+3. Nghề phụ cần thực dụng và thú vị, ví dụ: luyện đan sư, luyện khí sư, trận pháp sư, thuần thú sư, y sư...
+4. Mọi nghề phải khớp thiết lập bối cảnh thế giới tổng thể của dự án
+5. Mô tả giai đoạn phải ngắn gọn rõ ràng, thể hiện đặc trưng cốt lõi của giai đoạn đó
+6. **Chỉ trả về object JSON thuần, không thêm chữ giải thích hay đánh dấu markdown**
 """
         
         return prompt
@@ -137,7 +138,7 @@ class CareerService:
                 
                 career = Career(
                     project_id=project_id,
-                    name=career_info.get("name", f"未命名主职业{idx+1}"),
+                    name=career_info.get("name", f"Nghề chính chưa đặt tên {idx+1}"),
                     type="main",
                     description=career_info.get("description"),
                     category=career_info.get("category"),
@@ -166,7 +167,7 @@ class CareerService:
                 
                 career = Career(
                     project_id=project_id,
-                    name=career_info.get("name", f"未命名副职业{idx+1}"),
+                    name=career_info.get("name", f"Nghề phụ chưa đặt tên {idx+1}"),
                     type="sub",
                     description=career_info.get("description"),
                     category=career_info.get("category"),

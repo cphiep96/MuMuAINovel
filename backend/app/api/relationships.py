@@ -25,11 +25,11 @@ from app.schemas.relationship import (
 from app.logger import get_logger
 from app.api.common import verify_project_access
 
-router = APIRouter(prefix="/relationships", tags=["关系管理"])
+router = APIRouter(prefix="/relationships", tags=["Quản lý quan hệ"])
 logger = get_logger(__name__)
 
 
-@router.get("/types", response_model=List[RelationshipTypeResponse], summary="获取关系类型列表")
+@router.get("/types", response_model=List[RelationshipTypeResponse], summary="Lấy danh sách loại quan hệ")
 async def get_relationship_types(db: AsyncSession = Depends(get_db)):
     """获取所有预定义的关系类型"""
     result = await db.execute(select(RelationshipType).order_by(RelationshipType.category, RelationshipType.id))
@@ -37,7 +37,7 @@ async def get_relationship_types(db: AsyncSession = Depends(get_db)):
     return types
 
 
-@router.get("/project/{project_id}", response_model=List[CharacterRelationshipResponse], summary="获取项目的所有关系")
+@router.get("/project/{project_id}", response_model=List[CharacterRelationshipResponse], summary="Lấy tất cả quan hệ của dự án")
 async def get_project_relationships(
     project_id: str,
     request: Request,
@@ -74,7 +74,7 @@ async def get_project_relationships(
     return relationships
 
 
-@router.get("/graph/{project_id}", response_model=RelationshipGraphData, summary="获取关系图谱数据")
+@router.get("/graph/{project_id}", response_model=RelationshipGraphData, summary="Lấy dữ liệu đồ thị quan hệ")
 async def get_relationship_graph(
     project_id: str,
     request: Request,
@@ -120,7 +120,7 @@ async def get_relationship_graph(
         RelationshipGraphLink(
             source=r.character_from_id,
             target=r.character_to_id,
-            relationship=r.relationship_name or "未知关系",
+            relationship=r.relationship_name or "Quan hệ chưa rõ",
             intimacy=r.intimacy_level,
             status=r.status
         )
@@ -141,7 +141,7 @@ async def get_relationship_graph(
         RelationshipGraphLink(
             source=org.character_id,
             target=member.character_id,
-            relationship=f"组织成员·{member.position}",
+            relationship=f"Thành viên tổ chức·{member.position}",
             intimacy=member.loyalty,
             status=member.status
         )
@@ -152,12 +152,12 @@ async def get_relationship_graph(
 
     logger.info(
         f"获取项目 {project_id} 的关系图谱：{len(nodes)} 个节点，"
-        f"{len(relationships)} 条角色关系，{len(member_links)} 条组织成员关系"
+        f"{len(relationships)} quan hệ nhân vật, {len(member_links)} quan hệ thành viên tổ chức"
     )
     return RelationshipGraphData(nodes=nodes, links=links)
 
 
-@router.post("/", response_model=CharacterRelationshipResponse, summary="创建角色关系")
+@router.post("/", response_model=CharacterRelationshipResponse, summary="Tạo quan hệ nhân vật")
 async def create_relationship(
     relationship: CharacterRelationshipCreate,
     request: Request,
@@ -183,9 +183,9 @@ async def create_relationship(
     )
     
     if not char_from.scalar_one_or_none():
-        raise HTTPException(status_code=404, detail=f"角色A（ID: {relationship.character_from_id}）不存在")
+        raise HTTPException(status_code=404, detail=f"Nhân vật A (ID: {relationship.character_from_id}) không tồn tại")
     if not char_to.scalar_one_or_none():
-        raise HTTPException(status_code=404, detail=f"角色B（ID: {relationship.character_to_id}）不存在")
+        raise HTTPException(status_code=404, detail=f"Nhân vật B (ID: {relationship.character_to_id}) không tồn tại")
     
     # 创建关系
     db_relationship = CharacterRelationship(
@@ -200,7 +200,7 @@ async def create_relationship(
     return db_relationship
 
 
-@router.put("/{relationship_id}", response_model=CharacterRelationshipResponse, summary="更新关系")
+@router.put("/{relationship_id}", response_model=CharacterRelationshipResponse, summary="Cập nhật quan hệ")
 async def update_relationship(
     relationship_id: str,
     relationship: CharacterRelationshipUpdate,
@@ -216,7 +216,7 @@ async def update_relationship(
     db_rel = result.scalar_one_or_none()
     
     if not db_rel:
-        raise HTTPException(status_code=404, detail="关系不存在")
+        raise HTTPException(status_code=404, detail="Quan hệ không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -234,7 +234,7 @@ async def update_relationship(
     return db_rel
 
 
-@router.delete("/{relationship_id}", summary="删除关系")
+@router.delete("/{relationship_id}", summary="Xóa quan hệ")
 async def delete_relationship(
     relationship_id: str,
     request: Request,
@@ -249,7 +249,7 @@ async def delete_relationship(
     db_rel = result.scalar_one_or_none()
     
     if not db_rel:
-        raise HTTPException(status_code=404, detail="关系不存在")
+        raise HTTPException(status_code=404, detail="Quan hệ không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -259,4 +259,4 @@ async def delete_relationship(
     await db.commit()
     
     logger.info(f"删除关系成功：{relationship_id}")
-    return {"message": "关系删除成功", "id": relationship_id}
+    return {"message": "Xóa quan hệ thành công", "id": relationship_id}

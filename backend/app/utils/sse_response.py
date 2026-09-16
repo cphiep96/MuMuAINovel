@@ -38,13 +38,13 @@ class StageConfig:
 
 # 标准进度阶段配置
 STAGE_CONFIGS: Dict[ProgressStage, StageConfig] = {
-    ProgressStage.INIT: StageConfig(0, 5, "开始处理..."),
-    ProgressStage.LOADING: StageConfig(5, 15, "加载数据中..."),
-    ProgressStage.PREPARING: StageConfig(15, 20, "准备AI提示词..."),
-    ProgressStage.GENERATING: StageConfig(20, 85, "AI生成中..."),
-    ProgressStage.PARSING: StageConfig(85, 92, "解析数据..."),
-    ProgressStage.SAVING: StageConfig(92, 98, "保存到数据库..."),
-    ProgressStage.COMPLETE: StageConfig(100, 100, "完成!"),
+    ProgressStage.INIT: StageConfig(0, 5, "Bắt đầu xử lý..."),
+    ProgressStage.LOADING: StageConfig(5, 15, "Đang tải dữ liệu..."),
+    ProgressStage.PREPARING: StageConfig(15, 20, "Đang chuẩn bị prompt AI..."),
+    ProgressStage.GENERATING: StageConfig(20, 85, "AI đang tạo..."),
+    ProgressStage.PARSING: StageConfig(85, 92, "Đang phân tích dữ liệu..."),
+    ProgressStage.SAVING: StageConfig(92, 98, "Đang lưu vào cơ sở dữ liệu..."),
+    ProgressStage.COMPLETE: StageConfig(100, 100, "Hoàn tất!"),
 }
 
 
@@ -64,7 +64,7 @@ class WizardProgressTracker:
         yield await tracker.complete()
     """
     
-    def __init__(self, task_name: str = "任务"):
+    def __init__(self, task_name: str = "Tác vụ"):
         """
         初始化进度追踪器
         
@@ -102,7 +102,7 @@ class WizardProgressTracker:
         """开始阶段"""
         self.current_stage = ProgressStage.INIT
         self.current_progress = 0
-        msg = message or f"开始生成{self.task_name}..."
+        msg = message or f"Bắt đầu tạo {self.task_name}..."
         return await SSEResponse.send_progress(msg, 0, "processing")
     
     async def loading(self, message: str = None, sub_progress: float = 0.5) -> str:
@@ -154,11 +154,11 @@ class WizardProgressTracker:
         self.current_progress = progress
         
         # 构建消息
-        retry_suffix = f" (重试 {retry_count}/{max_retries})" if retry_count > 0 else ""
+        retry_suffix = f" (thử lại {retry_count}/{max_retries})" if retry_count > 0 else ""
         if message:
             msg = f"{message}{retry_suffix}"
         else:
-            msg = f"生成{self.task_name}中... ({current_chars}字符){retry_suffix}"
+            msg = f"Đang tạo {self.task_name}... ({current_chars} ký tự){retry_suffix}"
         
         return await SSEResponse.send_progress(msg, progress, "processing")
     
@@ -171,7 +171,7 @@ class WizardProgressTracker:
         self.current_stage = ProgressStage.PARSING
         progress = self._get_stage_progress(ProgressStage.PARSING, sub_progress)
         self.current_progress = progress
-        msg = message or f"解析{self.task_name}数据..."
+        msg = message or f"Đang phân tích dữ liệu {self.task_name}..."
         return await SSEResponse.send_progress(msg, progress, "processing")
     
     async def saving(self, message: str = None, sub_progress: float = 0.5) -> str:
@@ -179,14 +179,14 @@ class WizardProgressTracker:
         self.current_stage = ProgressStage.SAVING
         progress = self._get_stage_progress(ProgressStage.SAVING, sub_progress)
         self.current_progress = progress
-        msg = message or f"保存{self.task_name}到数据库..."
+        msg = message or f"Đang lưu {self.task_name} vào cơ sở dữ liệu..."
         return await SSEResponse.send_progress(msg, progress, "processing")
     
     async def complete(self, message: str = None) -> str:
         """完成阶段"""
         self.current_stage = ProgressStage.COMPLETE
         self.current_progress = 100
-        msg = message or f"{self.task_name}生成完成!"
+        msg = message or f"Tạo {self.task_name} hoàn tất!"
         return await SSEResponse.send_progress(msg, 100, "success")
     
     async def warning(self, message: str) -> str:
@@ -197,7 +197,7 @@ class WizardProgressTracker:
             "warning"
         )
     
-    async def retry(self, retry_count: int, max_retries: int, reason: str = "准备重试") -> str:
+    async def retry(self, retry_count: int, max_retries: int, reason: str = "Chuẩn bị thử lại") -> str:
         """发送重试消息"""
         return await SSEResponse.send_progress(
             f"⚠️ {reason}... ({retry_count}/{max_retries})",
@@ -255,7 +255,7 @@ class SSEResponse:
             error_message = ""
             if event:
                 error_message += f"event: {event}\n"
-            error_message += f'data: {{"type": "error", "error": "SSE格式化失败: {str(e)}", "code": 500}}\n\n'
+            error_message += f'data: {{"type": "error", "error": "Định dạng SSE thất bại: {str(e)}", "code": 500}}\n\n'
             return error_message
     
     @staticmethod
@@ -360,7 +360,7 @@ async def create_sse_generator(
     """
     try:
         if show_progress:
-            yield await SSEResponse.send_progress("开始生成...", 0)
+            yield await SSEResponse.send_progress("Bắt đầu tạo...", 0)
         
         # 累积内容用于进度计算
         accumulated_content = ""
@@ -378,7 +378,7 @@ async def create_sse_generator(
                 yield await SSEResponse.send_heartbeat()
         
         if show_progress:
-            yield await SSEResponse.send_progress("生成完成", 100, "success")
+            yield await SSEResponse.send_progress("Tạo hoàn tất", 100, "success")
         
         # 发送完成信号
         yield await SSEResponse.send_done()

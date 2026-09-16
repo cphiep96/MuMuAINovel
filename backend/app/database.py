@@ -45,15 +45,15 @@ _session_stats = {
 
 
 async def get_engine(user_id: str):
-    """获取或创建用户专属的数据库引擎（线程安全）
+    """Lấy hoặc tạo engine database riêng cho người dùng (thread-safe)
     
-    PostgreSQL: 所有用户共享一个数据库，通过user_id字段隔离数据
+    PostgreSQL: mọi người dùng dùng chung một database, cô lập qua trường user_id
     
     Args:
-        user_id: 用户ID
+        user_id: ID người dùng
         
     Returns:
-        用户专属的异步引擎
+        Engine bất đồng bộ riêng của người dùng
     """
     # PostgreSQL模式：所有用户共享同一个引擎
     cache_key = "shared_postgres"
@@ -76,7 +76,7 @@ async def get_engine(user_id: str):
                 # SQLite 配置（使用 NullPool，不支持连接池参数）
                 engine_args["connect_args"] = {
                     "check_same_thread": False,
-                    "timeout": 30.0,  # 等待锁释放的超时时间（秒）
+                    "timeout": 30.0,  # Timeout chờ giải phóng khóa (giây)
                 }
                 # 启用连接前检测以支持更好的并发
                 engine_args["pool_pre_ping"] = True
@@ -110,13 +110,13 @@ async def get_engine(user_id: str):
                 estimated_concurrent_users = total_connections * 2
                 
                 logger.info(
-                    f"📊 PostgreSQL 连接池配置:\n"
-                    f"   ├─ 核心连接: {settings.database_pool_size}\n"
-                    f"   ├─ 溢出连接: {settings.database_max_overflow}\n"
-                    f"   ├─ 总连接数: {total_connections}\n"
-                    f"   ├─ 获取超时: {settings.database_pool_timeout}秒\n"
-                    f"   ├─ 连接回收: {settings.database_pool_recycle}秒\n"
-                    f"   └─ 预估并发: {estimated_concurrent_users}+用户"
+                    f"📊 Cấu hình PostgreSQL connection pool:\n"
+                    f"   ├─ Kết nối lõi: {settings.database_pool_size}\n"
+                    f"   ├─ Kết nối overflow: {settings.database_max_overflow}\n"
+                    f"   ├─ Tổng kết nối: {total_connections}\n"
+                    f"   ├─ Timeout lấy kết nối: {settings.database_pool_timeout}s\n"
+                    f"   ├─ Recycle kết nối: {settings.database_pool_recycle}s\n"
+                    f"   └─ Ước tính đồng thời: {estimated_concurrent_users}+ người dùng"
                 )
             
             engine = create_async_engine(settings.database_url, **engine_args)
@@ -133,8 +133,8 @@ async def get_engine(user_id: str):
                         cursor = dbapi_conn.cursor()
                         cursor.execute("PRAGMA journal_mode=WAL")
                         cursor.execute("PRAGMA synchronous=NORMAL")
-                        cursor.execute("PRAGMA cache_size=-64000")  # 64MB 缓存
-                        cursor.execute("PRAGMA busy_timeout=30000")  # 30秒超时
+                        cursor.execute("PRAGMA cache_size=-64000")  # Cache 64MB
+                        cursor.execute("PRAGMA busy_timeout=30000")  # Timeout 30 giây
                         cursor.close()
                     
                     logger.info("✅ SQLite WAL 模式已启用（支持读写并发）")
@@ -145,14 +145,14 @@ async def get_engine(user_id: str):
 
 
 async def get_db(request: Request):
-    """获取数据库会话的依赖函数
+    """Hàm dependency lấy phiên database
     
-    从 request.state.user_id 获取用户ID，然后返回该用户的数据库会话
+    Lấy user ID từ request.state.user_id rồi trả về phiên database của người dùng đó
     """
     user_id = getattr(request.state, "user_id", None)
     
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录或用户ID缺失")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập hoặc thiếu ID người dùng")
     
     engine = await get_engine(user_id)
     
@@ -227,22 +227,22 @@ async def get_db(request: Request):
 
 async def init_db(user_id: str = None):
     """
-    初始化数据库（已弃用）
+    Khởi tạo database (đã deprecated)
     
-    ⚠️ 此函数已弃用，仅保留用于向后兼容
+    ⚠️ Hàm này đã deprecated, chỉ giữ để tương thích ngược
     
-    新的最佳实践:
-    - 表结构管理: 使用 'alembic upgrade head'
-    - 用户配置: Settings 在首次访问时自动创建（延迟初始化）
+    Thực hành tốt nhất mới:
+    - Quản lý cấu trúc bảng: dùng 'alembic upgrade head'
+    - Cấu hình người dùng: Settings tự tạo khi truy cập lần đầu (lazy init)
     
     Args:
-        user_id: 用户ID (已不再使用)
+        user_id: ID người dùng (không còn dùng)
     """
     logger.warning(
-        "⚠️ init_db() 已弃用且无实际作用！\n"
-        "   - 表结构: 由 Alembic 管理\n"
-        "   - 用户配置: Settings API 自动创建\n"
-        "   建议移除此调用"
+        "⚠️ init_db() đã bị deprecated và không còn tác dụng!\n"
+        "   - Cấu trúc bảng: do Alembic quản lý\n"
+        "   - Cấu hình người dùng: Settings API tự tạo\n"
+        "   Nên gỡ bỏ lời gọi này"
     )
 
 
@@ -260,10 +260,10 @@ async def close_db():
         raise
 
 async def get_database_stats():
-    """获取数据库连接和会话统计信息
+    """Lấy thống kê kết nối và phiên database
     
     Returns:
-        dict: 包含数据库统计信息的字典
+        dict: Dict chứa thống kê database
     """
     from app.config import settings
     
@@ -275,10 +275,10 @@ async def get_database_stats():
         try:
             pool = engine.pool
             pool_stats = {
-                "size": pool.size(),  # 当前连接池大小
-                "checked_in": pool.checkedin(),  # 可用连接数
-                "checked_out": pool.checkedout(),  # 正在使用的连接数
-                "overflow": pool.overflow(),  # 溢出连接数
+                "size": pool.size(),  # Kích thước connection pool hiện tại
+                "checked_in": pool.checkedin(),  # Số kết nối khả dụng
+                "checked_out": pool.checkedout(),  # Số kết nối đang dùng
+                "overflow": pool.overflow(),  # Số kết nối overflow
                 "usage_percent": (pool.checkedout() / (settings.database_pool_size + settings.database_max_overflow)) * 100,
             }
         except Exception as e:
@@ -294,7 +294,7 @@ async def get_database_stats():
             "generator_exits": _session_stats["generator_exits"],
             "last_check": _session_stats["last_check"],
         },
-        "pool_stats": pool_stats,  # 新增：连接池实时状态
+        "pool_stats": pool_stats,  # Mới: trạng thái realtime của connection pool
         "engine_cache": {
             "total_engines": len(_engine_cache),
             "engine_keys": list(_engine_cache.keys()),
@@ -320,33 +320,33 @@ async def get_database_stats():
     if _session_stats["active"] > settings.database_session_leak_threshold:
         stats["health"]["status"] = "critical"
         stats["health"]["errors"].append(
-            f"活跃会话数 {_session_stats['active']} 超过泄漏阈值 {settings.database_session_leak_threshold}"
+            f"Số phiên hoạt động {_session_stats['active']} vượt ngưỡng rò rỉ {settings.database_session_leak_threshold}"
         )
     elif _session_stats["active"] > settings.database_session_max_active:
         stats["health"]["status"] = "warning"
         stats["health"]["warnings"].append(
-            f"活跃会话数 {_session_stats['active']} 超过警告阈值 {settings.database_session_max_active}"
+            f"Số phiên hoạt động {_session_stats['active']} vượt ngưỡng cảnh báo {settings.database_session_max_active}"
         )
     
     if _session_stats["active"] < 0:
         stats["health"]["status"] = "error"
-        stats["health"]["errors"].append(f"活跃会话数异常: {_session_stats['active']}")
+        stats["health"]["errors"].append(f"Số phiên hoạt động bất thường: {_session_stats['active']}")
     
     # 连接池使用率检查
     if pool_stats and "usage_percent" in pool_stats:
         usage = pool_stats["usage_percent"]
         if usage > 90:
             stats["health"]["status"] = "warning"
-            stats["health"]["warnings"].append(f"连接池使用率过高: {usage:.1f}%")
+            stats["health"]["warnings"].append(f"Tỷ lệ sử dụng connection pool quá cao: {usage:.1f}%")
         elif usage > 95:
             stats["health"]["status"] = "critical"
-            stats["health"]["errors"].append(f"连接池几乎耗尽: {usage:.1f}%")
+            stats["health"]["errors"].append(f"Connection pool gần như cạn kiệt: {usage:.1f}%")
     
     error_rate = (_session_stats["errors"] / max(_session_stats["created"], 1)) * 100
     if error_rate > 5:
         if stats["health"]["status"] == "healthy":
             stats["health"]["status"] = "warning"
-        stats["health"]["warnings"].append(f"会话错误率过高: {error_rate:.2f}%")
+        stats["health"]["warnings"].append(f"Tỷ lệ lỗi phiên quá cao: {error_rate:.2f}%")
     
     stats["health"]["error_rate"] = f"{error_rate:.2f}%"
     
@@ -354,13 +354,13 @@ async def get_database_stats():
 
 
 async def check_database_health(user_id: str = None) -> dict:
-    """检查数据库连接健康状态
+    """Kiểm tra sức khỏe kết nối database
     
     Args:
-        user_id: 可选的用户ID，如果提供则检查特定用户的数据库
+        user_id: ID người dùng tùy chọn; nếu có thì kiểm tra database của người dùng đó
         
     Returns:
-        dict: 健康检查结果
+        dict: Kết quả kiểm tra sức khỏe
     """
     result = {
         "healthy": True,
@@ -404,7 +404,7 @@ async def check_database_health(user_id: str = None) -> dict:
             # 连接池健康检查
             if engine.pool.overflow() >= settings.database_max_overflow:
                 pool_status["healthy"] = False
-                pool_status["warning"] = "连接池溢出已满"
+                pool_status["warning"] = "Connection pool overflow đã đầy"
                 result["healthy"] = False
             
             result["checks"]["pool"] = pool_status

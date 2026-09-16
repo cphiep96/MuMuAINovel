@@ -84,8 +84,8 @@ async def sync_organization_member_count(
     
     if organization.member_count != actual_count:
         logger.warning(
-            f"组织 {organization.id} 成员计数不一致：" 
-            f"记录值={organization.member_count}, 实际值={actual_count}，已修正"
+            f"Tổ chức {organization.id} số thành viên không khớp: "
+            f"giá trị ghi={organization.member_count}, giá trị thực={actual_count}, đã sửa"
         )
         organization.member_count = actual_count
         await db.flush()
@@ -201,7 +201,7 @@ async def validate_relationships(
             issues.append({
                 "issue_type": "missing_from_character",
                 "relationship_id": rel.id,
-                "details": f"关系 {rel.id} 的源角色 {rel.character_from_id} 不存在"
+                "details": f"Quan hệ {rel.id} có nhân vật nguồn {rel.character_from_id} không tồn tại"
             })
         
         # 检查to角色
@@ -212,7 +212,7 @@ async def validate_relationships(
             issues.append({
                 "issue_type": "missing_to_character",
                 "relationship_id": rel.id,
-                "details": f"关系 {rel.id} 的目标角色 {rel.character_to_id} 不存在"
+                "details": f"Quan hệ {rel.id} có nhân vật đích {rel.character_to_id} không tồn tại"
             })
     
     if issues:
@@ -262,7 +262,7 @@ async def validate_organization_members(
             issues.append({
                 "issue_type": "missing_organization",
                 "member_id": member.id,
-                "details": f"成员 {member.id} 的组织 {member.organization_id} 不存在"
+                "details": f"Thành viên {member.id} có tổ chức {member.organization_id} không tồn tại"
             })
         
         # 检查角色
@@ -273,7 +273,7 @@ async def validate_organization_members(
             issues.append({
                 "issue_type": "missing_character",
                 "member_id": member.id,
-                "details": f"成员 {member.id} 的角色 {member.character_id} 不存在"
+                "details": f"Thành viên {member.id} có nhân vật {member.character_id} không tồn tại"
             })
     
     if issues:

@@ -37,14 +37,14 @@ async def get_global_db() -> AsyncGenerator[AsyncSession, None]:
 async def check_announcement_admin(request: Request) -> User:
     """检查公告管理员权限：仅云端服务端管理员可管理公告"""
     if not is_workshop_server():
-        raise HTTPException(status_code=403, detail="公告发布仅在云端服务端可用")
+        raise HTTPException(status_code=403, detail="Chỉ có thể phát hành thông báo trên máy chủ đám mây")
 
     user = getattr(request.state, "user", None)
     if not user:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
 
     if not user.is_admin:
-        raise HTTPException(status_code=403, detail="需要管理员权限")
+        raise HTTPException(status_code=403, detail="Cần quyền quản trị viên")
 
     return user
 
@@ -114,16 +114,16 @@ def _validate_announcement_window(publish_at: Optional[datetime], expire_at: Opt
     publish_at = _to_naive_utc(publish_at)
     expire_at = _to_naive_utc(expire_at)
     if publish_at and expire_at and expire_at <= publish_at:
-        raise HTTPException(status_code=400, detail="过期时间必须晚于发布时间")
+        raise HTTPException(status_code=400, detail="Thời gian hết hạn phải sau thời gian phát hành")
 
 
 def _clean_required_text(value: Optional[str], field_name: str, max_length: Optional[int] = None) -> str:
     """清理并校验必填文本"""
     cleaned = (value or "").strip()
     if not cleaned:
-        raise HTTPException(status_code=400, detail=f"{field_name}不能为空")
+        raise HTTPException(status_code=400, detail=f"{field_name} không được để trống")
     if max_length and len(cleaned) > max_length:
-        raise HTTPException(status_code=400, detail=f"{field_name}不能超过 {max_length} 个字符")
+        raise HTTPException(status_code=400, detail=f"{field_name} không được vượt quá {max_length} ký tự")
     return cleaned
 
 
@@ -135,7 +135,7 @@ def _clean_optional_text(value: Optional[str], field_name: str, max_length: int)
     if not cleaned:
         return None
     if len(cleaned) > max_length:
-        raise HTTPException(status_code=400, detail=f"{field_name}不能超过 {max_length} 个字符")
+        raise HTTPException(status_code=400, detail=f"{field_name} không được vượt quá {max_length} ký tự")
     return cleaned
 
 
@@ -216,7 +216,7 @@ async def _sync_announcements_local(db: AsyncSession, since: Optional[str], limi
                 )
             )
         except ValueError:
-            raise HTTPException(status_code=400, detail="since 时间格式无效")
+            raise HTTPException(status_code=400, detail="Định dạng thời gian since không hợp lệ")
 
     query = query.order_by(
         Announcement.updated_at.asc(),
@@ -326,14 +326,14 @@ async def admin_create_announcement(
 
     announcement = Announcement(
         id=str(uuid.uuid4()),
-        title=_clean_required_text(data.title, "公告标题", 120),
-        content=_clean_required_text(data.content, "公告正文"),
-        summary=_clean_optional_text(data.summary, "公告摘要", 255),
+        title=_clean_required_text(data.title, "Tiêu đề thông báo", 120),
+        content=_clean_required_text(data.content, "Nội dung thông báo"),
+        summary=_clean_optional_text(data.summary, "Tóm tắt thông báo", 255),
         level=data.level,
         status=data.status,
         pinned=data.pinned,
         author_id=admin.user_id,
-        author_name=getattr(admin, "display_name", None) or getattr(admin, "username", None) or "管理员",
+        author_name=getattr(admin, "display_name", None) or getattr(admin, "username", None) or "Quản trị viên",
         publish_at=publish_at,
         expire_at=expire_at,
     )
@@ -357,7 +357,7 @@ async def admin_update_announcement(
     result = await db.execute(select(Announcement).where(Announcement.id == announcement_id))
     announcement = result.scalar_one_or_none()
     if not announcement:
-        raise HTTPException(status_code=404, detail="公告不存在")
+        raise HTTPException(status_code=404, detail="Thông báo không tồn tại")
 
     update_data = data.model_dump(exclude_unset=True)
     if "publish_at" in update_data:
@@ -365,11 +365,11 @@ async def admin_update_announcement(
     if "expire_at" in update_data:
         update_data["expire_at"] = _to_naive_utc(update_data.get("expire_at"))
     if "title" in update_data:
-        update_data["title"] = _clean_required_text(update_data.get("title"), "公告标题", 120)
+        update_data["title"] = _clean_required_text(update_data.get("title"), "Tiêu đề thông báo", 120)
     if "content" in update_data:
-        update_data["content"] = _clean_required_text(update_data.get("content"), "公告正文")
+        update_data["content"] = _clean_required_text(update_data.get("content"), "Nội dung thông báo")
     if "summary" in update_data:
-        update_data["summary"] = _clean_optional_text(update_data.get("summary"), "公告摘要", 255)
+        update_data["summary"] = _clean_optional_text(update_data.get("summary"), "Tóm tắt thông báo", 255)
 
     next_publish_at = update_data.get("publish_at", announcement.publish_at)
     next_expire_at = update_data.get("expire_at", announcement.expire_at)
@@ -397,12 +397,12 @@ async def admin_delete_announcement(
     result = await db.execute(select(Announcement).where(Announcement.id == announcement_id))
     announcement = result.scalar_one_or_none()
     if not announcement:
-        raise HTTPException(status_code=404, detail="公告不存在")
+        raise HTTPException(status_code=404, detail="Thông báo không tồn tại")
 
     await db.delete(announcement)
     await db.commit()
 
-    return {"success": True, "message": "删除成功"}
+    return {"success": True, "message": "Xóa thành công"}
 
 
 @router.post("/admin/items/{announcement_id}/publish")
@@ -417,7 +417,7 @@ async def admin_publish_announcement(
     result = await db.execute(select(Announcement).where(Announcement.id == announcement_id))
     announcement = result.scalar_one_or_none()
     if not announcement:
-        raise HTTPException(status_code=404, detail="公告不存在")
+        raise HTTPException(status_code=404, detail="Thông báo không tồn tại")
 
     announcement.status = "published"
     if not announcement.publish_at:
@@ -442,7 +442,7 @@ async def admin_hide_announcement(
     result = await db.execute(select(Announcement).where(Announcement.id == announcement_id))
     announcement = result.scalar_one_or_none()
     if not announcement:
-        raise HTTPException(status_code=404, detail="公告不存在")
+        raise HTTPException(status_code=404, detail="Thông báo không tồn tại")
 
     announcement.status = "hidden"
     announcement.updated_at = datetime.utcnow()

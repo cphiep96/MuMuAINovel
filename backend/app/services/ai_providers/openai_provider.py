@@ -88,7 +88,7 @@ class OpenAIProvider(BaseAIProvider):
                         tool_context = mcp_client.build_tool_context(tool_results, format="markdown")
                         
                         # 构建最终提示词，要求AI基于工具结果回答
-                        final_prompt = f"{prompt}\n\n{tool_context}\n\n请基于以上工具查询结果，给出完整详细的回答。"
+                        final_prompt = f"{prompt}\n\n{tool_context}\n\nHãy dựa trên kết quả truy vấn công cụ ở trên để đưa ra câu trả lời đầy đủ chi tiết."
                         final_messages = messages.copy()
                         final_messages.append({"role": "user", "content": final_prompt})
                         
@@ -154,7 +154,7 @@ class OpenAIProvider(BaseAIProvider):
                 tool_context = mcp_client.build_tool_context(tool_results, format="markdown")
                 
                 # 再次调用获取最终回答
-                messages.append({"role": "user", "content": f"{tool_context}\n\n请基于以上工具查询结果，给出完整详细的回答。"})
+                messages.append({"role": "user", "content": f"{tool_context}\n\nHãy dựa trên kết quả truy vấn công cụ ở trên để đưa ra câu trả lời đầy đủ chi tiết."})
                 
                 async for final_chunk in self._generate_with_tools(
                     messages, model, temperature, max_tokens, tools, user_id

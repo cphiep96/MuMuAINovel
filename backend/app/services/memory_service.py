@@ -458,7 +458,7 @@ class MemoryService:
         # 4. 如果有指定角色,获取角色相关记忆
         character_memories = []
         if character_names:
-            character_query = " ".join(character_names) + " 角色 状态 关系"
+            character_query = " ".join(character_names) + " nhân vật trạng thái quan hệ"
             character_memories = await self.search_memories(
                 user_id=user_id,
                 project_id=project_id,
@@ -473,7 +473,7 @@ class MemoryService:
             plot_points = await self.search_memories(
                 user_id=user_id,
                 project_id=project_id,
-                query="重要 转折 高潮 关键",
+                query="quan trọng bước ngoặt cao trào then chốt",
                 memory_types=["plot_point", "hook"],
                 limit=5,
                 min_importance=0.7
@@ -486,7 +486,7 @@ class MemoryService:
                 plot_points = await self.search_memories(
                     user_id=user_id,
                     project_id=project_id,
-                    query="重要 转折 高潮 关键",
+                    query="quan trọng bước ngoặt cao trào then chốt",
                     memory_types=["plot_point", "hook"],
                     limit=5
                 )
@@ -495,11 +495,11 @@ class MemoryService:
                 plot_points = []
         
         context = {
-            "recent_context": self._format_memories(recent, "最近章节记忆"),
-            "relevant_memories": self._format_memories(relevant, "语义相关记忆"),
-            "character_states": self._format_memories(character_memories, "角色相关记忆"),
-            "foreshadows": self._format_memories(foreshadows[:5], "未完结伏笔"),
-            "plot_points": self._format_memories(plot_points, "重要情节点"),
+            "recent_context": self._format_memories(recent, "Ký ức chương gần đây"),
+            "relevant_memories": self._format_memories(relevant, "Ký ức liên quan ngữ nghĩa"),
+            "character_states": self._format_memories(character_memories, "Ký ức liên quan nhân vật"),
+            "foreshadows": self._format_memories(foreshadows[:5], "Phục bút chưa kết thúc"),
+            "plot_points": self._format_memories(plot_points, "Điểm tình tiết quan trọng"),
             "stats": {
                 "recent_count": len(recent),
                 "relevant_count": len(relevant),
@@ -511,7 +511,7 @@ class MemoryService:
         
         logger.info(f"✅ 上下文构建完成: 最近{len(recent)}条, 相关{len(relevant)}条, 伏笔{len(foreshadows)}个")
         return context
-    def _format_memories(self, memories: List[Dict], section_title: str = "记忆") -> str:
+    def _format_memories(self, memories: List[Dict], section_title: str = "Ký ức") -> str:
         """
         格式化记忆列表为文本
         
@@ -523,19 +523,19 @@ class MemoryService:
             格式化后的文本
         """
         if not memories:
-            return f"【{section_title}】\n暂无相关记忆\n"
+            return f"【{section_title}】\nChưa có ký ức liên quan\n"
         
         lines = [f"【{section_title}】"]
         for i, mem in enumerate(memories, 1):
             meta = mem.get('metadata', {})
             chapter_num = meta.get('chapter_number', '?')
-            mem_type = meta.get('memory_type', '未知')
+            mem_type = meta.get('memory_type', 'không rõ')
             importance = float(meta.get('importance', 0.5))
             title = meta.get('title', '')
             content = mem['content']
             
             # 格式: [序号] 第X章-类型(重要性) 标题: 内容
-            line = f"{i}. [第{chapter_num}章-{mem_type}★{importance:.1f}]"
+            line = f"{i}. [Chương {chapter_num}-{mem_type}★{importance:.1f}]"
             if title:
                 line += f" {title}: {content[:100]}"
             else:

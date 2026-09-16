@@ -139,7 +139,7 @@ export default function Login() {
           const config = await authApi.getAuthConfig();
           setAuthConfig(config);
         } catch (error) {
-          console.error('获取认证配置失败:', error);
+          console.error('Lấy cấu hình xác thực thất bại:', error);
           setAuthConfig({
             local_auth_enabled: false,
             linuxdo_enabled: true,
@@ -154,7 +154,7 @@ export default function Login() {
   }, [navigate, searchParams]);
 
   const handleLoginSuccess = () => {
-    message.success('登录成功！');
+    message.success('Đăng nhập thành công!');
 
     const hideForever = localStorage.getItem('announcement_hide_forever');
     const hideToday = localStorage.getItem('announcement_hide_today');
@@ -176,7 +176,7 @@ export default function Login() {
         handleLoginSuccess();
       }
     } catch (error) {
-      console.error('本地登录失败:', error);
+      console.error('Đăng nhập cục bộ thất bại:', error);
     } finally {
       setLoading(false);
     }
@@ -193,7 +193,7 @@ export default function Login() {
         handleLoginSuccess();
       }
     } catch (error) {
-      console.error('邮箱验证码登录失败:', error);
+      console.error('Đăng nhập bằng mã qua email thất bại:', error);
     } finally {
       setLoading(false);
     }
@@ -204,10 +204,10 @@ export default function Login() {
       const values = await emailLoginForm.validateFields(['email']);
       setLoginCodeSending(true);
       const result = await authApi.sendEmailCode({ email: values.email, scene: 'login' });
-      message.success(result.message || '验证码已发送');
+      message.success(result.message || 'Đã gửi mã xác minh');
       setLoginCountdown(result.resend_interval_seconds || 60);
     } catch (error) {
-      console.error('发送 login 验证码失败:', error);
+      console.error('Gửi mã xác minh login thất bại:', error);
     } finally {
       setLoginCodeSending(false);
     }
@@ -218,10 +218,10 @@ export default function Login() {
       const values = await emailRegisterForm.validateFields(['email']);
       setRegisterCodeSending(true);
       const result = await authApi.sendEmailCode({ email: values.email, scene: 'register' });
-      message.success(result.message || '验证码已发送');
+      message.success(result.message || 'Đã gửi mã xác minh');
       setRegisterCountdown(result.resend_interval_seconds || 60);
     } catch (error) {
-      console.error('发送 register 验证码失败:', error);
+      console.error('Gửi mã xác minh register thất bại:', error);
     } finally {
       setRegisterCodeSending(false);
     }
@@ -232,10 +232,10 @@ export default function Login() {
       const values = await resetPasswordForm.validateFields(['email']);
       setResetCodeSending(true);
       const result = await authApi.sendEmailCode({ email: values.email, scene: 'reset_password' });
-      message.success(result.message || '验证码已发送');
+      message.success(result.message || 'Đã gửi mã xác minh');
       setResetCountdown(result.resend_interval_seconds || 60);
     } catch (error) {
-      console.error('发送 reset_password 验证码失败:', error);
+      console.error('Gửi mã xác minh reset_password thất bại:', error);
     } finally {
       setResetCodeSending(false);
     }
@@ -251,13 +251,13 @@ export default function Login() {
         display_name: values.display_name?.trim() || undefined,
       });
       if (response.success) {
-        message.success('注册成功，已自动登录');
+        message.success('Đăng ký thành công, đã tự đăng nhập');
         emailRegisterForm.resetFields(['code', 'password', 'confirmPassword']);
         setRegisterCountdown(0);
         handleLoginSuccess();
       }
     } catch (error) {
-      console.error('邮箱注册失败:', error);
+      console.error('Đăng ký bằng email thất bại:', error);
     } finally {
       setLoading(false);
     }
@@ -271,12 +271,12 @@ export default function Login() {
         code: values.code,
         new_password: values.new_password,
       });
-      message.success(result.message || '密码重置成功');
+      message.success(result.message || 'Đặt lại mật khẩu thành công');
       resetPasswordForm.resetFields(['code', 'new_password', 'confirmNewPassword']);
       setResetCountdown(0);
       setShowResetPassword(false);
     } catch (error) {
-      console.error('重置密码失败:', error);
+      console.error('Đặt lại mật khẩu thất bại:', error);
     } finally {
       setLoading(false);
     }
@@ -294,8 +294,8 @@ export default function Login() {
 
       window.location.href = response.auth_url;
     } catch (error) {
-      console.error('获取授权地址失败:', error);
-      message.error('获取授权地址失败，请稍后重试');
+      console.error('Lấy địa chỉ cấp quyền thất bại:', error);
+      message.error('Lấy địa chỉ ủy quyền thất bại, vui lòng thử lại sau');
       setLoading(false);
     }
   };
@@ -317,15 +317,15 @@ export default function Login() {
 
   const loginTips = useMemo(() => {
     const tips = [
-      '首次 LinuxDO 登录会自动创建账号。',
+      'Lần đăng nhập LinuxDO đầu sẽ tự tạo tài khoản.',
     ];
 
     if (localAuthEnabled) {
-      tips.unshift('本地登录默认账号：admin / admin123');
+      tips.unshift('Tài khoản mặc định đăng nhập local: admin / admin123');
     }
 
     if (emailAuthEnabled) {
-      tips.push('邮箱注册用户支持通过邮箱验证码重置密码。');
+      tips.push('Người dùng đăng ký email có thể đặt lại mật khẩu bằng mã email.');
     }
 
     return tips;
@@ -334,23 +334,23 @@ export default function Login() {
   const featureItems = [
     {
       icon: <RobotOutlined />,
-      title: '多 AI 模型协同',
-      description: '支持 OpenAI、Gemini、Claude 等主流模型，按场景灵活切换。',
+      title: 'Đa mô hình AI phối hợp',
+      description: 'Hỗ trợ OpenAI, Gemini, Claude..., chuyển linh hoạt theo tình huống.',
     },
     {
       icon: <ThunderboltOutlined />,
-      title: '智能向导驱动',
-      description: '自动生成大纲、角色与世界观，快速搭建完整故事骨架。',
+      title: 'Điều khiển bởi hướng dẫn thông minh',
+      description: 'Tự tạo dàn ý, nhân vật và bối cảnh thế giới, dựng khung câu chuyện nhanh.',
     },
     {
       icon: <TeamOutlined />,
-      title: '角色组织管理',
-      description: '人物关系、组织架构可视化管理，复杂设定也能清晰掌控。',
+      title: 'Quản lý nhân vật và tổ chức',
+      description: 'Quản lý trực quan quan hệ nhân vật và tổ chức, thiết lập phức tạp cũng nắm rõ.',
     },
     {
       icon: <BookOutlined />,
-      title: '章节创作闭环',
-      description: '支持章节生成、编辑、重写与润色，持续提升内容质量。',
+      title: 'Vòng khép kín sáng tác chương',
+      description: 'Hỗ trợ tạo/chỉnh sửa/viết lại/trau chuốt chương, liên tục nâng chất lượng.',
     },
   ];
 
@@ -365,24 +365,24 @@ export default function Login() {
       >
         <Form.Item
           name="username"
-          label="管理账号"
-          rules={[{ required: true, message: '请输入管理账号/邮箱' }]}
+          label="Tài khoản quản trị"
+          rules={[{ required: true, message: 'Vui lòng nhập tài khoản quản trị/email' }]}
         >
           <Input
             prefix={<UserOutlined style={{ color: token.colorTextTertiary }} />}
-            placeholder="请输入管理账号/邮箱"
+            placeholder="Vui lòng nhập tài khoản quản trị/email"
             autoComplete="username"
             style={{ height: 46, borderRadius: 12 }}
           />
         </Form.Item>
         <Form.Item
           name="password"
-          label="访问密钥"
-          rules={[{ required: true, message: '请输入访问密钥' }]}
+          label="Khóa truy cập"
+          rules={[{ required: true, message: 'Vui lòng nhập khóa truy cập' }]}
         >
           <Input.Password
             prefix={<LockOutlined style={{ color: token.colorTextTertiary }} />}
-            placeholder="请输入访问密钥"
+            placeholder="Vui lòng nhập khóa truy cập"
             autoComplete="current-password"
             style={{ height: 46, borderRadius: 12 }}
           />
@@ -403,14 +403,14 @@ export default function Login() {
               boxShadow: primaryButtonShadow,
             }}
           >
-            登录系统
+            Đăng nhập hệ thống
           </Button>
         </Form.Item>
       </Form>
 
       {linuxdoEnabled ? (
         <>
-          <Divider style={{ margin: '18px 0 16px' }}>第三方登录</Divider>
+          <Divider style={{ margin: '18px 0 16px' }}>Đăng nhập bên thứ ba</Divider>
           {renderLinuxDOLogin()}
         </>
       ) : null}
@@ -423,9 +423,9 @@ export default function Login() {
         <div style={{ marginTop: 16 }}>
           <Space direction="vertical" size={12} style={{ width: '100%' }}>
             <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-              <Title level={5} style={{ margin: 0 }}>忘记密码 / 重置密码</Title>
+              <Title level={5} style={{ margin: 0 }}>Quên mật khẩu / Đặt lại mật khẩu</Title>
               <Button type="link" style={{ paddingInline: 0 }} onClick={() => setShowResetPassword(false)}>
-                返回验证码登录
+                Quay lại đăng nhập bằng mã
               </Button>
             </Space>
 
@@ -438,65 +438,65 @@ export default function Login() {
               >
                 <Form.Item
                   name="email"
-                  label="注册邮箱"
+                  label="Email đăng ký"
                   rules={[
-                    { required: true, message: '请输入注册邮箱' },
-                    { type: 'email', message: '请输入有效的邮箱地址' },
+                    { required: true, message: 'Vui lòng nhập email đăng ký' },
+                    { type: 'email', message: 'Vui lòng nhập địa chỉ email hợp lệ' },
                   ]}
                 >
-                  <Input prefix={<MailOutlined />} placeholder="请输入注册邮箱" />
+                  <Input prefix={<MailOutlined />} placeholder="Vui lòng nhập email đăng ký" />
                 </Form.Item>
-                <Form.Item label="重置验证码" required style={{ marginBottom: 12 }}>
+                <Form.Item label="Mã đặt lại" required style={{ marginBottom: 12 }}>
                   <Space.Compact style={{ width: '100%' }}>
                     <Form.Item
                       name="code"
                       noStyle
                       rules={[
-                        { required: true, message: '请输入重置验证码' },
-                        { len: 6, message: '验证码长度为 6 位' },
+                        { required: true, message: 'Vui lòng nhập mã xác minh đặt lại' },
+                        { len: 6, message: 'Mã xác minh dài 6 ký tự' },
                       ]}
                     >
-                      <Input placeholder="请输入重置验证码" maxLength={6} />
+                      <Input placeholder="Vui lòng nhập mã xác minh đặt lại" maxLength={6} />
                     </Form.Item>
                     <Button
                       onClick={sendResetCode}
                       loading={resetCodeSending}
                       disabled={resetCountdown > 0}
                     >
-                      {resetCountdown > 0 ? `${resetCountdown}s 后重发` : '发送验证码'}
+                      {resetCountdown > 0 ? `Gửi lại sau ${resetCountdown}s` : 'Gửi mã xác minh'}
                     </Button>
                   </Space.Compact>
                 </Form.Item>
                 <Form.Item
                   name="new_password"
-                  label="新密码"
+                  label="Mật khẩu mới"
                   rules={[
-                    { required: true, message: '请输入新密码' },
-                    { min: 6, message: '密码长度至少为 6 个字符' },
+                    { required: true, message: 'Vui lòng nhập mật khẩu mới' },
+                    { min: 6, message: 'Mật khẩu dài ít nhất 6 ký tự' },
                   ]}
                 >
-                  <Input.Password prefix={<LockOutlined />} placeholder="请输入新密码" />
+                  <Input.Password prefix={<LockOutlined />} placeholder="Vui lòng nhập mật khẩu mới" />
                 </Form.Item>
                 <Form.Item
                   name="confirmNewPassword"
-                  label="确认新密码"
+                  label="Xác nhận mật khẩu mới"
                   dependencies={['new_password']}
                   rules={[
-                    { required: true, message: '请再次输入新密码' },
+                    { required: true, message: 'Vui lòng nhập lại mật khẩu mới' },
                     ({ getFieldValue }) => ({
                       validator(_, value) {
                         if (!value || getFieldValue('new_password') === value) {
                           return Promise.resolve();
                         }
-                        return Promise.reject(new Error('两次输入的新密码不一致'));
+                        return Promise.reject(new Error('Hai lần nhập mật khẩu mới không khớp'));
                       },
                     }),
                   ]}
                 >
-                  <Input.Password prefix={<LockOutlined />} placeholder="请再次输入新密码" />
+                  <Input.Password prefix={<LockOutlined />} placeholder="Vui lòng nhập lại mật khẩu mới" />
                 </Form.Item>
                 <Button type="default" htmlType="submit" loading={loading} block>
-                  重置密码
+                  Đặt lại mật khẩu
                 </Button>
               </Form>
             </Card>
@@ -515,33 +515,33 @@ export default function Login() {
       >
         <Form.Item
           name="email"
-          label="邮箱地址"
+          label="Địa chỉ email"
           rules={[
-            { required: true, message: '请输入邮箱地址' },
-            { type: 'email', message: '请输入有效的邮箱地址' },
+            { required: true, message: 'Vui lòng nhập địa chỉ email' },
+            { type: 'email', message: 'Vui lòng nhập địa chỉ email hợp lệ' },
           ]}
         >
           <Input
             prefix={<MailOutlined style={{ color: token.colorTextTertiary }} />}
-            placeholder="请输入已注册邮箱"
+            placeholder="Vui lòng nhập email đã đăng ký"
             autoComplete="email"
             style={{ height: 46, borderRadius: 12 }}
           />
         </Form.Item>
 
-        <Form.Item label="登录验证码" required style={{ marginBottom: 24 }}>
+        <Form.Item label="Mã xác minh đăng nhập" required style={{ marginBottom: 24 }}>
           <Space.Compact style={{ width: '100%' }}>
             <Form.Item
               name="code"
               noStyle
               rules={[
-                { required: true, message: '请输入登录验证码' },
-                { len: 6, message: '验证码长度为 6 位' },
+                { required: true, message: 'Vui lòng nhập mã xác minh đăng nhập' },
+                { len: 6, message: 'Mã xác minh dài 6 ký tự' },
               ]}
             >
               <Input
                 prefix={<SafetyCertificateOutlined style={{ color: token.colorTextTertiary }} />}
-                placeholder="请输入 6 位登录验证码"
+                placeholder="Vui lòng nhập mã đăng nhập 6 số"
                 maxLength={6}
                 style={{ height: 46, borderRadius: '12px 0 0 12px' }}
               />
@@ -552,7 +552,7 @@ export default function Login() {
               loading={loginCodeSending}
               disabled={loginCountdown > 0}
             >
-              {loginCountdown > 0 ? `${loginCountdown}s 后重发` : '发送验证码'}
+              {loginCountdown > 0 ? `Gửi lại sau ${loginCountdown}s` : 'Gửi mã xác minh'}
             </Button>
           </Space.Compact>
         </Form.Item>
@@ -573,13 +573,13 @@ export default function Login() {
               boxShadow: primaryButtonShadow,
             }}
           >
-            验证码登录
+            Đăng nhập bằng mã
           </Button>
         </Form.Item>
 
         <div style={{ marginTop: 12, textAlign: 'right' }}>
           <Button type="link" style={{ paddingInline: 0 }} onClick={() => setShowResetPassword(true)}>
-            忘记密码？点击重置
+            Quên mật khẩu? Nhấn đặt lại
           </Button>
         </div>
       </Form>
@@ -596,33 +596,33 @@ export default function Login() {
     >
       <Form.Item
         name="email"
-        label="注册邮箱"
+        label="Email đăng ký"
         rules={[
-          { required: true, message: '请输入注册邮箱' },
-          { type: 'email', message: '请输入有效的邮箱地址' },
+          { required: true, message: 'Vui lòng nhập email đăng ký' },
+          { type: 'email', message: 'Vui lòng nhập địa chỉ email hợp lệ' },
         ]}
       >
         <Input
           prefix={<MailOutlined style={{ color: token.colorTextTertiary }} />}
-          placeholder="请输入注册邮箱"
+          placeholder="Vui lòng nhập email đăng ký"
           autoComplete="email"
           style={{ height: 46, borderRadius: 12 }}
         />
       </Form.Item>
 
-      <Form.Item label="邮箱验证码" required style={{ marginBottom: 12 }}>
+      <Form.Item label="Mã xác minh email" required style={{ marginBottom: 12 }}>
         <Space.Compact style={{ width: '100%' }}>
           <Form.Item
             name="code"
             noStyle
             rules={[
-              { required: true, message: '请输入邮箱验证码' },
-              { len: 6, message: '验证码长度为 6 位' },
+              { required: true, message: 'Vui lòng nhập mã xác minh email' },
+              { len: 6, message: 'Mã xác minh dài 6 ký tự' },
             ]}
           >
             <Input
               prefix={<SafetyCertificateOutlined style={{ color: token.colorTextTertiary }} />}
-              placeholder="请输入 6 位验证码"
+              placeholder="Vui lòng nhập mã xác minh 6 số"
               maxLength={6}
               style={{ height: 46, borderRadius: '12px 0 0 12px' }}
             />
@@ -633,19 +633,19 @@ export default function Login() {
             loading={registerCodeSending}
             disabled={registerCountdown > 0}
           >
-            {registerCountdown > 0 ? `${registerCountdown}s 后重发` : '发送验证码'}
+            {registerCountdown > 0 ? `Gửi lại sau ${registerCountdown}s` : 'Gửi mã xác minh'}
           </Button>
         </Space.Compact>
       </Form.Item>
 
       <Form.Item
         name="display_name"
-        label="昵称"
-        rules={[{ max: 50, message: '昵称长度不能超过 50 个字符' }]}
+        label="Biệt danh"
+        rules={[{ max: 50, message: 'Biệt danh không quá 50 ký tự' }]}
       >
         <Input
           prefix={<UserOutlined style={{ color: token.colorTextTertiary }} />}
-          placeholder="选填，默认使用邮箱前缀"
+          placeholder="Tùy chọn, mặc định dùng phần trước @ của email"
           autoComplete="nickname"
           style={{ height: 46, borderRadius: 12 }}
         />
@@ -653,15 +653,15 @@ export default function Login() {
 
       <Form.Item
         name="password"
-        label="登录密码"
+        label="Mật khẩu đăng nhập"
         rules={[
-          { required: true, message: '请输入登录密码' },
-          { min: 6, message: '密码长度至少为 6 个字符' },
+          { required: true, message: 'Vui lòng nhập mật khẩu đăng nhập' },
+          { min: 6, message: 'Mật khẩu dài ít nhất 6 ký tự' },
         ]}
       >
         <Input.Password
           prefix={<LockOutlined style={{ color: token.colorTextTertiary }} />}
-          placeholder="请输入登录密码"
+          placeholder="Vui lòng nhập mật khẩu đăng nhập"
           autoComplete="new-password"
           style={{ height: 46, borderRadius: 12 }}
         />
@@ -669,23 +669,23 @@ export default function Login() {
 
       <Form.Item
         name="confirmPassword"
-        label="确认密码"
+        label="Xác nhận mật khẩu"
         dependencies={['password']}
         rules={[
-          { required: true, message: '请再次输入登录密码' },
+          { required: true, message: 'Vui lòng nhập lại mật khẩu đăng nhập' },
           ({ getFieldValue }) => ({
             validator(_, value) {
               if (!value || getFieldValue('password') === value) {
                 return Promise.resolve();
               }
-              return Promise.reject(new Error('两次输入的密码不一致'));
+              return Promise.reject(new Error('Hai lần nhập mật khẩu không khớp'));
             },
           }),
         ]}
       >
         <Input.Password
           prefix={<LockOutlined style={{ color: token.colorTextTertiary }} />}
-          placeholder="请再次输入登录密码"
+          placeholder="Vui lòng nhập lại mật khẩu đăng nhập"
           autoComplete="new-password"
           style={{ height: 46, borderRadius: 12 }}
         />
@@ -707,12 +707,12 @@ export default function Login() {
             boxShadow: primaryButtonShadow,
           }}
         >
-          注册并登录
+          Đăng ký và đăng nhập
         </Button>
       </Form.Item>
 
       <Text type="secondary" style={{ marginTop: 12, display: 'block' }}>
-        验证码将发送到你填写的邮箱，若未收到请检查垃圾箱或稍后重试。注册后可通过邮箱验证码登录，也支持邮箱重置密码。
+        Mã xác minh sẽ được gửi tới email bạn nhập; nếu chưa nhận hãy kiểm tra hộp thư rác hoặc thử lại sau. Sau khi đăng ký có thể đăng nhập bằng mã email, cũng hỗ trợ đặt lại mật khẩu qua email.
       </Text>
     </Form>
   );
@@ -756,7 +756,7 @@ export default function Login() {
           e.currentTarget.style.boxShadow = primaryButtonShadow;
         }}
       >
-        使用 LinuxDO OAuth 登录
+        Đăng nhập bằng LinuxDO OAuth
       </Button>
     </div>
   );
@@ -766,7 +766,7 @@ export default function Login() {
       ? [
           {
             key: 'local-login',
-            label: '本地登录',
+            label: 'Đăng nhập local',
             children: renderLocalLogin(),
           },
         ]
@@ -775,7 +775,7 @@ export default function Login() {
       ? [
           {
             key: 'email-login',
-            label: '邮箱登录',
+            label: 'Đăng nhập email',
             children: renderEmailLogin(),
           },
         ]
@@ -784,7 +784,7 @@ export default function Login() {
       ? [
           {
             key: 'email-register',
-            label: '邮箱注册',
+            label: 'Đăng ký email',
             children: renderEmailRegister(),
           },
         ]
@@ -903,7 +903,7 @@ export default function Login() {
                         fontSize: 'clamp(52px, 3vw, 78px)',
                       }}
                     >
-                      基于 AI 的
+                      Dựa trên AI
                       <br />
                       <span
                         style={{
@@ -914,7 +914,7 @@ export default function Login() {
                           color: token.colorPrimary,
                         }}
                       >
-                        智能小说创作助手
+                        Trợ lý sáng tác tiểu thuyết thông minh
                       </span>
                     </Title>
                     <Paragraph
@@ -926,7 +926,7 @@ export default function Login() {
                         maxWidth: 800,
                       }}
                     >
-                      从灵感到成稿，围绕「多模型协同、创作流程自动化、角色关系管理、章节精修」构建一体化创作工作台。
+                      Từ cảm hứng tới bản thảo, xây bàn làm việc sáng tác thống nhất quanh «đa mô hình, tự động hóa quy trình, quản lý quan hệ nhân vật, tinh chỉnh chương».
                     </Paragraph>
                   </div>
 
@@ -998,10 +998,10 @@ export default function Login() {
               <div style={{ width: '100%', maxWidth: 520 }}>
                 <Space direction="vertical" size={4}>
                   <Title level={2} style={{ marginBottom: 0, fontWeight: 700, color: token.colorText }}>
-                    欢迎回来
+                    Chào mừng trở lại
                   </Title>
                   <Paragraph style={{ marginBottom: 0, color: token.colorTextSecondary }}>
-                    登录 MuMuAINovel，继续你的小说创作项目。
+                    Đăng nhập MuMuAINovel và tiếp tục dự án sáng tác tiểu thuyết của bạn.
                   </Paragraph>
                 </Space>
 
@@ -1014,8 +1014,8 @@ export default function Login() {
                     <Alert
                       type="warning"
                       showIcon
-                      message="当前未启用可用登录方式"
-                      description="请联系管理员在系统配置中启用本地登录、邮箱认证或 LinuxDO OAuth 登录。"
+                      message="Chưa bật phương thức đăng nhập khả dụng"
+                      description="Hãy liên hệ quản trị viên để bật đăng nhập local, email hoặc LinuxDO OAuth trong cấu hình hệ thống."
                     />
                   ) : null}
 
@@ -1024,8 +1024,8 @@ export default function Login() {
                       type="info"
                       showIcon
                       style={{ marginTop: 12, borderRadius: 12 }}
-                      message="邮箱注册暂未开放"
-                      description="当前仅开放邮箱验证码登录与找回密码，如需注册请联系管理员。"
+                      message="Đăng ký email tạm chưa mở"
+                      description="Hiện chỉ mở đăng nhập mã email và lấy lại mật khẩu; cần đăng ký hãy liên hệ quản trị viên."
                     />
                   ) : null}
 
@@ -1035,7 +1035,7 @@ export default function Login() {
                     showIcon
                     icon={<SafetyCertificateOutlined />}
                     style={{ background: alphaColor(token.colorPrimary, 0.06), borderRadius: 12 }}
-                    message="登录说明"
+                    message="Hướng dẫn đăng nhập"
                     description={(
                       <ul style={{ margin: 0, paddingLeft: 18 }}>
                         {loginTips.map((tip) => (

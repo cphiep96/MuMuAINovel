@@ -18,8 +18,8 @@ config_logger = logging.getLogger(__name__)
 # 从环境变量获取数据库URL
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://mumuai:password@localhost:5432/mumuai_novel")
 
-config_logger.debug(f"数据库类型: PostgreSQL")
-config_logger.debug(f"数据库URL: {DATABASE_URL}")
+config_logger.debug(f"Loại cơ sở dữ liệu: PostgreSQL")
+config_logger.debug(f"URL cơ sở dữ liệu: {DATABASE_URL}")
 
 class Settings(BaseSettings):
     """应用配置"""
@@ -55,7 +55,7 @@ class Settings(BaseSettings):
     
     # 连接池高级配置
     database_echo_pool: bool = False  # 是否记录连接池日志（调试用）
-    database_pool_reset_on_return: str = "rollback"  # 连接归还时的重置策略：rollback/commit/none
+    database_pool_reset_on_return: str = "rollback"  # Chiến lược reset khi trả kết nối: rollback/commit/none
     database_max_identifier_length: int = 128  # PostgreSQL标识符最大长度
     
     # 会话监控配置
@@ -112,7 +112,7 @@ class Settings(BaseSettings):
     LOCAL_AUTH_ENABLED: bool = True  # 是否启用本地账户登录
     LOCAL_AUTH_USERNAME: Optional[str] = None  # 本地登录用户名
     LOCAL_AUTH_PASSWORD: Optional[str] = None  # 本地登录密码
-    LOCAL_AUTH_DISPLAY_NAME: str = "本地用户"  # 本地用户显示名称
+    LOCAL_AUTH_DISPLAY_NAME: str = "Người dùng cục bộ"  # Tên hiển thị người dùng local
     
     # 会话配置
     SESSION_EXPIRE_MINUTES: int = 120  # 会话过期时间（分钟），默认2小时
@@ -136,34 +136,34 @@ class Settings(BaseSettings):
     EMAIL_VERIFICATION_RESEND_INTERVAL_SECONDS: int = 60
     
     # 提示词工坊配置
-    WORKSHOP_MODE: str = "client"  # client: 本地部署实例, server: 云端中央服务器
-    WORKSHOP_CLOUD_URL: str = "https://mumuverse.space:1566"  # 云端服务地址
+    WORKSHOP_MODE: str = "client"  # client: instance triển khai local, server: máy chủ trung tâm đám mây
+    WORKSHOP_CLOUD_URL: str = "https://mumuverse.space:1566"  # Địa chỉ dịch vụ đám mây
     WORKSHOP_API_TIMEOUT: int = 30  # 云端API请求超时时间（秒）
     
     class Config:
         env_file = ".env"
         case_sensitive = False
-        extra = "ignore"  # 忽略未定义的环境变量，避免验证错误
+        extra = "ignore"  # Bỏ qua biến môi trường chưa định nghĩa để tránh lỗi validate
 
 
 # 创建全局配置实例
 settings = Settings()
-config_logger.info(f"配置加载完成: {settings.app_name} v{settings.app_version}")
-config_logger.debug(f"调试模式: {settings.debug}")
-config_logger.debug(f"AI提供商: {settings.default_ai_provider}")
+config_logger.info(f"Đã tải cấu hình: {settings.app_name} v{settings.app_version}")
+config_logger.debug(f"Chế độ debug: {settings.debug}")
+config_logger.debug(f"Nhà cung cấp AI: {settings.default_ai_provider}")
 
 
 # ==================== 提示词工坊实例标识 ====================
 
 def get_or_create_instance_id() -> str:
-    """获取或创建实例唯一标识
+    """Lấy hoặc tạo định danh duy nhất của instance
     
-    - Server 模式：固定使用 "server" 作为标识，确保与所有 Client 实例区分
-    - Client 模式：从 .instance_id 文件读取或自动生成唯一标识
+    - Chế độ Server: cố định dùng "server" làm định danh, tách biệt mọi instance Client
+    - Chế độ Client: đọc từ file .instance_id hoặc tự sinh định danh duy nhất
     """
     # Server 模式使用固定标识
     if settings.WORKSHOP_MODE.lower() == "server":
-        config_logger.info("Server 模式：使用固定实例标识 'server'")
+        config_logger.info("Chế độ Server: dùng định danh instance cố định 'server'")
         return "server"
     
     # Client 模式：从文件读取或生成
@@ -171,7 +171,7 @@ def get_or_create_instance_id() -> str:
     if instance_file.exists():
         with open(instance_file, 'r') as f:
             instance_id = f.read().strip()
-            if instance_id and instance_id != "server":  # 确保不与 server 冲突
+            if instance_id and instance_id != "server":  # Đảm bảo không trùng với server
                 return instance_id
     
     # 生成新的实例ID
@@ -179,9 +179,9 @@ def get_or_create_instance_id() -> str:
     try:
         with open(instance_file, 'w') as f:
             f.write(instance_id)
-        config_logger.info(f"生成新的实例标识: {instance_id}")
+        config_logger.info(f"Đã tạo định danh instance mới: {instance_id}")
     except Exception as e:
-        config_logger.warning(f"无法保存实例标识到文件: {e}")
+        config_logger.warning(f"Không thể lưu định danh instance vào file: {e}")
     
     return instance_id
 
@@ -191,4 +191,4 @@ def is_workshop_server() -> bool:
     """判断当前实例是否为工坊服务端"""
     return settings.WORKSHOP_MODE.lower() == "server"
 
-config_logger.info(f"提示词工坊模式: {settings.WORKSHOP_MODE}, 实例ID: {INSTANCE_ID}")
+config_logger.info(f"Chế độ xưởng prompt: {settings.WORKSHOP_MODE}, instance ID: {INSTANCE_ID}")

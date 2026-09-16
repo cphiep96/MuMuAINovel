@@ -50,16 +50,16 @@ class WorkshopClient:
                 return response.json()
         except httpx.ConnectError as e:
             logger.error(f"无法连接到云端服务: {self.base_url}, 错误: {e}")
-            raise WorkshopClientError("无法连接到云端服务，请检查网络连接")
+            raise WorkshopClientError("Không thể kết nối tới dịch vụ đám mây, vui lòng kiểm tra kết nối mạng")
         except httpx.TimeoutException:
             logger.error(f"云端服务请求超时: {url}")
-            raise WorkshopClientError("云端服务请求超时，请稍后重试")
+            raise WorkshopClientError("Yêu cầu tới dịch vụ đám mây quá thời gian, vui lòng thử lại sau")
         except httpx.HTTPStatusError as e:
             logger.error(f"云端服务返回错误: {e.response.status_code}, response={safe_preview(e.response.text, 500)}")
-            raise WorkshopClientError(f"云端服务错误: {e.response.status_code}")
+            raise WorkshopClientError(f"Lỗi dịch vụ đám mây: {e.response.status_code}")
         except Exception as e:
             logger.error(f"请求云端服务异常: {e}")
-            raise WorkshopClientError(f"请求云端服务失败: {str(e)}")
+            raise WorkshopClientError(f"Yêu cầu tới dịch vụ đám mây thất bại: {str(e)}")
     
     async def check_connection(self) -> bool:
         """检查云端连接状态"""

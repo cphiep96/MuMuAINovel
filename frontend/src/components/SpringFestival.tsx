@@ -24,13 +24,13 @@ function isSpringFestivalSeason(): boolean {
 // 飘落装饰物配置
 const FALLING_ITEMS = ['🌸', '✨', '🧧', '💮', '🎐', '❄️', '🏮'];
 const SPRING_COUPLETS = [
-  '马年大吉',
-  '恭喜发财',
-  '红包拿来',
-  '万事如意',
-  '阖家欢乐',
-  '新春快乐',
-  '福星高照',
+  'Năm Ngựa đại cát',
+  'Chúc mừng phát tài',
+  'Lì xì đây',
+  'Vạn sự như ý',
+  'Gia đình vui vẻ',
+  'Chúc mừng năm mới',
+  'Phúc tinh chiếu rọi',
 ];
 
 interface FallingItem {
@@ -446,7 +446,7 @@ export default function SpringFestival() {
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
         onClick={handleBtnClick}
-        title={visible ? '关闭春节装饰' : '开启春节装饰'}
+        title={visible ? 'Tắt trang trí Tết' : 'Bật trang trí Tết'}
       >
         {visible ? '🧨' : '🏮'}
       </button>
@@ -474,7 +474,7 @@ export default function SpringFestival() {
                 <div className="sf-lantern-top"></div>
                 <div className="sf-lantern-middle">
                   <span className={`sf-lantern-char ${lanternFading ? 'sf-char-fade-out' : 'sf-char-fade-in'}`}>
-                    {lanternChars[0] || '福'}
+                    {lanternChars[0] || 'Phúc'}
                   </span>
                 </div>
                 <div className="sf-lantern-bottom"></div>
@@ -487,7 +487,7 @@ export default function SpringFestival() {
                 <div className="sf-lantern-top"></div>
                 <div className="sf-lantern-middle">
                   <span className={`sf-lantern-char ${lanternFading ? 'sf-char-fade-out' : 'sf-char-fade-in'}`}>
-                    {lanternChars[1] || '春'}
+                    {lanternChars[1] || 'Lộc'}
                   </span>
                 </div>
                 <div className="sf-lantern-bottom"></div>
@@ -504,7 +504,7 @@ export default function SpringFestival() {
                 <div className="sf-lantern-top"></div>
                 <div className="sf-lantern-middle">
                   <span className={`sf-lantern-char ${lanternFading ? 'sf-char-fade-out' : 'sf-char-fade-in'}`}>
-                    {lanternChars[2] || '喜'}
+                    {lanternChars[2] || 'Thọ'}
                   </span>
                 </div>
                 <div className="sf-lantern-bottom"></div>
@@ -517,7 +517,7 @@ export default function SpringFestival() {
                 <div className="sf-lantern-top"></div>
                 <div className="sf-lantern-middle">
                   <span className={`sf-lantern-char ${lanternFading ? 'sf-char-fade-out' : 'sf-char-fade-in'}`}>
-                    {lanternChars[3] || '乐'}
+                    {lanternChars[3] || 'Xuân'}
                   </span>
                 </div>
                 <div className="sf-lantern-bottom"></div>

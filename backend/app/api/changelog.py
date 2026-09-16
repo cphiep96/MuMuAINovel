@@ -16,7 +16,7 @@ router = APIRouter()
 
 def require_login(request: Request):
     if not hasattr(request.state, "user") or not request.state.user:
-        raise HTTPException(status_code=401, detail="需要登录")
+        raise HTTPException(status_code=401, detail="Cần đăng nhập")
     return request.state.user
 
 # GitHub API配置
@@ -100,7 +100,7 @@ async def fetch_github_commits(page: int = 1, per_page: int = 30) -> List[dict]:
         logger.error(f"GitHub API请求失败: {str(e)}")
         raise HTTPException(
             status_code=502,
-            detail=f"获取GitHub提交历史失败: {str(e)}"
+            detail=f"Lấy lịch sử commit GitHub thất bại: {str(e)}"
         )
 
 
@@ -174,7 +174,7 @@ async def get_changelog(
         logger.error(f"获取更新日志时发生错误: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"获取更新日志失败: {str(e)}"
+            detail=f"Lấy nhật ký cập nhật thất bại: {str(e)}"
         )
 
 
@@ -226,7 +226,7 @@ async def refresh_changelog(user=Depends(require_login)):
         
         return {
             "success": True,
-            "message": "缓存已刷新",
+            "message": "Đã làm mới bộ nhớ đệm",
             "commit_count": len(commits),
             "cache_time": _cache["timestamp"].isoformat()
         }
@@ -235,5 +235,5 @@ async def refresh_changelog(user=Depends(require_login)):
         logger.error(f"刷新缓存时发生错误: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"刷新缓存失败: {str(e)}"
+            detail=f"Làm mới bộ nhớ đệm thất bại: {str(e)}"
         )

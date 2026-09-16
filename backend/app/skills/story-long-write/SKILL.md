@@ -1,9 +1,19 @@
 ---
 name: story-long-write
+display_name: Viết tiểu thuyết dài
+category: Skill·Dài
 description: |
-  长篇网文写作。从大纲到正文，辅助长篇网络小说的创作，包括世界观、人物、情节线管理。
-  触发方式：/story-long-write、/写长篇、/story、/网文、「帮我开书」「写大纲」
+  Viết tiểu thuyết mạng dài. Từ dàn ý tới chính văn, hỗ trợ sáng tác tiểu thuyết dài, gồm bối cảnh thế giới, nhân vật và quản lý tuyến tình tiết.
+  Kích hoạt: /story-long-write, «viết truyện dài», «mở sách mới», «viết dàn ý».
+triggers:
+  - /story-long-write
+  - viết truyện dài
+  - mở sách mới
+  - viết dàn ý
 ---
+
+> **Yêu cầu ngôn ngữ**: nội dung tạo cho người dùng phải viết bằng tiếng Việt tự nhiên.
+
 
 # story-long-write：长篇网文写作
 
@@ -250,7 +260,7 @@ description: |
 
 ---
 
-## 语言
-
-- 用户用中文就用中文回复，用英文就用英文回复
-- 中文回复遵循《中文文案排版指北》
+## Ngôn ngữ đầu ra
+- Ưu tiên trả lời và viết nội dung bằng **tiếng Việt** tự nhiên.
+- Nếu người dùng dùng tiếng Anh thì có thể trả lời bằng tiếng Anh; mặc định dùng tiếng Việt.
+- Không đổi tên kỹ thuật, đường dẫn lệnh slash (`/story-...`) hay tên file tham chiếu.

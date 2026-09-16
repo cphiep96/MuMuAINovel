@@ -4,6 +4,7 @@ import { Card, Input, Button, Space, Typography, message, Spin, Modal, theme } f
 import { SendOutlined, ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
 import { inspirationApi } from '../services/api';
 import { AIProjectGenerator, type GenerationConfig } from '../components/AIProjectGenerator';
+import { perspectiveLabel } from '../utils/displayLabels';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -51,6 +52,9 @@ const CACHE_KEY = 'inspiration_conversation_cache';
 // 缓存有效期：24小时
 const CACHE_EXPIRY = 24 * 60 * 60 * 1000;
 
+// Giá trị góc kể chuyện được lưu bằng tiếng Trung (hợp đồng dữ liệu với backend), chỉ dịch khi hiển thị
+const displayOption = (option: string) => perspectiveLabel(option) || option;
+
 const Inspiration: React.FC = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<Step>('idea');
@@ -68,7 +72,7 @@ const Inspiration: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       type: 'ai',
-      content: '你好！我是你的AI创作助手。让我们一起创作一部精彩的小说吧！\n\n请告诉我，你想写一本什么样的小说？',
+      content: 'Xin chào! Tôi là trợ lý sáng tác AI của bạn. Hãy cùng nhau viết một cuốn tiểu thuyết thật hấp dẫn nhé!\n\nHãy cho tôi biết, bạn muốn viết một cuốn tiểu thuyết như thế nào?',
     }
   ]);
   const [inputValue, setInputValue] = useState('');
@@ -108,9 +112,9 @@ const Inspiration: React.FC = () => {
   const clearCache = useCallback(() => {
     try {
       localStorage.removeItem(CACHE_KEY);
-      console.log('🗑️ 缓存已清除');
+      console.log('🗑️ Đã xóa cache');
     } catch (error) {
-      console.error('清除缓存失败:', error);
+      console.error('Xóa cache thất bại:', error);
     }
   }, []);
 
@@ -138,9 +142,9 @@ const Inspiration: React.FC = () => {
       };
 
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-      console.log('💾 对话已自动保存');
+      console.log('💾 Hội thoại đã được lưu tự động');
     } catch (error) {
-      console.error('保存缓存失败:', error);
+      console.error('Lưu cache thất bại:', error);
     }
   }, [currentStep, messages, wizardData, initialIdea, selectedOptions, lastFailedRequest]);
 
@@ -157,7 +161,7 @@ const Inspiration: React.FC = () => {
 
       // 检查缓存是否过期
       if (age > CACHE_EXPIRY) {
-        console.log('⏰ 缓存已过期，清除');
+        console.log('⏰ Cache đã hết hạn, đã xóa');
         clearCache();
         return false;
       }
@@ -178,11 +182,11 @@ const Inspiration: React.FC = () => {
         setLastFailedRequest(cacheData.lastFailedRequest);
       }
 
-      console.log('✅ 已恢复上次的对话进度');
-      message.success('已恢复上次的对话进度', 2);
+      console.log('✅ Đã khôi phục tiến độ hội thoại lần trước');
+      message.success('Đã khôi phục tiến độ trò chuyện lần trước', 2);
       return true;
     } catch (error) {
-      console.error('恢复缓存失败:', error);
+      console.error('Khôi phục cache thất bại:', error);
       clearCache();
       return false;
     }
@@ -263,7 +267,7 @@ const Inspiration: React.FC = () => {
 
       const aiMessage: Message = {
         type: 'ai',
-        content: response.prompt || '请选择一个选项，或者输入你自己的：',
+        content: response.prompt || 'Hãy chọn một tùy chọn, hoặc nhập nội dung của riêng bạn:',
         options: response.options || [],
         isMultiSelect: failedRequest.step === 'genre',
         canRefine: true,
@@ -273,8 +277,8 @@ const Inspiration: React.FC = () => {
       setCurrentStep(failedRequest.step);
       setLastFailedRequest(null);
     } catch (error: unknown) {
-      console.error('重试失败:', error);
-      message.error('重试失败，请稍后再试');
+      console.error('Thử lại thất bại:', error);
+      message.error('Thử lại thất bại, vui lòng thử lại sau');
     } finally {
       if (sessionVersion === sessionVersionRef.current) setLoading(false);
     }
@@ -283,7 +287,7 @@ const Inspiration: React.FC = () => {
   // 处理用户反馈，重新生成选项
   const handleRefineOptions = async (messageIndex: number, feedback: string) => {
     if (!feedback.trim() || refining || loading) {
-      message.warning('请输入您的反馈意见');
+      message.warning('Vui lòng nhập ý kiến phản hồi của bạn');
       return;
     }
 
@@ -351,7 +355,7 @@ const Inspiration: React.FC = () => {
       // 添加新的AI消息
       const aiMessage: Message = {
         type: 'ai',
-        content: response.prompt || `根据您的反馈，我重新生成了一些${step === 'title' ? '书名' : step === 'description' ? '简介' : step === 'theme' ? '主题' : '类型'}选项：`,
+        content: response.prompt || `Theo phản hồi của bạn, tôi đã tạo lại một số tùy chọn ${step === 'title' ? 'tên sách' : step === 'description' ? 'giới thiệu' : step === 'theme' ? 'chủ đề' : 'thể loại'}:`,
         options: response.options || [],
         isMultiSelect: step === 'genre',
         canRefine: true,
@@ -359,7 +363,7 @@ const Inspiration: React.FC = () => {
       };
       setMessages(prev => [...prev, aiMessage]);
 
-      message.success('已根据您的反馈重新生成选项');
+      message.success('Đã tạo lại tùy chọn theo phản hồi của bạn');
     } catch (error: unknown) {
       if (sessionVersion !== sessionVersionRef.current) return;
       setMessages(prev => prev.map((item, index) => index === messageIndex
@@ -367,8 +371,8 @@ const Inspiration: React.FC = () => {
         : item));
       setFeedbackValue(feedback);
       setShowFeedbackInput(messageIndex);
-      console.error('优化选项失败:', error);
-      const errMsg = error instanceof Error ? error.message : '优化失败，请重试';
+      console.error('Tối ưu tùy chọn thất bại:', error);
+      const errMsg = error instanceof Error ? error.message : 'Tối ưu thất bại, vui lòng thử lại';
       const axiosError = error as { response?: { data?: { detail?: string } } };
       message.error(axiosError.response?.data?.detail || errMsg);
     } finally {
@@ -381,7 +385,7 @@ const Inspiration: React.FC = () => {
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || loading || refining) {
-      message.warning('请输入内容');
+      message.warning('Vui lòng nhập nội dung');
       return;
     }
 
@@ -416,9 +420,9 @@ const Inspiration: React.FC = () => {
           const errorMessage: Message = {
             type: 'ai',
             content: response.error
-              ? `生成书名时出错：${response.error}\n\n你可以选择：`
-              : `生成的选项格式不正确（至少需要3个有效选项）\n\n你可以选择：`,
-            options: ['重新生成', '我自己输入书名'],
+              ? `Lỗi khi tạo tên sách: ${response.error}\n\nBạn có thể chọn:`
+              : `Định dạng tùy chọn tạo ra không hợp lệ (cần ít nhất 3 tùy chọn hợp lệ)\n\nBạn có thể chọn:`,
+            options: ['Tạo lại', 'Tự nhập tên sách'],
             failedRequest: requestData,
           };
           setMessages(prev => [...prev, errorMessage]);
@@ -428,7 +432,7 @@ const Inspiration: React.FC = () => {
 
         const aiMessage: Message = {
           type: 'ai',
-          content: response.prompt || '请选择一个书名，或者输入你自己的：',
+          content: response.prompt || 'Hãy chọn một tên sách, hoặc nhập tên của riêng bạn:',
           options: response.options,
           canRefine: true,
           step: 'title'
@@ -441,8 +445,8 @@ const Inspiration: React.FC = () => {
       }
     } catch (error: unknown) {
       if (sessionVersion !== sessionVersionRef.current) return;
-      console.error('发送消息失败:', error);
-      const errMsg = error instanceof Error ? error.message : '生成失败，请重试';
+      console.error('Gửi tin nhắn thất bại:', error);
+      const errMsg = error instanceof Error ? error.message : 'Tạo thất bại, vui lòng thử lại';
       const axiosError = error as { response?: { data?: { detail?: string } } };
       message.error(axiosError.response?.data?.detail || errMsg);
     } finally {
@@ -452,15 +456,15 @@ const Inspiration: React.FC = () => {
 
   const handleSelectOption = async (option: string, sourceMessage?: Message) => {
     const retryRequest = sourceMessage?.failedRequest || lastFailedRequest;
-    if ((option === '重新生成' || option === '让AI重新生成') && retryRequest) {
+    if ((option === 'Tạo lại' || option === '重新生成' || option === '让AI重新生成') && retryRequest) {
       await handleRetry(retryRequest);
       return;
     }
 
     if (loading || refining) return;
 
-    if (option === '我自己输入书名' || option === '我自己输入') {
-      message.info('请在下方输入框中输入您的内容');
+    if (option === 'Tự nhập tên sách' || option === 'Tự nhập' || option === '我自己输入书名' || option === '我自己输入') {
+      message.info('Vui lòng nhập nội dung của bạn vào ô nhập bên dưới');
       return;
     }
 
@@ -489,7 +493,7 @@ const Inspiration: React.FC = () => {
     if (currentStep === 'perspective') {
       const userMessage: Message = {
         type: 'user',
-        content: option,
+        content: displayOption(option),
       };
       setMessages(prev => [...prev, userMessage]);
 
@@ -499,14 +503,14 @@ const Inspiration: React.FC = () => {
       // 询问大纲模式
       const aiMessage: Message = {
         type: 'ai',
-        content: `很好！现在请选择你想要的大纲模式：
+        content: `Tuyệt vời! Bây giờ hãy chọn chế độ dàn ý bạn muốn:
 
-📋 一对一模式：传统模式，一个大纲对应一个章节，适合结构清晰、章节独立的小说。
+📋 Chế độ một-một: chế độ truyền thống, một dàn ý tương ứng một chương, phù hợp với tiểu thuyết có cấu trúc rõ ràng, các chương độc lập.
 
-📚 一对多模式：细化模式，一个大纲可以展开成多个章节，适合需要详细展开情节的小说。
+📚 Chế độ một-nhiều: chế độ chi tiết hóa, một dàn ý có thể triển khai thành nhiều chương, phù hợp với tiểu thuyết cần khai thác tình tiết chi tiết.
 
-请选择：`,
-        options: ['📋 一对一模式', '📚 一对多模式']
+Vui lòng chọn:`,
+        options: ['📋 Chế độ một-một', '📚 Chế độ một-nhiều']
       };
       setMessages(prev => [...prev, aiMessage]);
       setCurrentStep('outline_mode');
@@ -522,7 +526,7 @@ const Inspiration: React.FC = () => {
 
       // 将选项转换为实际的模式值
       const modeValue: 'one-to-one' | 'one-to-many' =
-        option === '📋 一对一模式' ? 'one-to-one' : 'one-to-many';
+        option === '📋 Chế độ một-một' || option === '📋 一对一模式' ? 'one-to-one' : 'one-to-many';
 
       const updatedData = {
         ...wizardData,
@@ -532,24 +536,24 @@ const Inspiration: React.FC = () => {
       setWizardData(updatedData);
 
       // 显示摘要
-      const modeText = modeValue === 'one-to-one' ? '一对一模式' : '一对多模式';
+      const modeText = modeValue === 'one-to-one' ? 'Chế độ một-một' : 'Chế độ một-nhiều';
       const summary = `
-太棒了！你的小说设定已完成，请确认：
+Tuyệt vời! Thiết lập tiểu thuyết của bạn đã hoàn tất, vui lòng xác nhận:
 
-📖 书名：${updatedData.title}
-📝 简介：${updatedData.description}
-🎯 主题：${updatedData.theme}
-🏷️ 类型：${updatedData.genre.join('、')}
-👁️ 视角：${updatedData.narrative_perspective}
-📋 大纲模式：${modeText}
+📖 Tên sách: ${updatedData.title}
+📝 Giới thiệu: ${updatedData.description}
+🎯 Chủ đề: ${updatedData.theme}
+🏷️ Thể loại: ${updatedData.genre.join(', ')}
+👁️ Góc nhìn: ${displayOption(updatedData.narrative_perspective)}
+📋 Chế độ dàn ý: ${modeText}
 
-请选择下一步操作：
+Vui lòng chọn thao tác tiếp theo:
       `.trim();
 
       const aiMessage: Message = {
         type: 'ai',
         content: summary,
-        options: ['✅ 确认创建', '🔄 重新开始']
+        options: ['✅ Xác nhận tạo', '🔄 Bắt đầu lại']
       };
       setMessages(prev => [...prev, aiMessage]);
       setCurrentStep('confirm');
@@ -557,16 +561,16 @@ const Inspiration: React.FC = () => {
     }
 
     if (currentStep === 'confirm') {
-      if (option === '✅ 确认创建') {
+      if (option === '✅ Xác nhận tạo' || option === '✅ 确认创建') {
         const userMessage: Message = {
           type: 'user',
-          content: '确认创建',
+          content: 'Xác nhận tạo',
         };
         setMessages(prev => [...prev, userMessage]);
 
         const aiMessage: Message = {
           type: 'ai',
-          content: '好的！正在为你创建项目，这可能需要几分钟时间...'
+          content: 'Được rồi! Đang tạo dự án cho bạn, việc này có thể mất vài phút...'
         };
         setMessages(prev => [...prev, aiMessage]);
 
@@ -589,7 +593,7 @@ const Inspiration: React.FC = () => {
         setGenerationConfig(config);
         setCurrentStep('generating');
         return;
-      } else if (option === '🔄 重新开始') {
+      } else if (option === '🔄 Bắt đầu lại' || option === '🔄 重新开始') {
         handleRestart();
         return;
       }
@@ -617,8 +621,8 @@ const Inspiration: React.FC = () => {
       await generateNextStep(updatedData);
     } catch (error: unknown) {
       if (sessionVersion !== sessionVersionRef.current) return;
-      console.error('选择选项失败:', error);
-      const errMsg = error instanceof Error ? error.message : '生成失败，请重试';
+      console.error('Chọn tùy chọn thất bại:', error);
+      const errMsg = error instanceof Error ? error.message : 'Tạo thất bại, vui lòng thử lại';
       const axiosError = error as { response?: { data?: { detail?: string } } };
       message.error(axiosError.response?.data?.detail || errMsg);
     } finally {
@@ -647,14 +651,14 @@ const Inspiration: React.FC = () => {
         // 直接进入大纲模式选择
         const aiMessage: Message = {
           type: 'ai',
-          content: `很好！现在请选择你想要的大纲模式：
+          content: `Tốt! Bây giờ hãy chọn chế độ dàn ý bạn muốn:
 
-📋 一对一模式：传统模式，一个大纲对应一个章节，适合结构清晰、章节独立的小说。
+📋 Chế độ một-một: chế độ truyền thống, một dàn ý tương ứng một chương, phù hợp tiểu thuyết cấu trúc rõ, chương độc lập.
 
-📚 一对多模式：细化模式，一个大纲可以展开成多个章节，适合需要详细展开情节的小说。
+📚 Chế độ một-nhiều: chế độ chi tiết, một dàn ý có thể mở rộng thành nhiều chương, phù hợp khi cần triển khai tình tiết chi tiết.
 
-请选择：`,
-          options: ['📋 一对一模式', '📚 一对多模式']
+Vui lòng chọn:`,
+          options: ['📋 Chế độ một-một', '📚 Chế độ một-nhiều']
         };
         setMessages(prev => [...prev, aiMessage]);
         setCurrentStep('outline_mode');
@@ -662,7 +666,7 @@ const Inspiration: React.FC = () => {
         return;
       } else if (currentStep === 'outline_mode') {
         // 大纲模式不支持自定义输入
-        message.warning('请从选项中选择一个大纲模式');
+        message.warning('Vui lòng chọn một chế độ dàn ý từ các tùy chọn');
         setLoading(false);
         return;
       }
@@ -671,8 +675,8 @@ const Inspiration: React.FC = () => {
       await generateNextStep(updatedData);
     } catch (error: unknown) {
       if (sessionVersion !== sessionVersionRef.current) return;
-      console.error('处理自定义输入失败:', error);
-      const errMsg = error instanceof Error ? error.message : '处理失败，请重试';
+      console.error('Xử lý nội dung nhập tùy chỉnh thất bại:', error);
+      const errMsg = error instanceof Error ? error.message : 'Xử lý thất bại, vui lòng thử lại';
       const axiosError = error as { response?: { data?: { detail?: string } } };
       message.error(axiosError.response?.data?.detail || errMsg);
     } finally {
@@ -682,7 +686,7 @@ const Inspiration: React.FC = () => {
 
   const handleConfirmGenres = async () => {
     if (selectedOptions.length === 0) {
-      message.warning('请至少选择一个类型');
+      message.warning('Vui lòng chọn ít nhất một loại');
       return;
     }
 
@@ -701,7 +705,7 @@ const Inspiration: React.FC = () => {
 
     const userMessage: Message = {
       type: 'user',
-      content: selectedOptions.join('、'),
+      content: selectedOptions.join(', '),
     };
     setMessages(prev => [...prev, userMessage]);
 
@@ -713,7 +717,7 @@ const Inspiration: React.FC = () => {
     try {
       const aiMessage: Message = {
         type: 'ai',
-        content: '很好！接下来，请选择小说的叙事视角：',
+        content: 'Tốt! Tiếp theo, hãy chọn góc kể chuyện của tiểu thuyết:',
         options: ['第一人称', '第三人称', '全知视角']
       };
       setMessages(prev => [...prev, aiMessage]);
@@ -732,7 +736,7 @@ const Inspiration: React.FC = () => {
       // genre 步骤完成后，进入 perspective
       const aiMessage: Message = {
         type: 'ai',
-        content: '很好！接下来，请选择小说的叙事视角：',
+        content: 'Tốt! Tiếp theo, hãy chọn góc kể chuyện của tiểu thuyết:',
         options: ['第一人称', '第三人称', '全知视角']
       };
       setMessages(prev => [...prev, aiMessage]);
@@ -753,9 +757,9 @@ const Inspiration: React.FC = () => {
         const errorMessage: Message = {
           type: 'ai',
           content: response.error
-            ? `生成简介时出错：${response.error}\n\n你可以选择：`
-            : `生成的选项格式不正确（至少需要3个有效选项）\n\n你可以选择：`,
-          options: ['重新生成', '我自己输入'],
+            ? `Lỗi khi tạo tóm tắt: ${response.error}\n\nBạn có thể chọn:`
+            : `Định dạng tùy chọn tạo ra không đúng (cần ít nhất 3 tùy chọn hợp lệ)\n\nBạn có thể chọn:`,
+          options: ['Tạo lại', 'Tự nhập'],
           failedRequest: requestData,
         };
         setMessages(prev => [...prev, errorMessage]);
@@ -765,7 +769,7 @@ const Inspiration: React.FC = () => {
 
       const aiMessage: Message = {
         type: 'ai',
-        content: response.prompt || '请选择一个简介，或者输入你自己的：',
+        content: response.prompt || 'Hãy chọn một tóm tắt, hoặc tự nhập:',
         options: response.options,
         canRefine: true,
         step: 'description'
@@ -791,9 +795,9 @@ const Inspiration: React.FC = () => {
         const errorMessage: Message = {
           type: 'ai',
           content: response.error
-            ? `生成主题时出错：${response.error}\n\n你可以选择：`
-            : `生成的选项格式不正确（至少需要3个有效选项）\n\n你可以选择：`,
-          options: ['重新生成', '我自己输入'],
+            ? `Lỗi khi tạo chủ đề: ${response.error}\n\nBạn có thể chọn:`
+            : `Định dạng tùy chọn tạo ra không đúng (cần ít nhất 3 tùy chọn hợp lệ)\n\nBạn có thể chọn:`,
+          options: ['Tạo lại', 'Tự nhập'],
           failedRequest: requestData,
         };
         setMessages(prev => [...prev, errorMessage]);
@@ -803,7 +807,7 @@ const Inspiration: React.FC = () => {
 
       const aiMessage: Message = {
         type: 'ai',
-        content: response.prompt || '请选择一个主题，或者输入你自己的：',
+        content: response.prompt || 'Hãy chọn một chủ đề, hoặc tự nhập:',
         options: response.options,
         canRefine: true,
         step: 'theme'
@@ -830,9 +834,9 @@ const Inspiration: React.FC = () => {
         const errorMessage: Message = {
           type: 'ai',
           content: response.error
-            ? `生成类型时出错：${response.error}\n\n你可以选择：`
-            : `生成的选项格式不正确（至少需要3个有效选项）\n\n你可以选择：`,
-          options: ['重新生成', '我自己输入'],
+            ? `Lỗi khi tạo thể loại: ${response.error}\n\nBạn có thể chọn:`
+            : `Định dạng tùy chọn tạo ra không đúng (cần ít nhất 3 tùy chọn hợp lệ)\n\nBạn có thể chọn:`,
+          options: ['Tạo lại', 'Tự nhập'],
           isMultiSelect: false,
           failedRequest: requestData,
         };
@@ -843,7 +847,7 @@ const Inspiration: React.FC = () => {
 
       const aiMessage: Message = {
         type: 'ai',
-        content: response.prompt || '请选择类型标签（可多选）：',
+        content: response.prompt || 'Hãy chọn nhãn thể loại (có thể chọn nhiều):',
         options: response.options,
         isMultiSelect: true,
         canRefine: true,
@@ -867,7 +871,7 @@ const Inspiration: React.FC = () => {
     setMessages([
       {
         type: 'ai',
-        content: '好的，让我们重新开始！\n\n请告诉我，你想写一本什么样的小说？',
+        content: 'Được rồi, hãy bắt đầu lại!\n\nHãy cho tôi biết bạn muốn viết tiểu thuyết thế nào?',
       }
     ]);
     setWizardData({});
@@ -888,7 +892,7 @@ const Inspiration: React.FC = () => {
 
   // 生成完成回调
   const handleComplete = (projectId: string) => {
-    console.log('灵感模式项目创建完成:', projectId);
+    console.log('Tạo dự án ở chế độ cảm hứng hoàn tất:', projectId);
     // 确保清除缓存
     clearCache();
     setCurrentStep('complete');
@@ -989,7 +993,7 @@ const Inspiration: React.FC = () => {
                           }
                         }}
                       >
-                        {option}
+                        {displayOption(option)}
                       </Card>
                     ))}
 
@@ -1000,7 +1004,7 @@ const Inspiration: React.FC = () => {
                         onClick={handleConfirmGenres}
                         disabled={selectedOptions.length === 0}
                       >
-                        确认选择 ({selectedOptions.length})
+                        Xác nhận chọn ({selectedOptions.length})
                       </Button>
                     )}
 
@@ -1012,7 +1016,7 @@ const Inspiration: React.FC = () => {
                             <TextArea
                               value={feedbackValue}
                               onChange={(e) => setFeedbackValue(e.target.value)}
-                              placeholder="例如：我想要更悲剧的主题、能不能更简短一些、偏向古风..."
+                              placeholder="Ví dụ: tôi muốn chủ đề bi kịch hơn, ngắn hơn một chút, thiên cổ phong..."
                               autoSize={{ minRows: 2, maxRows: 3 }}
                               disabled={refining}
                               onPressEnter={(e) => {
@@ -1031,7 +1035,7 @@ const Inspiration: React.FC = () => {
                                 }}
                                 disabled={refining}
                               >
-                                取消
+                                Hủy
                               </Button>
                               <Button
                                 type="primary"
@@ -1040,7 +1044,7 @@ const Inspiration: React.FC = () => {
                                 loading={refining}
                                 disabled={!feedbackValue.trim()}
                               >
-                                根据反馈生成
+                                Tạo theo phản hồi
                               </Button>
                             </Space>
                           </Space>
@@ -1051,7 +1055,7 @@ const Inspiration: React.FC = () => {
                             onClick={() => setShowFeedbackInput(index)}
                             style={{ padding: 0, height: 'auto' }}
                           >
-                            💡 不太满意？告诉我你的想法
+                            💡 Chưa ưng ý? Hãy cho tôi biết ý của bạn
                           </Button>
                         )}
                       </div>
@@ -1068,7 +1072,7 @@ const Inspiration: React.FC = () => {
               padding: 20,
               animation: 'fadeIn 0.3s ease-in'
             }}>
-              <Spin tip={refining ? "正在根据您的反馈重新生成..." : "AI思考中..."} />
+              <Spin tip={refining ? "Đang tạo lại theo phản hồi của bạn..." : "AI đang suy nghĩ..."} />
             </div>
           )}
 
@@ -1086,8 +1090,8 @@ const Inspiration: React.FC = () => {
             onChange={(e) => setInputValue(e.target.value)}
             placeholder={
               currentStep === 'idea'
-                ? '例如：我想写一本关于时间旅行的科幻小说...'
-                : '输入自定义内容，或点击上方选项卡片...'
+                ? 'Ví dụ: tôi muốn viết tiểu thuyết khoa học viễn tưởng về du hành thời gian...'
+                : 'Nhập nội dung tùy chỉnh, hoặc nhấn thẻ tùy chọn phía trên...'
             }
             autoSize={{ minRows: 2, maxRows: 4 }}
             onPressEnter={(e) => {
@@ -1105,11 +1109,11 @@ const Inspiration: React.FC = () => {
             loading={loading}
             style={{ height: 'auto' }}
           >
-            发送
+            Gửi
           </Button>
         </Space.Compact>
         <Text type="secondary" style={{ fontSize: 12, marginTop: 8, display: 'block' }}>
-          💡 提示：按 Enter 发送，Shift+Enter 换行
+          💡 Gợi ý: Enter để gửi, Shift+Enter để xuống dòng
         </Text>
       </Card>
     </>
@@ -1185,7 +1189,7 @@ const Inspiration: React.FC = () => {
               color: token.colorWhite,
             }}
           >
-            {isMobile ? '返回' : '返回首页'}
+            {isMobile ? 'Quay lại' : 'Về trang chủ'}
           </Button>
 
           <div style={{ textAlign: 'center' }}>
@@ -1198,7 +1202,7 @@ const Inspiration: React.FC = () => {
                 lineHeight: 1.2
               }}
             >
-              ✨ 灵感模式
+              ✨ Chế độ cảm hứng
             </Title>
           </div>
 
@@ -1208,10 +1212,10 @@ const Inspiration: React.FC = () => {
               icon={<ReloadOutlined />}
               onClick={() => {
                 modal.confirm({
-                  title: '确认重新开始',
-                  content: '确定要重新开始吗？当前的对话进度将会丢失。',
-                  okText: '确认',
-                  cancelText: '取消',
+                  title: 'Xác nhận bắt đầu lại',
+                  content: 'Xác nhận bắt đầu lại? Tiến độ hội thoại hiện tại sẽ mất.',
+                  okText: 'Xác nhận',
+                  cancelText: 'Hủy',
                   centered: true,
                   okButtonProps: { danger: true },
                   onOk: () => {
@@ -1226,7 +1230,7 @@ const Inspiration: React.FC = () => {
                 color: token.colorWhite,
               }}
             >
-              {isMobile ? '重新' : '重新开始'}
+              {isMobile ? 'Lại' : 'Bắt đầu lại'}
             </Button>
           ) : (
             <div style={{ width: isMobile ? 60 : 120 }}></div>

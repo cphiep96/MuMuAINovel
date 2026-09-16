@@ -25,6 +25,9 @@ RUN rm -f package-lock.json
 
 # 安装依赖
 RUN npm install
+# 固定 esbuild 的 JS 包与 Linux 原生二进制版本，避免 npm 可选依赖版本不一致
+RUN npm install --no-save --force esbuild@0.28.1 @esbuild/linux-x64@0.28.1
+RUN npm rebuild esbuild
 
 # 复制前端源代码
 COPY frontend/ ./

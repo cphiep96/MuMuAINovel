@@ -24,22 +24,22 @@ const { Option } = Select;
 
 // 状态配置
 const STATUS_CONFIG: Record<ForeshadowStatus, { label: string; color: string; icon: React.ReactNode }> = {
-  pending: { label: '待埋入', color: 'default', icon: <ClockCircleOutlined /> },
-  planted: { label: '已埋入', color: 'green', icon: <BulbOutlined /> },
-  resolved: { label: '已回收', color: 'blue', icon: <CheckCircleOutlined /> },
-  partially_resolved: { label: '部分回收', color: 'orange', icon: <ExclamationCircleOutlined /> },
-  abandoned: { label: '已废弃', color: 'default', icon: <CloseCircleOutlined /> },
+  pending: { label: 'Chờ cài cắm', color: 'default', icon: <ClockCircleOutlined /> },
+  planted: { label: 'Đã cài cắm', color: 'green', icon: <BulbOutlined /> },
+  resolved: { label: 'Đã thu hồi', color: 'blue', icon: <CheckCircleOutlined /> },
+  partially_resolved: { label: 'Thu hồi một phần', color: 'orange', icon: <ExclamationCircleOutlined /> },
+  abandoned: { label: 'Đã bỏ', color: 'default', icon: <CloseCircleOutlined /> },
 };
 
 // 分类配置
 const CATEGORY_CONFIG: Record<string, { label: string; color: string }> = {
-  identity: { label: '身世', color: 'purple' },
-  mystery: { label: '悬念', color: 'magenta' },
-  item: { label: '物品', color: 'gold' },
-  relationship: { label: '关系', color: 'cyan' },
-  event: { label: '事件', color: 'blue' },
-  ability: { label: '能力', color: 'green' },
-  prophecy: { label: '预言', color: 'volcano' },
+  identity: { label: 'Thân thế', color: 'purple' },
+  mystery: { label: 'Nghi vấn', color: 'magenta' },
+  item: { label: 'Vật phẩm', color: 'gold' },
+  relationship: { label: 'Quan hệ', color: 'cyan' },
+  event: { label: 'Sự kiện', color: 'blue' },
+  ability: { label: 'Năng lực', color: 'green' },
+  prophecy: { label: 'Lời tiên tri', color: 'volcano' },
 };
 
 export default function Foreshadows() {
@@ -96,7 +96,7 @@ export default function Foreshadows() {
         setStats(response.stats);
       }
     } catch (error) {
-      console.error('加载伏笔列表失败:', error);
+      console.error('Tải danh sách phục bút thất bại:', error);
     } finally {
       setLoading(false);
     }
@@ -109,7 +109,7 @@ export default function Foreshadows() {
       const chaptersData = await chapterApi.getChapters(projectId);
       setChapters(chaptersData);
     } catch (error) {
-      console.error('加载章节列表失败:', error);
+      console.error('Tải danh sách chương thất bại:', error);
     }
   }, [projectId]);
 
@@ -120,7 +120,7 @@ export default function Foreshadows() {
       const charactersData = await characterApi.getCharacters(projectId);
       setCharacters(charactersData);
     } catch (error) {
-      console.error('加载角色列表失败:', error);
+      console.error('Tải danh sách nhân vật thất bại:', error);
     }
   }, [projectId]);
 
@@ -136,7 +136,7 @@ export default function Foreshadows() {
       const statsData = await foreshadowApi.getForeshadowStats(projectId, maxChapter);
       setStats(statsData);
     } catch (error) {
-      console.error('加载统计失败:', error);
+      console.error('Tải thống kê thất bại:', error);
     }
   }, [projectId, chapters]);
 
@@ -192,20 +192,20 @@ export default function Foreshadows() {
     try {
       if (currentForeshadow) {
         await foreshadowApi.updateForeshadow(currentForeshadow.id, values as ForeshadowUpdate);
-        message.success('伏笔更新成功');
+        message.success('Cập nhật phục bút thành công');
       } else {
         await foreshadowApi.createForeshadow({
           ...values,
           project_id: projectId!,
         } as ForeshadowCreate);
-        message.success('伏笔创建成功');
+        message.success('Tạo phục bút thành công');
       }
       setEditModalVisible(false);
       form.resetFields();
       setCurrentForeshadow(null);
       loadForeshadows();
     } catch (error) {
-      console.error('保存伏笔失败:', error);
+      console.error('Lưu phục bút thất bại:', error);
     }
   };
 
@@ -213,10 +213,10 @@ export default function Foreshadows() {
   const handleDelete = async (id: string) => {
     try {
       await foreshadowApi.deleteForeshadow(id);
-      message.success('伏笔删除成功');
+      message.success('Xóa phục bút thành công');
       loadForeshadows();
     } catch (error) {
-      console.error('删除伏笔失败:', error);
+      console.error('Xóa phục bút thất bại:', error);
     }
   };
 
@@ -233,13 +233,13 @@ export default function Foreshadows() {
         chapter_number: chapter.chapter_number,
         hint_text: values.hint_text,
       });
-      message.success('伏笔已标记为埋入');
+      message.success('Đã đánh dấu phục bút là đã cài cắm');
       setPlantModalVisible(false);
       plantForm.resetFields();
       setCurrentForeshadow(null);
       loadForeshadows();
     } catch (error) {
-      console.error('标记埋入失败:', error);
+      console.error('Đánh dấu đã gài cắm thất bại:', error);
     }
   };
 
@@ -257,13 +257,13 @@ export default function Foreshadows() {
         resolution_text: values.resolution_text,
         is_partial: values.is_partial,
       });
-      message.success('伏笔已标记为回收');
+      message.success('Đã đánh dấu phục bút là đã thu hồi');
       setResolveModalVisible(false);
       resolveForm.resetFields();
       setCurrentForeshadow(null);
       loadForeshadows();
     } catch (error) {
-      console.error('标记回收失败:', error);
+      console.error('Đánh dấu đã thu hồi thất bại:', error);
     }
   };
 
@@ -271,10 +271,10 @@ export default function Foreshadows() {
   const handleAbandon = async (id: string) => {
     try {
       await foreshadowApi.abandonForeshadow(id);
-      message.success('伏笔已标记为废弃');
+      message.success('Đã đánh dấu phục bút là đã bỏ');
       loadForeshadows();
     } catch (error) {
-      console.error('标记废弃失败:', error);
+      console.error('Đánh dấu đã bỏ thất bại:', error);
     }
   };
 
@@ -287,11 +287,11 @@ export default function Foreshadows() {
       const result = await foreshadowApi.syncFromAnalysis(projectId, {
         auto_set_planted: true,
       });
-      message.success(`同步完成: 新增${result.synced_count}个伏笔, 跳过${result.skipped_count}个`);
+      message.success(`Đồng bộ hoàn tất: thêm ${result.synced_count} phục bút, bỏ qua ${result.skipped_count}`);
       setSyncModalVisible(false);
       loadForeshadows();
     } catch (error) {
-      console.error('同步失败:', error);
+      console.error('Đồng bộ thất bại:', error);
     } finally {
       setSyncing(false);
     }
@@ -347,9 +347,9 @@ export default function Foreshadows() {
     const remaining = foreshadow.target_resolve_chapter_number - currentMaxChapter;
     
     if (remaining < 0) {
-      return <Badge status="error" text={`已超期${Math.abs(remaining)}章`} />;
+      return <Badge status="error" text={`Quá hạn ${Math.abs(remaining)} chương`} />;
     } else if (remaining <= 3) {
-      return <Badge status="warning" text={`还剩${remaining}章`} />;
+      return <Badge status="warning" text={`Còn ${remaining} chương`} />;
     }
     return null;
   };
@@ -366,7 +366,7 @@ export default function Foreshadows() {
   // 表格列定义
   const columns = [
     {
-      title: '状态',
+      title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
       width: 100,
@@ -381,17 +381,17 @@ export default function Foreshadows() {
       },
     },
     {
-      title: '标题',
+      title: 'Tiêu đề',
       dataIndex: 'title',
       key: 'title',
       ellipsis: true,
-      sorter: (a: Foreshadow, b: Foreshadow) => a.title.localeCompare(b.title, 'zh-CN'),
+      sorter: (a: Foreshadow, b: Foreshadow) => a.title.localeCompare(b.title, 'vi-VN'),
       render: (title: string, record: Foreshadow) => (
         <Space direction="vertical" size={0}>
           <Space>
             <a onClick={() => openDetailModal(record)}>{title}</a>
             {record.is_long_term && (
-              <Tag color="purple" style={{ marginLeft: 4 }}>长线</Tag>
+              <Tag color="purple" style={{ marginLeft: 4 }}>Dài hạn</Tag>
             )}
           </Space>
           {getUrgencyBadge(record)}
@@ -399,14 +399,14 @@ export default function Foreshadows() {
       ),
     },
     {
-      title: '分类',
+      title: 'Phân loại',
       dataIndex: 'category',
       key: 'category',
       width: 80,
       sorter: (a: Foreshadow, b: Foreshadow) => {
         const catA = a.category || '';
         const catB = b.category || '';
-        return catA.localeCompare(catB, 'zh-CN');
+        return catA.localeCompare(catB, 'vi-VN');
       },
       render: (category?: ForeshadowCategory) => {
         if (!category) return '-';
@@ -415,7 +415,7 @@ export default function Foreshadows() {
       },
     },
     {
-      title: '埋入章节',
+      title: 'Chương cài cắm',
       dataIndex: 'plant_chapter_number',
       key: 'plant_chapter_number',
       width: 120,
@@ -425,10 +425,10 @@ export default function Foreshadows() {
         return valA - valB;
       },
       defaultSortOrder: 'ascend' as const,
-      render: (num?: number) => num ? `第${num}章` : '-',
+      render: (num?: number) => num ? `Chương ${num}` : '-',
     },
     {
-      title: '计划回收',
+      title: 'Dự kiến thu hồi',
       dataIndex: 'target_resolve_chapter_number',
       key: 'target_resolve_chapter_number',
       width: 120,
@@ -437,10 +437,10 @@ export default function Foreshadows() {
         const valB = b.target_resolve_chapter_number ?? 999999;
         return valA - valB;
       },
-      render: (num?: number) => num ? `第${num}章` : '-',
+      render: (num?: number) => num ? `Chương ${num}` : '-',
     },
     {
-      title: '重要性',
+      title: 'Độ quan trọng',
       dataIndex: 'importance',
       key: 'importance',
       width: 100,
@@ -451,7 +451,7 @@ export default function Foreshadows() {
       },
     },
     {
-      title: '来源',
+      title: 'Nguồn',
       dataIndex: 'source_type',
       key: 'source_type',
       width: 80,
@@ -462,47 +462,47 @@ export default function Foreshadows() {
       },
       render: (source?: string) => (
         <Tag color={source === 'analysis' ? 'blue' : 'green'}>
-          {source === 'analysis' ? '分析' : '手动'}
+          {source === 'analysis' ? 'Phân tích' : 'Thủ công'}
         </Tag>
       ),
     },
     {
-      title: '操作',
+      title: 'Thao tác',
       key: 'actions',
       width: 200,
       render: (_: unknown, record: Foreshadow) => (
         <Space size="small">
-          <Tooltip title="查看详情">
+          <Tooltip title="Xem chi tiết">
             <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => openDetailModal(record)} />
           </Tooltip>
-          <Tooltip title="编辑">
+          <Tooltip title="Chỉnh sửa">
             <Button type="text" size="small" icon={<EditOutlined />} onClick={() => openEditModal(record)} />
           </Tooltip>
           {record.status === 'pending' && (
-            <Tooltip title="标记埋入">
+            <Tooltip title="Đánh dấu đã cài cắm">
               <Button type="text" size="small" icon={<FlagOutlined />} onClick={() => openPlantModal(record)} />
             </Tooltip>
           )}
           {record.status === 'planted' && (
-            <Tooltip title="标记回收">
+            <Tooltip title="Đánh dấu đã thu hồi">
               <Button type="text" size="small" icon={<CheckCircleOutlined />} onClick={() => openResolveModal(record)} />
             </Tooltip>
           )}
           {record.status !== 'abandoned' && record.status !== 'resolved' && (
             <Popconfirm
-              title="确定要废弃这个伏笔吗？"
+              title="Bạn chắc chắn muốn bỏ phục bút này?"
               onConfirm={() => handleAbandon(record.id)}
             >
-              <Tooltip title="废弃">
+              <Tooltip title="Bỏ">
                 <Button type="text" size="small" danger icon={<CloseCircleOutlined />} />
               </Tooltip>
             </Popconfirm>
           )}
           <Popconfirm
-            title="确定要删除这个伏笔吗？"
+            title="Bạn chắc chắn muốn xóa phục bút này?"
             onConfirm={() => handleDelete(record.id)}
           >
-            <Tooltip title="删除">
+            <Tooltip title="Xóa">
               <Button type="text" size="small" danger icon={<DeleteOutlined />} />
             </Tooltip>
           </Popconfirm>
@@ -518,33 +518,33 @@ export default function Foreshadows() {
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col span={3}>
             <Card size="small">
-              <Statistic title="总计" value={stats.total} />
+              <Statistic title="Tổng cộng" value={stats.total} />
             </Card>
           </Col>
           <Col span={3}>
             <Card size="small">
-              <Statistic title="待埋入" value={stats.pending} valueStyle={{ color: token.colorTextSecondary }} />
+              <Statistic title="Chờ cài cắm" value={stats.pending} valueStyle={{ color: token.colorTextSecondary }} />
             </Card>
           </Col>
           <Col span={3}>
             <Card size="small">
-              <Statistic title="已埋入" value={stats.planted} valueStyle={{ color: token.colorSuccess }} />
+              <Statistic title="Đã cài cắm" value={stats.planted} valueStyle={{ color: token.colorSuccess }} />
             </Card>
           </Col>
           <Col span={3}>
             <Card size="small">
-              <Statistic title="已回收" value={stats.resolved} valueStyle={{ color: token.colorPrimary }} />
+              <Statistic title="Đã thu hồi" value={stats.resolved} valueStyle={{ color: token.colorPrimary }} />
             </Card>
           </Col>
           <Col span={3}>
             <Card size="small">
-              <Statistic title="长线伏笔" value={stats.long_term_count} valueStyle={{ color: token.colorInfo }} />
+              <Statistic title="Phục bút dài hạn" value={stats.long_term_count} valueStyle={{ color: token.colorInfo }} />
             </Card>
           </Col>
           <Col span={3}>
             <Card size="small">
               <Statistic 
-                title="超期未回收" 
+                title="Quá hạn chưa thu hồi"
                 value={stats.overdue_count} 
                 valueStyle={{ color: stats.overdue_count > 0 ? token.colorError : token.colorTextSecondary }}
                 prefix={stats.overdue_count > 0 ? <WarningOutlined /> : null}
@@ -557,8 +557,8 @@ export default function Foreshadows() {
       {/* 超期提醒 */}
       {stats && stats.overdue_count > 0 && (
         <Alert
-          message={`有 ${stats.overdue_count} 个伏笔已超期未回收`}
-          description="请尽快在后续章节中回收这些伏笔，或调整计划回收章节"
+          message={`Có ${stats.overdue_count} phục bút đã quá hạn chưa thu hồi`}
+          description="Vui lòng thu hồi các phục bút này trong các chương tiếp theo, hoặc điều chỉnh chương dự kiến thu hồi"
           type="warning"
           showIcon
           style={{ marginBottom: 16 }}
@@ -570,7 +570,7 @@ export default function Foreshadows() {
         message={
           <Space>
             <InfoCircleOutlined />
-            <span>伏笔数据会在章节分析完成后自动同步，无需手动操作</span>
+            <span>Dữ liệu phục bút sẽ tự động đồng bộ sau khi phân tích chương hoàn tất, không cần thao tác thủ công</span>
           </Space>
         }
         type="info"
@@ -583,7 +583,7 @@ export default function Foreshadows() {
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Space>
           <Select
-            placeholder="状态筛选"
+            placeholder="Lọc theo trạng thái"
             allowClear
             style={{ width: 120 }}
             value={statusFilter}
@@ -594,7 +594,7 @@ export default function Foreshadows() {
             ))}
           </Select>
           <Select
-            placeholder="分类筛选"
+            placeholder="Lọc theo phân loại"
             allowClear
             style={{ width: 100 }}
             value={categoryFilter}
@@ -605,18 +605,18 @@ export default function Foreshadows() {
             ))}
           </Select>
           <Select
-            placeholder="来源筛选"
+            placeholder="Lọc theo nguồn"
             allowClear
             style={{ width: 100 }}
             value={sourceFilter}
             onChange={setSourceFilter}
           >
-            <Option value="analysis">分析</Option>
-            <Option value="manual">手动</Option>
+            <Option value="analysis">Phân tích</Option>
+            <Option value="manual">Thủ công</Option>
           </Select>
         </Space>
         <Space>
-          <Tooltip title="刷新列表">
+          <Tooltip title="Làm mới danh sách">
             <Button
               icon={<ReloadOutlined spin={loading} />}
               onClick={loadForeshadows}
@@ -628,21 +628,21 @@ export default function Foreshadows() {
                 {
                   key: 'sync',
                   icon: <SyncOutlined />,
-                  label: '手动同步分析伏笔',
+                  label: 'Đồng bộ thủ công phục bút phân tích',
                   onClick: () => setSyncModalVisible(true),
                 },
               ] as MenuProps['items'],
             }}
             placement="bottomRight"
           >
-            <Button icon={<MoreOutlined />}>更多</Button>
+            <Button icon={<MoreOutlined />}>Thêm</Button>
           </Dropdown>
           <Button
             type="primary"
             icon={<PlusOutlined />}
             onClick={() => openEditModal()}
           >
-            添加伏笔
+            Thêm phục bút
           </Button>
         </Space>
       </div>
@@ -666,7 +666,7 @@ export default function Foreshadows() {
           pagination={false}
           scroll={{ y: tableScrollY }}
           locale={{
-            emptyText: <Empty description="暂无伏笔，点击右上角添加" />,
+            emptyText: <Empty description="Chưa có phục bút, nhấn nút thêm ở góc trên bên phải" />,
           }}
         />
       </div>
@@ -692,14 +692,14 @@ export default function Foreshadows() {
             }
           }}
           showSizeChanger
-          showTotal={(total) => `共 ${total} 条`}
+          showTotal={(total) => `Tổng ${total} mục`}
           showQuickJumper
         />
       </div>
 
       {/* 创建/编辑模态框 */}
       <Modal
-        title={currentForeshadow ? '编辑伏笔' : '添加伏笔'}
+        title={currentForeshadow ? 'Chỉnh sửa phục bút' : 'Thêm phục bút'}
         open={editModalVisible}
         centered
         onCancel={() => {
@@ -727,13 +727,13 @@ export default function Foreshadows() {
         >
           <Row gutter={16}>
             <Col span={16}>
-              <Form.Item name="title" label="伏笔标题" rules={[{ required: true, message: '请输入标题' }]}>
-                <Input placeholder="简洁描述伏笔内容" maxLength={200} />
+              <Form.Item name="title" label="Tiêu đề phục bút" rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}>
+                <Input placeholder="Mô tả ngắn gọn nội dung phục bút" maxLength={200} />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="category" label="分类">
-                <Select placeholder="选择分类" allowClear>
+              <Form.Item name="category" label="Phân loại">
+                <Select placeholder="Chọn phân loại" allowClear>
                   {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
                     <Option key={key} value={key}>{config.label}</Option>
                   ))}
@@ -742,26 +742,26 @@ export default function Foreshadows() {
             </Col>
           </Row>
           
-          <Form.Item name="content" label="伏笔内容" rules={[{ required: true, message: '请输入内容' }]}>
-            <TextArea rows={3} placeholder="详细描述伏笔的内容和意图" />
+          <Form.Item name="content" label="Nội dung phục bút" rules={[{ required: true, message: 'Vui lòng nhập nội dung' }]}>
+            <TextArea rows={3} placeholder="Mô tả chi tiết nội dung và ý đồ của phục bút" />
           </Form.Item>
           
           <Row gutter={16}>
             <Col span={6}>
-              <Form.Item name="plant_chapter_number" label="计划埋入">
-                <InputNumber min={1} placeholder="章节号" style={{ width: '100%' }} />
+              <Form.Item name="plant_chapter_number" label="Dự kiến cài cắm">
+                <InputNumber min={1} placeholder="Số chương" style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col span={6}>
-              <Form.Item name="target_resolve_chapter_number" label="计划回收">
-                <InputNumber min={1} placeholder="章节号" style={{ width: '100%' }} />
+              <Form.Item name="target_resolve_chapter_number" label="Dự kiến thu hồi">
+                <InputNumber min={1} placeholder="Số chương" style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="related_characters" label="关联角色">
+              <Form.Item name="related_characters" label="Nhân vật liên quan">
                 <Select
                   mode="multiple"
-                  placeholder="选择关联角色"
+                  placeholder="Chọn nhân vật liên quan"
                   optionFilterProp="children"
                   maxTagCount={3}
                 >
@@ -779,55 +779,55 @@ export default function Foreshadows() {
           
           <Row gutter={16}>
             <Col span={6}>
-              <Form.Item name="importance" label="重要性 (0-1)">
+              <Form.Item name="importance" label="Độ quan trọng (0-1)">
                 <InputNumber min={0} max={1} step={0.1} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col span={6}>
-              <Form.Item name="strength" label="强度 (1-10)">
+              <Form.Item name="strength" label="Độ mạnh (1-10)">
                 <InputNumber min={1} max={10} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col span={6}>
-              <Form.Item name="subtlety" label="隐藏度 (1-10)">
+              <Form.Item name="subtlety" label="Độ ẩn (1-10)">
                 <InputNumber min={1} max={10} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col span={6}>
-              <Form.Item name="is_long_term" label="长线伏笔" valuePropName="checked">
-                <Switch checkedChildren="是" unCheckedChildren="否" />
+              <Form.Item name="is_long_term" label="Phục bút dài hạn" valuePropName="checked">
+                <Switch checkedChildren="Có" unCheckedChildren="Không" />
               </Form.Item>
             </Col>
           </Row>
           
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="hint_text" label="暗示文本">
-                <TextArea rows={2} placeholder="埋伏笔时使用的暗示性描写" />
+              <Form.Item name="hint_text" label="Văn bản gợi ý">
+                <TextArea rows={2} placeholder="Miêu tả gợi ý dùng khi cài cắm phục bút" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="notes" label="备注">
-                <TextArea rows={2} placeholder="创作备注（仅作者可见）" />
+              <Form.Item name="notes" label="Ghi chú">
+                <TextArea rows={2} placeholder="Ghi chú sáng tác (chỉ tác giả thấy)" />
               </Form.Item>
             </Col>
           </Row>
           
-          <Divider style={{ margin: '12px 0' }}>AI辅助设置</Divider>
+          <Divider style={{ margin: '12px 0' }}>Thiết lập hỗ trợ AI</Divider>
           
           <Row gutter={16}>
             <Col span={8}>
-              <Form.Item name="auto_remind" label="自动提醒" valuePropName="checked" style={{ marginBottom: 0 }}>
-                <Switch checkedChildren="开" unCheckedChildren="关" />
+              <Form.Item name="auto_remind" label="Tự động nhắc nhở" valuePropName="checked" style={{ marginBottom: 0 }}>
+                <Switch checkedChildren="Bật" unCheckedChildren="Tắt" />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="include_in_context" label="包含在生成上下文" valuePropName="checked" style={{ marginBottom: 0 }}>
-                <Switch checkedChildren="是" unCheckedChildren="否" />
+              <Form.Item name="include_in_context" label="Đưa vào ngữ cảnh tạo" valuePropName="checked" style={{ marginBottom: 0 }}>
+                <Switch checkedChildren="Có" unCheckedChildren="Không" />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="remind_before_chapters" label="提前几章提醒" style={{ marginBottom: 0 }}>
+              <Form.Item name="remind_before_chapters" label="Nhắc trước mấy chương" style={{ marginBottom: 0 }}>
                 <InputNumber min={1} max={20} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
@@ -837,7 +837,7 @@ export default function Foreshadows() {
 
       {/* 详情模态框 */}
       <Modal
-        title="伏笔详情"
+        title="Chi tiết phục bút"
         open={detailModalVisible}
         centered
         onCancel={() => {
@@ -846,13 +846,13 @@ export default function Foreshadows() {
         }}
         footer={[
           <Button key="close" onClick={() => setDetailModalVisible(false)}>
-            关闭
+            Đóng
           </Button>,
           <Button key="edit" type="primary" onClick={() => {
             setDetailModalVisible(false);
             openEditModal(currentForeshadow!);
           }}>
-            编辑
+            Chỉnh sửa
           </Button>,
         ]}
         width={600}
@@ -866,7 +866,7 @@ export default function Foreshadows() {
                   <Tag color={STATUS_CONFIG[currentForeshadow.status].color}>
                     {STATUS_CONFIG[currentForeshadow.status].label}
                   </Tag>
-                  {currentForeshadow.is_long_term && <Tag color="purple">长线伏笔</Tag>}
+                  {currentForeshadow.is_long_term && <Tag color="purple">Phục bút dài hạn</Tag>}
                   {currentForeshadow.category && CATEGORY_CONFIG[currentForeshadow.category] && (
                     <Tag color={CATEGORY_CONFIG[currentForeshadow.category].color}>
                       {CATEGORY_CONFIG[currentForeshadow.category].label}
@@ -876,13 +876,13 @@ export default function Foreshadows() {
               </Col>
               
               <Col span={24}>
-                <strong>伏笔内容：</strong>
+                <strong>Nội dung phục bút:</strong>
                 <p style={{ marginTop: 8, whiteSpace: 'pre-wrap' }}>{currentForeshadow.content}</p>
               </Col>
               
               {currentForeshadow.hint_text && (
                 <Col span={24}>
-                  <strong>暗示文本：</strong>
+                  <strong>Văn bản gợi ý:</strong>
                   <p style={{ marginTop: 8, whiteSpace: 'pre-wrap', color: token.colorTextSecondary }}>
                     {currentForeshadow.hint_text}
                   </p>
@@ -891,7 +891,7 @@ export default function Foreshadows() {
               
               {currentForeshadow.resolution_text && (
                 <Col span={24}>
-                  <strong>揭示文本：</strong>
+                  <strong>Văn bản hé lộ:</strong>
                   <p style={{ marginTop: 8, whiteSpace: 'pre-wrap', color: token.colorTextSecondary }}>
                     {currentForeshadow.resolution_text}
                   </p>
@@ -899,31 +899,31 @@ export default function Foreshadows() {
               )}
               
               <Col span={12}>
-                <strong>埋入章节：</strong> {currentForeshadow.plant_chapter_number ? `第${currentForeshadow.plant_chapter_number}章` : '未设定'}
+                <strong>Chương cài cắm:</strong> {currentForeshadow.plant_chapter_number ? `Chương ${currentForeshadow.plant_chapter_number}` : 'Chưa thiết lập'}
               </Col>
               <Col span={12}>
-                <strong>计划回收：</strong> {currentForeshadow.target_resolve_chapter_number ? `第${currentForeshadow.target_resolve_chapter_number}章` : '未设定'}
+                <strong>Dự kiến thu hồi:</strong> {currentForeshadow.target_resolve_chapter_number ? `Chương ${currentForeshadow.target_resolve_chapter_number}` : 'Chưa thiết lập'}
               </Col>
               
               {currentForeshadow.actual_resolve_chapter_number && (
                 <Col span={24}>
-                  <strong>实际回收：</strong> 第{currentForeshadow.actual_resolve_chapter_number}章
+                  <strong>Thực tế thu hồi:</strong> Chương {currentForeshadow.actual_resolve_chapter_number}
                 </Col>
               )}
               
               <Col span={8}>
-                <strong>重要性：</strong> {'★'.repeat(Math.round(currentForeshadow.importance * 5))}
+                <strong>Độ quan trọng:</strong> {'★'.repeat(Math.round(currentForeshadow.importance * 5))}
               </Col>
               <Col span={8}>
-                <strong>强度：</strong> {currentForeshadow.strength}/10
+                <strong>Độ mạnh:</strong> {currentForeshadow.strength}/10
               </Col>
               <Col span={8}>
-                <strong>隐藏度：</strong> {currentForeshadow.subtlety}/10
+                <strong>Độ ẩn:</strong> {currentForeshadow.subtlety}/10
               </Col>
               
               {currentForeshadow.related_characters && currentForeshadow.related_characters.length > 0 && (
                 <Col span={24}>
-                  <strong>关联角色：</strong>
+                  <strong>Nhân vật liên quan:</strong>
                   <div style={{ marginTop: 4 }}>
                     {currentForeshadow.related_characters.map((name, idx) => (
                       <Tag key={idx}>{name}</Tag>
@@ -934,13 +934,13 @@ export default function Foreshadows() {
               
               {currentForeshadow.notes && (
                 <Col span={24}>
-                  <strong>备注：</strong>
+                  <strong>Ghi chú:</strong>
                   <p style={{ marginTop: 8, color: token.colorTextSecondary }}>{currentForeshadow.notes}</p>
                 </Col>
               )}
               
               <Col span={24}>
-                <strong>来源：</strong> {currentForeshadow.source_type === 'analysis' ? '章节分析提取' : '手动添加'}
+                <strong>Nguồn:</strong> {currentForeshadow.source_type === 'analysis' ? 'Trích xuất từ phân tích chương' : 'Thêm thủ công'}
               </Col>
             </Row>
           </div>
@@ -949,7 +949,7 @@ export default function Foreshadows() {
 
       {/* 标记埋入模态框 */}
       <Modal
-        title="标记伏笔埋入"
+        title="Đánh dấu cài cắm phục bút"
         open={plantModalVisible}
         centered
         onCancel={() => {
@@ -961,24 +961,24 @@ export default function Foreshadows() {
         destroyOnClose
       >
         <Form form={plantForm} layout="vertical" onFinish={handlePlant}>
-          <Form.Item name="chapter_id" label="选择埋入章节" rules={[{ required: true, message: '请选择章节' }]}>
-            <Select placeholder="选择章节">
+          <Form.Item name="chapter_id" label="Chọn chương cài cắm" rules={[{ required: true, message: 'Vui lòng chọn chương' }]}>
+            <Select placeholder="Chọn chương">
               {chapters.map(chapter => (
                 <Option key={chapter.id} value={chapter.id}>
-                  第{chapter.chapter_number}章 - {chapter.title}
+                  Chương {chapter.chapter_number} - {chapter.title}
                 </Option>
               ))}
             </Select>
           </Form.Item>
-          <Form.Item name="hint_text" label="暗示文本（可选）">
-            <TextArea rows={3} placeholder="记录埋伏笔时使用的暗示性描写" />
+          <Form.Item name="hint_text" label="Văn bản gợi ý (tùy chọn)">
+            <TextArea rows={3} placeholder="Ghi lại miêu tả gợi ý dùng khi cài cắm phục bút" />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* 标记回收模态框 */}
       <Modal
-        title="标记伏笔回收"
+        title="Đánh dấu thu hồi phục bút"
         open={resolveModalVisible}
         centered
         onCancel={() => {
@@ -990,46 +990,46 @@ export default function Foreshadows() {
         destroyOnClose
       >
         <Form form={resolveForm} layout="vertical" onFinish={handleResolve}>
-          <Form.Item name="chapter_id" label="选择回收章节" rules={[{ required: true, message: '请选择章节' }]}>
-            <Select placeholder="选择章节">
+          <Form.Item name="chapter_id" label="Chọn chương thu hồi" rules={[{ required: true, message: 'Vui lòng chọn chương' }]}>
+            <Select placeholder="Chọn chương">
               {chapters.map(chapter => (
                 <Option key={chapter.id} value={chapter.id}>
-                  第{chapter.chapter_number}章 - {chapter.title}
+                  Chương {chapter.chapter_number} - {chapter.title}
                 </Option>
               ))}
             </Select>
           </Form.Item>
-          <Form.Item name="resolution_text" label="揭示文本（可选）">
-            <TextArea rows={3} placeholder="记录回收伏笔时的揭示内容" />
+          <Form.Item name="resolution_text" label="Văn bản hé lộ (tùy chọn)">
+            <TextArea rows={3} placeholder="Ghi lại nội dung hé lộ khi thu hồi phục bút" />
           </Form.Item>
-          <Form.Item name="is_partial" label="是否部分回收" valuePropName="checked">
-            <Switch checkedChildren="部分" unCheckedChildren="完全" />
+          <Form.Item name="is_partial" label="Thu hồi một phần?" valuePropName="checked">
+            <Switch checkedChildren="Một phần" unCheckedChildren="Toàn bộ" />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* 同步模态框 */}
       <Modal
-        title="手动同步分析伏笔"
+        title="Đồng bộ thủ công phục bút phân tích"
         open={syncModalVisible}
         centered
         onCancel={() => setSyncModalVisible(false)}
         onOk={handleSync}
         confirmLoading={syncing}
-        okText="开始同步"
+        okText="Bắt đầu đồng bộ"
       >
         <Alert
-          message="提示"
-          description="通常情况下，章节分析完成后伏笔会自动同步到伏笔管理中。此功能用于手动补充同步可能遗漏的伏笔。"
+          message="Gợi ý"
+          description="Thông thường, sau khi phân tích chương hoàn tất, phục bút sẽ tự động đồng bộ vào phần quản lý phục bút. Chức năng này dùng để bổ sung thủ công những phục bút có thể bị bỏ sót."
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
         />
-        <p>此操作将从已完成的章节分析结果中提取伏笔信息，同步到伏笔管理表。</p>
+        <p>Thao tác này sẽ trích xuất thông tin phục bút từ kết quả phân tích chương đã hoàn tất và đồng bộ vào bảng quản lý phục bút.</p>
         <ul>
-          <li>已存在的伏笔记录不会被覆盖</li>
-          <li>新同步的伏笔将自动设置为"已埋入"状态</li>
-          <li>同步完成后可在列表中查看和编辑</li>
+          <li>Bản ghi phục bút đã tồn tại sẽ không bị ghi đè</li>
+          <li>Phục bút mới đồng bộ sẽ tự động được đặt ở trạng thái "Đã cài cắm"</li>
+          <li>Sau khi đồng bộ xong có thể xem và chỉnh sửa trong danh sách</li>
         </ul>
       </Modal>
     </div>

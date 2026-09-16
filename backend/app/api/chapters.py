@@ -60,7 +60,7 @@ from app.logger import get_logger
 from app.api.settings import get_user_ai_service, get_user_ai_service_from_db_by_usage
 from app.utils.sse_response import SSEResponse, create_sse_response
 
-router = APIRouter(prefix="/chapters", tags=["章节管理"])
+router = APIRouter(prefix="/chapters", tags=["Quản lý chương"])
 logger = get_logger(__name__)
 
 # 全局数据库写入锁（每个用户一个锁，用于保护SQLite写入操作）
@@ -136,7 +136,7 @@ async def _set_analysis_task_terminal_state(
     return False
 
 
-@router.post("", response_model=ChapterResponse, summary="创建章节")
+@router.post("", response_model=ChapterResponse, summary="Tạo chương")
 async def create_chapter(
     chapter: ChapterCreate,
     request: Request,
@@ -164,7 +164,7 @@ async def create_chapter(
     return db_chapter
 
 
-@router.get("/project/{project_id}", response_model=ChapterListResponse, summary="获取项目的所有章节")
+@router.get("/project/{project_id}", response_model=ChapterListResponse, summary="Lấy tất cả chương của dự án")
 async def get_project_chapters(
     project_id: str,
     request: Request,
@@ -231,7 +231,7 @@ async def get_project_chapters(
     return ChapterListResponse(total=total, items=chapters_with_outline)
 
 
-@router.get("/{chapter_id}", response_model=ChapterResponse, summary="获取章节详情")
+@router.get("/{chapter_id}", response_model=ChapterResponse, summary="Lấy chi tiết chương")
 async def get_chapter(
     chapter_id: str,
     request: Request,
@@ -244,7 +244,7 @@ async def get_chapter(
     chapter = result.scalar_one_or_none()
     
     if not chapter:
-        raise HTTPException(status_code=404, detail="章节不存在")
+        raise HTTPException(status_code=404, detail="Chương không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -253,7 +253,7 @@ async def get_chapter(
     return chapter
 
 
-@router.get("/{chapter_id}/navigation", summary="获取章节导航信息")
+@router.get("/{chapter_id}/navigation", summary="Lấy thông tin điều hướng chương")
 async def get_chapter_navigation(
     chapter_id: str,
     request: Request,
@@ -270,7 +270,7 @@ async def get_chapter_navigation(
     current_chapter = result.scalar_one_or_none()
     
     if not current_chapter:
-        raise HTTPException(status_code=404, detail="章节不存在")
+        raise HTTPException(status_code=404, detail="Chương không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -315,7 +315,7 @@ async def get_chapter_navigation(
     }
 
 
-@router.put("/{chapter_id}", response_model=ChapterResponse, summary="更新章节")
+@router.put("/{chapter_id}", response_model=ChapterResponse, summary="Cập nhật chương")
 async def update_chapter(
     chapter_id: str,
     chapter_update: ChapterUpdate,
@@ -329,7 +329,7 @@ async def update_chapter(
     chapter = result.scalar_one_or_none()
     
     if not chapter:
-        raise HTTPException(status_code=404, detail="章节不存在")
+        raise HTTPException(status_code=404, detail="Chương không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -444,7 +444,7 @@ async def update_chapter(
     return chapter_dict
 
 
-@router.delete("/{chapter_id}", summary="删除章节")
+@router.delete("/{chapter_id}", summary="Xóa chương")
 async def delete_chapter(
     chapter_id: str,
     request: Request,
@@ -457,7 +457,7 @@ async def delete_chapter(
     chapter = result.scalar_one_or_none()
     
     if not chapter:
-        raise HTTPException(status_code=404, detail="章节不存在")
+        raise HTTPException(status_code=404, detail="Chương không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -503,7 +503,7 @@ async def delete_chapter(
     await db.delete(chapter)
     await db.commit()
     
-    return {"message": "章节删除成功"}
+    return {"message": "Xóa chương thành công"}
 
 
 async def check_prerequisites(db: AsyncSession, chapter: Chapter) -> tuple[bool, str, list[Chapter]]:
@@ -538,7 +538,7 @@ async def check_prerequisites(db: AsyncSession, chapter: Chapter) -> tuple[bool,
     
     if incomplete_chapters:
         missing_numbers = [str(ch.chapter_number) for ch in incomplete_chapters]
-        error_msg = f"需要先完成前置章节：第 {', '.join(missing_numbers)} 章"
+        error_msg = f"Cần hoàn thành các chương trước: chương {', '.join(missing_numbers)}"
         return False, error_msg, previous_chapters
     
     return True, "", previous_chapters
@@ -571,7 +571,7 @@ async def check_previous_analysis_ready(db: AsyncSession, chapter: Chapter) -> t
     if analysis_task and analysis_task.status == 'completed':
         return True, ""
 
-    return False, f"上一章（第{prev_chapter.chapter_number}章）内容分析尚未完成，请等待分析完成后再生成下一章，以保证角色状态、记忆和伏笔连贯"
+    return False, f"Phân tích nội dung chương trước (chương {prev_chapter.chapter_number}) chưa hoàn tất, vui lòng chờ phân tích xong rồi mới tạo chương tiếp theo để đảm bảo trạng thái nhân vật, ghi nhớ và phục bút liền mạch"
 
 
 async def build_characters_info_with_careers(
@@ -593,7 +593,7 @@ async def build_characters_info_with_careers(
         格式化的角色信息字符串，包含职业信息
     """
     if not characters:
-        return '暂无角色信息'
+        return 'Chưa có thông tin nhân vật'
     
     # 如果提供了筛选名单，只保留匹配的角色
     if filter_character_names:
@@ -614,7 +614,7 @@ async def build_characters_info_with_careers(
     # 获取所有角色的职业关联（一次性查询）
     character_ids = [c.id for c in characters]
     if not character_ids:
-        return '暂无角色信息'
+        return 'Chưa có thông tin nhân vật'
     
     # 构建全局角色名称映射（用于关系显示）
     all_chars_result = await db.execute(
@@ -658,7 +658,7 @@ async def build_characters_info_with_careers(
     org_name_map = {}  # org_id -> org_name
     char_id_to_org = {}  # character_id -> Organization（用于组织实体补充详情）
     for org in all_orgs:
-        org_name_map[org.id] = all_char_name_map.get(org.character_id, '未知组织')
+        org_name_map[org.id] = all_char_name_map.get(org.character_id, 'Tổ chức chưa xác định')
         char_id_to_org[org.character_id] = org
     
     # 获取所有组织的成员关系（一次性查询）
@@ -711,15 +711,15 @@ async def build_characters_info_with_careers(
     characters_info_parts = []
     for c in characters:
         # 基本信息（含存活状态标记）
-        entity_type = '组织' if c.is_organization else '角色'
+        entity_type = 'Tổ chức' if c.is_organization else 'Nhân vật'
         status_marker = ""
         char_status = getattr(c, 'status', None) or 'active'
         if char_status != 'active':
             STATUS_MARKERS = {
-                'deceased': '💀已死亡',
-                'missing': '❓已失踪',
-                'retired': '📤已退场',
-                'destroyed': '💀已覆灭'
+                'deceased': '💀Đã chết',
+                'missing': '❓Đã mất tích',
+                'retired': '📤Đã rời sân khấu',
+                'destroyed': '💀Đã diệt vong'
             }
             status_marker = f" [{STATUS_MARKERS.get(char_status, char_status)}]"
         base_info = f"- {c.name}({entity_type}, {c.role_type}){status_marker}"
@@ -730,18 +730,18 @@ async def build_characters_info_with_careers(
             org = char_id_to_org[c.id]
             org_detail_parts = []
             if c.organization_type:
-                org_detail_parts.append(f"类型:{c.organization_type}")
+                org_detail_parts.append(f"Loại:{c.organization_type}")
             if c.organization_purpose:
                 purpose_preview = c.organization_purpose[:60] if len(c.organization_purpose) > 60 else c.organization_purpose
-                org_detail_parts.append(f"宗旨:{purpose_preview}")
+                org_detail_parts.append(f"Tôn chỉ:{purpose_preview}")
             if org.power_level is not None:
-                org_detail_parts.append(f"势力等级:{org.power_level}")
+                org_detail_parts.append(f"Cấp độ thế lực:{org.power_level}")
             if org.location:
-                org_detail_parts.append(f"据点:{org.location}")
+                org_detail_parts.append(f"Căn cứ:{org.location}")
             if org.motto:
-                org_detail_parts.append(f"口号:{org.motto}")
+                org_detail_parts.append(f"Khẩu hiệu:{org.motto}")
             if org.member_count:
-                org_detail_parts.append(f"成员数:{org.member_count}")
+                org_detail_parts.append(f"Số thành viên:{org.member_count}")
             if org_detail_parts:
                 org_detail_str = f" | {', '.join(org_detail_parts)}"
             
@@ -749,13 +749,13 @@ async def build_characters_info_with_careers(
             if org.id in org_members_map and org_members_map[org.id]:
                 member_parts = []
                 for m in sorted(org_members_map[org.id], key=lambda x: -(x.rank or 0))[:5]:
-                    m_name = all_char_name_map.get(m.character_id, '未知')
+                    m_name = all_char_name_map.get(m.character_id, 'Chưa xác định')
                     m_desc = f"{m_name}({m.position})"
                     if m.status and m.status != 'active':
                         m_desc += f"[{m.status}]"
                     member_parts.append(m_desc)
                 if member_parts:
-                    org_detail_str += f" | 成员: {', '.join(member_parts)}"
+                    org_detail_str += f" | Thành viên: {', '.join(member_parts)}"
         
         # 职业信息
         career_info_str = ""
@@ -765,39 +765,39 @@ async def build_characters_info_with_careers(
             # 主职业
             if career_data['main']:
                 main = career_data['main']
-                stage_desc = f"{main['stage']}/{main['max_stage']}阶"
-                career_info_str += f" | 主职业: {main['name']}({stage_desc})"
+                stage_desc = f"{main['stage']}/{main['max_stage']} cấp"
+                career_info_str += f" | Nghề chính: {main['name']}({stage_desc})"
             
             # 副职业
             if career_data['sub']:
                 sub_list = []
                 for sub in career_data['sub']:
-                    stage_desc = f"{sub['stage']}/{sub['max_stage']}阶"
+                    stage_desc = f"{sub['stage']}/{sub['max_stage']} cấp"
                     sub_list.append(f"{sub['name']}({stage_desc})")
-                career_info_str += f" | 副职业: {', '.join(sub_list)}"
+                career_info_str += f" | Nghề phụ: {', '.join(sub_list)}"
         
         # 心理状态（由章节分析自动更新）
         state_str = ""
         if c.current_state:
             state_preview = c.current_state[:50] if len(c.current_state) > 50 else c.current_state
-            state_str = f" | 当前状态: {state_preview}"
+            state_str = f" | Trạng thái hiện tại: {state_preview}"
             if c.state_updated_chapter:
-                state_str += f"(第{c.state_updated_chapter}章)"
+                state_str += f"(Chương {c.state_updated_chapter})"
         
         # 组织成员信息（非组织角色才显示所属组织）
         org_str = ""
         if not c.is_organization and c.id in char_org_map and char_org_map[c.id]:
             org_parts = []
             for m in char_org_map[c.id][:3]:  # 最多显示3个组织
-                o_name = org_name_map.get(m.organization_id, '未知组织')
+                o_name = org_name_map.get(m.organization_id, 'Tổ chức chưa xác định')
                 o_desc = f"{o_name}({m.position})"
                 if m.loyalty is not None and m.loyalty != 50:
-                    o_desc += f"[忠诚度:{m.loyalty}]"
+                    o_desc += f"[Mức độ trung thành:{m.loyalty}]"
                 if m.status and m.status != 'active':
                     o_desc += f"[{m.status}]"
                 org_parts.append(o_desc)
             if org_parts:
-                org_str = f" | 所属组织: {', '.join(org_parts)}"
+                org_str = f" | Tổ chức trực thuộc: {', '.join(org_parts)}"
         
         # 关系信息
         rel_str = ""
@@ -807,23 +807,23 @@ async def build_characters_info_with_careers(
             for r in char_rels_map[c.id][:5]:  # 最多显示5个关系
                 # 确定对方角色名
                 if r.character_from_id == c.id:
-                    other_name = all_char_name_map.get(r.character_to_id, '未知')
+                    other_name = all_char_name_map.get(r.character_to_id, 'Chưa xác định')
                 else:
-                    other_name = all_char_name_map.get(r.character_from_id, '未知')
+                    other_name = all_char_name_map.get(r.character_from_id, 'Chưa xác định')
                 
                 pair_key = tuple(sorted([c.id, r.character_from_id if r.character_from_id != c.id else r.character_to_id]))
                 if pair_key in seen_pairs:
                     continue
                 seen_pairs.add(pair_key)
                 
-                rel_name = r.relationship_name or '关联'
+                rel_name = r.relationship_name or 'Liên quan'
                 rel_desc = f"{other_name}({rel_name})"
                 if r.intimacy_level is not None and r.intimacy_level != 50:
-                    rel_desc += f"[亲密度:{r.intimacy_level}]"
+                    rel_desc += f"[Mức độ thân mật:{r.intimacy_level}]"
                 rel_parts.append(rel_desc)
             
             if rel_parts:
-                rel_str = f" | 关系: {', '.join(rel_parts)}"
+                rel_str = f" | Quan hệ: {', '.join(rel_parts)}"
         
         # 性格描述
         personality_str = ""
@@ -838,7 +838,7 @@ async def build_characters_info_with_careers(
     return "\n".join(characters_info_parts)
 
 
-@router.get("/{chapter_id}/can-generate", summary="检查章节是否可以生成")
+@router.get("/{chapter_id}/can-generate", summary="Kiểm tra chương có thể tạo hay không")
 async def check_can_generate(
     chapter_id: str,
     request: Request,
@@ -854,7 +854,7 @@ async def check_can_generate(
     )
     chapter = result.scalar_one_or_none()
     if not chapter:
-        raise HTTPException(status_code=404, detail="章节不存在")
+        raise HTTPException(status_code=404, detail="Chương không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -905,7 +905,7 @@ async def analyze_chapter_background(
             timeout=ANALYSIS_TASK_TIMEOUT_SECONDS,
         )
     except TimeoutError:
-        error_message = f"分析任务超时（超过{ANALYSIS_TASK_TIMEOUT_SECONDS // 60}分钟）"
+        error_message = f"Tác vụ phân tích quá thời gian (vượt quá {ANALYSIS_TASK_TIMEOUT_SECONDS // 60} phút)"
         logger.error(f"❌ {error_message}: chapter_id={chapter_id}, task_id={task_id}")
         await _set_analysis_task_terminal_state(user_id, task_id, "failed", error_message)
         return False
@@ -915,7 +915,7 @@ async def analyze_chapter_background(
                 user_id,
                 task_id,
                 "failed",
-                "分析任务被取消或服务关闭",
+                "Tác vụ phân tích bị hủy hoặc dịch vụ đã đóng",
             )
         )
         await asyncio.shield(terminal_update)
@@ -998,7 +998,7 @@ async def _analyze_chapter_background_impl(
         if not chapter or not chapter.content:
             async with write_lock:
                 task.status = 'failed'
-                task.error_message = '章节不存在或内容为空'
+                task.error_message = 'Chương không tồn tại hoặc nội dung trống'
                 task.completed_at = datetime.now()
                 await db_session.commit()
             logger.error(f"❌ 章节不存在或内容为空: {chapter_id}")
@@ -1096,7 +1096,7 @@ async def _analyze_chapter_background_impl(
                         task_retry.status = 'running'
                         task_retry.started_at = datetime.now()  # 重置开始时间，防止超时检测误判
                         task_retry.progress = 25 + attempt * 5  # 根据重试次数更新进度
-                        task_retry.error_message = f"正在重试({attempt}/{max_retries})：{error_reason[:100]}"
+                        task_retry.error_message = f"Đang thử lại ({attempt}/{max_retries}): {error_reason[:100]}"
                         await db_session.commit()
                         logger.info(f"🔄 分析任务重试状态已更新: 尝试 {attempt}/{max_retries}, 等待 {wait_time}s, 原因: {error_reason[:50]}...")
                 await report_progress(25 + attempt * 5)
@@ -1118,7 +1118,7 @@ async def _analyze_chapter_background_impl(
         if not analysis_result:
             async with write_lock:
                 task.status = 'failed'
-                task.error_message = 'AI分析失败，请检查日志'
+                task.error_message = 'Phân tích AI thất bại, vui lòng kiểm tra log'
                 task.completed_at = datetime.now()
                 await db_session.commit()
             logger.error(f"❌ AI分析失败: {chapter_id}")
@@ -1139,7 +1139,7 @@ async def _analyze_chapter_background_impl(
             if existing_analysis:
                 # 更新现有记录
                 logger.info(f"  更新现有分析记录: {existing_analysis.id}")
-                existing_analysis.plot_stage = analysis_result.get('plot_stage', '发展')
+                existing_analysis.plot_stage = analysis_result.get('plot_stage', 'Phát triển')
                 existing_analysis.conflict_level = analysis_result.get('conflict', {}).get('level', 0)
                 existing_analysis.conflict_types = analysis_result.get('conflict', {}).get('types', [])
                 existing_analysis.emotional_tone = analysis_result.get('emotional_arc', {}).get('primary_emotion', '')
@@ -1168,7 +1168,7 @@ async def _analyze_chapter_background_impl(
                 plot_analysis = PlotAnalysis(
                     chapter_id=chapter_id,
                     project_id=project_id,
-                    plot_stage=analysis_result.get('plot_stage', '发展'),
+                    plot_stage=analysis_result.get('plot_stage', 'Phát triển'),
                     conflict_level=analysis_result.get('conflict', {}).get('level', 0),
                     conflict_types=analysis_result.get('conflict', {}).get('types', []),
                     emotional_tone=analysis_result.get('emotional_arc', {}).get('primary_emotion', ''),
@@ -1337,9 +1337,9 @@ async def _analyze_chapter_background_impl(
                 if total_state_changes > 0:
                     logger.info(
                         f"✅ 角色状态更新: 心理状态{state_update_result['state_updated_count']}个, "
-                        f"新建关系{state_update_result['relationship_created_count']}个, "
-                        f"更新关系{state_update_result['relationship_updated_count']}个, "
-                        f"组织变动{state_update_result.get('org_updated_count', 0)}个"
+                        f"quan hệ mới {state_update_result['relationship_created_count']}, "
+                        f"quan hệ cập nhật {state_update_result['relationship_updated_count']}, "
+                        f"thay đổi tổ chức {state_update_result.get('org_updated_count', 0)}"
                     )
                     if state_update_result['changes']:
                         for change in state_update_result['changes'][:8]:
@@ -1395,7 +1395,7 @@ async def _analyze_chapter_background_impl(
                 if foreshadow_stats['planted_count'] > 0 or foreshadow_stats['resolved_count'] > 0:
                     logger.info(
                         f"✅ 伏笔自动更新: 埋入{foreshadow_stats['planted_count']}个, "
-                        f"回收{foreshadow_stats['resolved_count']}个"
+                        f"thu hồi {foreshadow_stats['resolved_count']}"
                     )
                 else:
                     logger.info("ℹ️ 本章节无新的伏笔状态变化")
@@ -1433,7 +1433,7 @@ async def _analyze_chapter_background_impl(
             await db_session.close()
 
 
-@router.post("/{chapter_id}/generate-stream", summary="AI创作章节内容（流式）")
+@router.post("/{chapter_id}/generate-stream", summary="AI sáng tác nội dung chương (luồng)")
 async def generate_chapter_content_stream(
     chapter_id: str,
     request: Request,
@@ -1466,7 +1466,7 @@ async def generate_chapter_content_stream(
             )
             chapter = result.scalar_one_or_none()
             if not chapter:
-                raise HTTPException(status_code=404, detail="章节不存在")
+                raise HTTPException(status_code=404, detail="Chương không tồn tại")
             
             # 检查前置条件
             can_generate, error_msg, previous_chapters = await check_prerequisites(temp_db, chapter)
@@ -1499,7 +1499,7 @@ async def generate_chapter_content_stream(
         
         # 初始化标准进度追踪器
         from app.utils.sse_response import WizardProgressTracker
-        tracker = WizardProgressTracker("章节")
+        tracker = WizardProgressTracker("Chương")
         
         try:
             yield await tracker.start()
@@ -1507,7 +1507,7 @@ async def generate_chapter_content_stream(
             # 创建新的数据库会话
             async for db_session in get_db(request):
                 # === 加载阶段 ===
-                yield await tracker.loading("加载章节信息...", 0.2)
+                yield await tracker.loading("Đang tải thông tin chương...", 0.2)
                 
                 # 重新获取章节信息
                 chapter_result = await db_session.execute(
@@ -1515,10 +1515,10 @@ async def generate_chapter_content_stream(
                 )
                 current_chapter = chapter_result.scalar_one_or_none()
                 if not current_chapter:
-                    yield await tracker.error("章节不存在", 404)
+                    yield await tracker.error("Chương không tồn tại", 404)
                     return
             
-                yield await tracker.loading("加载项目信息...", 0.4)
+                yield await tracker.loading("Đang tải thông tin dự án...", 0.4)
                 
                 # 获取项目信息
                 project_result = await db_session.execute(
@@ -1526,7 +1526,7 @@ async def generate_chapter_content_stream(
                 )
                 project = project_result.scalar_one_or_none()
                 if not project:
-                    yield await tracker.error("项目不存在", 404)
+                    yield await tracker.error("Dự án không tồn tại", 404)
                     return
                 
                 # 获取项目的大纲模式
@@ -1562,7 +1562,7 @@ async def generate_chapter_content_stream(
                         # 验证风格是否可用：全局预设风格（user_id为NULL）或者当前用户的自定义风格
                         if style.user_id is None or style.user_id == current_user_id:
                             style_content = style.prompt_content or ""
-                            style_type = "全局预设" if style.user_id is None else "用户自定义"
+                            style_type = "Cấu hình sẵn chung" if style.user_id is None else "Người dùng tự tạo"
                             logger.info(f"使用指定风格: {style.name} ({style_type})")
                         else:
                             logger.warning(f"风格 {style_id} 不属于当前项目，无法使用")
@@ -1625,7 +1625,7 @@ async def generate_chapter_content_stream(
                     logger.info(f"  - 伏笔提醒: {chapter_context.context_stats.get('foreshadow_length', 0)} 字符")
                     logger.info(f"  - 总长度: {chapter_context.context_stats.get('total_length', 0)} 字符")
             
-                yield await tracker.loading("上下文构建完成", 0.8)
+                yield await tracker.loading("Đã dựng xong ngữ cảnh", 0.8)
                 
                 # 🎭 确定使用的叙事人称（临时指定 > 项目默认 > 系统默认）
                 chapter_perspective = (
@@ -1648,15 +1648,15 @@ async def generate_chapter_content_stream(
                             chapter_title=current_chapter.title,
                             chapter_outline=chapter_context.chapter_outline,
                             target_word_count=target_word_count,
-                            genre=project.genre or '未设定',
+                            genre=project.genre or 'Chưa thiết lập',
                             narrative_perspective=chapter_perspective,
                             previous_chapter_content=chapter_context.continuation_point,
-                            previous_chapter_summary=chapter_context.previous_chapter_summary or '（无上一章摘要）',
-                            recent_chapters_context=chapter_context.recent_chapters_context or '暂无最近章节摘要',
-                            characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                            chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                            foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
-                            relevant_memories=chapter_context.relevant_memories or '暂无相关记忆'
+                            previous_chapter_summary=chapter_context.previous_chapter_summary or '（Không có tóm tắt chương trước）',
+                            recent_chapters_context=chapter_context.recent_chapters_context or 'Chưa có tóm tắt các chương gần đây',
+                            characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                            chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                            foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
+                            relevant_memories=chapter_context.relevant_memories or 'Không có ký ức liên quan'
                         )
                         logger.debug(f"创建第{current_chapter.chapter_number}章提示词完成: prompt_length={len(base_prompt)}")
                     else:
@@ -1669,12 +1669,12 @@ async def generate_chapter_content_stream(
                             chapter_title=current_chapter.title,
                             chapter_outline=chapter_context.chapter_outline,
                             target_word_count=target_word_count,
-                            genre=project.genre or '未设定',
+                            genre=project.genre or 'Chưa thiết lập',
                             narrative_perspective=chapter_perspective,
-                            characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                            chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                            foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
-                            relevant_memories=chapter_context.relevant_memories or '暂无相关记忆'
+                            characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                            chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                            foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
+                            relevant_memories=chapter_context.relevant_memories or 'Không có ký ức liên quan'
                         )
                         logger.debug(f"创建第一章提示词完成: prompt_length={len(base_prompt)}")
                 else:
@@ -1684,7 +1684,7 @@ async def generate_chapter_content_stream(
                         logger.info(f"📝 [1-n模式] 使用带上下文的模板（第{current_chapter.chapter_number}章）")
                         
                         # 提取上一章摘要
-                        previous_summary = "（无上一章摘要，请根据锚点续写）"
+                        previous_summary = "（Không có tóm tắt chương trước, hãy viết tiếp theo điểm nối）"
                         if chapter_context.previous_chapter_summary:
                             previous_summary = chapter_context.previous_chapter_summary
                         
@@ -1697,11 +1697,11 @@ async def generate_chapter_content_stream(
                             chapter_outline=chapter_context.chapter_outline,
                             target_word_count=target_word_count,
                             continuation_point=chapter_context.continuation_point,
-                            genre=project.genre or '未设定',
+                            genre=project.genre or 'Chưa thiết lập',
                             narrative_perspective=chapter_perspective,
-                            characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                            chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                            foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
+                            characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                            chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                            foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
                             previous_chapter_summary=previous_summary,
                             recent_chapters_context=chapter_context.recent_chapters_context or '',
                             relevant_memories=chapter_context.relevant_memories or ''
@@ -1718,12 +1718,12 @@ async def generate_chapter_content_stream(
                             chapter_title=current_chapter.title,
                             chapter_outline=chapter_context.chapter_outline,
                             target_word_count=target_word_count,
-                            genre=project.genre or '未设定',
+                            genre=project.genre or 'Chưa thiết lập',
                             narrative_perspective=chapter_perspective,
-                            characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                            chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                            foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
-                            relevant_memories=chapter_context.relevant_memories or '暂无相关记忆'
+                            characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                            chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                            foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
+                            relevant_memories=chapter_context.relevant_memories or 'Không có ký ức liên quan'
                         )
                         logger.debug(f"创建第一章提示词完成: prompt_length={len(base_prompt)}")
                 
@@ -1734,7 +1734,7 @@ async def generate_chapter_content_stream(
                     prompt = base_prompt
                 
                 # === 准备阶段 ===
-                yield await tracker.preparing("准备AI提示词...")
+                yield await tracker.preparing("Đang chuẩn bị prompt AI...")
                 
                 logger.info(f"开始AI流式创作章节 {chapter_id}")
                 
@@ -1750,15 +1750,15 @@ async def generate_chapter_content_stream(
                         if skill:
                             skill_content = skill["content"]
                             skill_name = skill["template_name"]
-                            system_prompt_with_style = f"""【⚡ Skill 工作流：{skill_name}】
+                            system_prompt_with_style = f"""【⚡ Quy trình Skill: {skill_name}】
 
 {skill_content}
 
-⚠️ 请严格遵循上述 Skill 工作流指令进行创作！"""
+⚠️ Hãy nghiêm ngặt tuân theo chỉ dẫn của quy trình Skill ở trên khi sáng tác!"""
                             if style_content:
                                 system_prompt_with_style += f"""
 
-【🎨 写作风格要求 - 补充】
+【🎨 Yêu cầu phong cách viết - Bổ sung】
 
 {style_content}"""
                             logger.info(f"⚡ 已将 Skill '{skill_name}' 注入系统提示词（{len(skill_content)}字符）")
@@ -1768,12 +1768,12 @@ async def generate_chapter_content_stream(
                         logger.warning(f"⚠️ 加载 Skill 失败: {skill_err}")
                 
                 if not system_prompt_with_style and style_content:
-                    system_prompt_with_style = f"""【🎨 写作风格要求 - 最高优先级】
+                    system_prompt_with_style = f"""【🎨 Yêu cầu phong cách viết - Ưu tiên cao nhất】
 
 {style_content}
 
-⚠️ 请严格遵循上述写作风格要求进行创作，这是最重要的指令！
-确保在整个章节创作过程中始终保持风格的一致性。"""
+⚠️ Hãy nghiêm ngặt tuân theo yêu cầu phong cách viết ở trên khi sáng tác; đây là chỉ dẫn quan trọng nhất!
+Hãy luôn duy trì sự nhất quán của phong cách trong suốt quá trình sáng tác chương."""
                     logger.info(f"✅ 已将写作风格注入系统提示词（{len(style_content)}字符）")
                 
                 # 🔢 计算 max_tokens 限制
@@ -1825,7 +1825,7 @@ async def generate_chapter_content_stream(
                         yield await tracker.generating(
                             current_chars=len(full_content),
                             estimated_total=target_word_count,
-                            message=f'正在创作中... 已生成 {len(full_content)} 字'
+                            message=f'Đang sáng tác... Đã tạo {len(full_content)} chữ'
                         )
                     
                     # 每20个chunk发送心跳
@@ -1835,7 +1835,7 @@ async def generate_chapter_content_stream(
                     await asyncio.sleep(0)  # 让出控制权
                 
                 # === 保存阶段 ===
-                yield await tracker.saving("正在保存章节...", 0.3)
+                yield await tracker.saving("Đang lưu chương...", 0.3)
                 
                 # 更新章节内容到数据库
                 old_word_count = current_chapter.word_count or 0
@@ -1852,7 +1852,7 @@ async def generate_chapter_content_stream(
                 history = GenerationHistory(
                     project_id=current_chapter.project_id,
                     chapter_id=current_chapter.id,
-                    prompt=f"创作章节: 第{current_chapter.chapter_number}章 {current_chapter.title}",
+                    prompt=f"Sáng tác chương: Chương {current_chapter.chapter_number} {current_chapter.title}",
                     generated_content=full_content[:500] if len(full_content) > 500 else full_content,
                     model="default"
                 )
@@ -1906,10 +1906,10 @@ async def generate_chapter_content_stream(
                     ai_service=user_ai_service
                 )
                 
-                yield await tracker.saving("章节保存完成", 0.8)
+                yield await tracker.saving("Đã lưu chương xong", 0.8)
                 
                 # === 完成阶段 ===
-                yield await tracker.complete("创作完成！")
+                yield await tracker.complete("Sáng tác hoàn tất!")
                 
                 # 发送结果数据
                 yield await tracker.result({
@@ -1922,7 +1922,7 @@ async def generate_chapter_content_stream(
                     event='analysis_started',
                     data={
                         'task_id': task_id,
-                        'message': '章节分析已开始'
+                        'message': 'Đã bắt đầu phân tích chương'
                     }
                 )
                 
@@ -1973,7 +1973,7 @@ async def generate_chapter_content_stream(
     return create_sse_response(event_generator())
 
 
-@router.post("/{chapter_id}/generate-background", summary="AI创作章节内容（后台任务）")
+@router.post("/{chapter_id}/generate-background", summary="AI sáng tác nội dung chương (tác vụ nền)")
 async def generate_chapter_content_background(
     chapter_id: str,
     request: Request,
@@ -1987,7 +1987,7 @@ async def generate_chapter_content_background(
     """
     user_id = getattr(request.state, 'user_id', None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
 
     # 验证章节存在
     result = await db.execute(
@@ -1995,7 +1995,7 @@ async def generate_chapter_content_background(
     )
     chapter = result.scalar_one_or_none()
     if not chapter:
-        raise HTTPException(status_code=404, detail="章节不存在")
+        raise HTTPException(status_code=404, detail="Chương không tồn tại")
 
     # 验证项目权限
     project = await verify_project_access(chapter.project_id, user_id, db)
@@ -2035,7 +2035,7 @@ async def generate_chapter_content_background(
         AsyncSessionLocal = async_sessionmaker(engine, class_=BgAsyncSession, expire_on_commit=False)
 
         async with AsyncSessionLocal() as bg_db:
-            tracker = TaskProgressTracker(task_id, bg_user_id, "章节")
+            tracker = TaskProgressTracker(task_id, bg_user_id, "Chương")
             try:
                 await tracker.start()
 
@@ -2072,7 +2072,7 @@ async def generate_chapter_content_background(
         "task_id": task.id,
         "task_type": "chapter_generate",
         "status": "pending",
-        "message": "任务已创建，请通过 GET /api/tasks/{task_id} 查询进度"
+        "message": "Tác vụ đã được tạo, vui lòng kiểm tra tiến độ qua GET /api/tasks/{task_id}"
     }
 
 
@@ -2099,24 +2099,24 @@ async def _run_chapter_generation_bg(
     write_lock = await get_db_write_lock(user_id)
 
     # === 加载阶段 ===
-    await tracker.loading("加载章节信息...", 0.2)
+    await tracker.loading("Đang tải thông tin chương...", 0.2)
 
     chapter_result = await db.execute(
         select(Chapter).where(Chapter.id == chapter_id)
     )
     current_chapter = chapter_result.scalar_one_or_none()
     if not current_chapter:
-        await tracker.error("章节不存在")
+        await tracker.error("Chương không tồn tại")
         return
 
-    await tracker.loading("加载项目信息...", 0.4)
+    await tracker.loading("Đang tải thông tin dự án...", 0.4)
 
     project_result = await db.execute(
         select(Project).where(Project.id == current_chapter.project_id)
     )
     project = project_result.scalar_one_or_none()
     if not project:
-        await tracker.error("项目不存在")
+        await tracker.error("Dự án không tồn tại")
         return
 
     outline_mode = project.outline_mode if project else 'one-to-many'
@@ -2174,7 +2174,7 @@ async def _run_chapter_generation_bg(
             temp_narrative_perspective=temp_narrative_perspective
         )
 
-    await tracker.loading("上下文构建完成", 0.8)
+    await tracker.loading("Đã dựng xong ngữ cảnh", 0.8)
 
     # 确定叙事人称
     chapter_perspective = (
@@ -2194,15 +2194,15 @@ async def _run_chapter_generation_bg(
                 chapter_title=current_chapter.title,
                 chapter_outline=chapter_context.chapter_outline,
                 target_word_count=target_word_count,
-                genre=project.genre or '未设定',
+                genre=project.genre or 'Chưa thiết lập',
                 narrative_perspective=chapter_perspective,
                 previous_chapter_content=chapter_context.continuation_point,
-                previous_chapter_summary=chapter_context.previous_chapter_summary or '（无上一章摘要）',
-                recent_chapters_context=chapter_context.recent_chapters_context or '暂无最近章节摘要',
-                characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
-                relevant_memories=chapter_context.relevant_memories or '暂无相关记忆'
+                previous_chapter_summary=chapter_context.previous_chapter_summary or '（Không có tóm tắt chương trước）',
+                recent_chapters_context=chapter_context.recent_chapters_context or 'Chưa có tóm tắt các chương gần đây',
+                characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
+                relevant_memories=chapter_context.relevant_memories or 'Không có ký ức liên quan'
             )
         else:
             template = await PromptService.get_template("CHAPTER_GENERATION_ONE_TO_ONE", user_id, db)
@@ -2213,16 +2213,16 @@ async def _run_chapter_generation_bg(
                 chapter_title=current_chapter.title,
                 chapter_outline=chapter_context.chapter_outline,
                 target_word_count=target_word_count,
-                genre=project.genre or '未设定',
+                genre=project.genre or 'Chưa thiết lập',
                 narrative_perspective=chapter_perspective,
-                characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
-                relevant_memories=chapter_context.relevant_memories or '暂无相关记忆'
+                characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
+                relevant_memories=chapter_context.relevant_memories or 'Không có ký ức liên quan'
             )
     else:
         if chapter_context.continuation_point:
-            previous_summary = chapter_context.previous_chapter_summary or "（无上一章摘要，请根据锚点续写）"
+            previous_summary = chapter_context.previous_chapter_summary or "（Không có tóm tắt chương trước, hãy viết tiếp theo điểm nối）"
             template = await PromptService.get_template("CHAPTER_GENERATION_ONE_TO_MANY_NEXT", user_id, db)
             base_prompt = PromptService.format_prompt(
                 template,
@@ -2232,11 +2232,11 @@ async def _run_chapter_generation_bg(
                 chapter_outline=chapter_context.chapter_outline,
                 target_word_count=target_word_count,
                 continuation_point=chapter_context.continuation_point,
-                genre=project.genre or '未设定',
+                genre=project.genre or 'Chưa thiết lập',
                 narrative_perspective=chapter_perspective,
-                characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
+                characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
                 previous_chapter_summary=previous_summary,
                 recent_chapters_context=chapter_context.recent_chapters_context or '',
                 relevant_memories=chapter_context.relevant_memories or ''
@@ -2250,12 +2250,12 @@ async def _run_chapter_generation_bg(
                 chapter_title=current_chapter.title,
                 chapter_outline=chapter_context.chapter_outline,
                 target_word_count=target_word_count,
-                genre=project.genre or '未设定',
+                genre=project.genre or 'Chưa thiết lập',
                 narrative_perspective=chapter_perspective,
-                characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
-                relevant_memories=chapter_context.relevant_memories or '暂无相关记忆'
+                characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
+                relevant_memories=chapter_context.relevant_memories or 'Không có ký ức liên quan'
             )
 
     # 应用写作风格
@@ -2265,16 +2265,16 @@ async def _run_chapter_generation_bg(
         prompt = base_prompt
 
     # === 准备阶段 ===
-    await tracker.preparing("准备AI提示词...")
+    await tracker.preparing("Đang chuẩn bị prompt AI...")
 
     system_prompt_with_style = None
     if style_content:
-        system_prompt_with_style = f"""【🎨 写作风格要求 - 最高优先级】
+        system_prompt_with_style = f"""【🎨 Yêu cầu phong cách viết - Ưu tiên cao nhất】
 
 {style_content}
 
-⚠️ 请严格遵循上述写作风格要求进行创作，这是最重要的指令！
-确保在整个章节创作过程中始终保持风格的一致性。"""
+⚠️ Hãy nghiêm ngặt tuân theo yêu cầu phong cách viết ở trên khi sáng tác; đây là chỉ dẫn quan trọng nhất!
+Hãy luôn duy trì sự nhất quán của phong cách trong suốt quá trình sáng tác chương."""
 
     calculated_max_tokens = int(target_word_count * 3)
     calculated_max_tokens = max(2000, min(calculated_max_tokens, 16000))
@@ -2312,7 +2312,7 @@ async def _run_chapter_generation_bg(
             await tracker.generating(
                 current_chars=len(full_content),
                 estimated_total=target_word_count,
-                message=f'正在创作中... 已生成 {len(full_content)} 字'
+                message=f'Đang sáng tác... Đã tạo {len(full_content)} chữ'
             )
 
         await asyncio.sleep(0)
@@ -2322,7 +2322,7 @@ async def _run_chapter_generation_bg(
         logger.info(f"🚫 后台章节生成保存前被取消: {chapter_id}")
         return
 
-    await tracker.saving("正在保存章节...", 0.3)
+    await tracker.saving("Đang lưu chương...", 0.3)
 
     async with write_lock:
         # 重新获取章节（确保最新状态）
@@ -2331,7 +2331,7 @@ async def _run_chapter_generation_bg(
         )
         current_chapter = chapter_result.scalar_one_or_none()
         if not current_chapter:
-            await tracker.error("保存时章节不存在")
+            await tracker.error("Không tìm thấy chương khi lưu")
             return
 
         old_word_count = current_chapter.word_count or 0
@@ -2353,7 +2353,7 @@ async def _run_chapter_generation_bg(
         history = GenerationHistory(
             project_id=current_chapter.project_id,
             chapter_id=current_chapter.id,
-            prompt=f"创作章节: 第{current_chapter.chapter_number}章 {current_chapter.title}",
+            prompt=f"Sáng tác chương: Chương {current_chapter.chapter_number} {current_chapter.title}",
             generated_content=full_content[:500] if len(full_content) > 500 else full_content,
             model="default"
         )
@@ -2396,7 +2396,7 @@ async def _run_chapter_generation_bg(
         "word_count": new_word_count,
         "analysis_task_id": analysis_task.id,
     })
-    await tracker.analyzing(0, "章节创作完成，准备分析...")
+    await tracker.analyzing(0, "Sáng tác chương hoàn tất, chuẩn bị phân tích...")
 
     analysis_success = await analyze_chapter_background(
         chapter_id=chapter_id,
@@ -2406,10 +2406,10 @@ async def _run_chapter_generation_bg(
         progress_callback=tracker.analyzing,
     )
     if not analysis_success:
-        raise RuntimeError("章节内容已生成，但章节分析失败")
+        raise RuntimeError("Nội dung chương đã được tạo nhưng phân tích chương thất bại")
 
     # === 完成 ===
-    await tracker.complete(f"创作和分析完成！共 {new_word_count} 字")
+    await tracker.complete(f"Sáng tác và phân tích hoàn tất! Tổng cộng {new_word_count} chữ")
 
 
 def _build_analysis_task_status_payload(
@@ -2459,7 +2459,7 @@ async def _recover_stale_analysis_tasks(
         if task.status == "running":
             reference_time = task.started_at or task.created_at
             if reference_time and (now - reference_time) > timedelta(seconds=ANALYSIS_TASK_STALE_SECONDS):
-                error_message = "任务执行超时，已自动恢复"
+                error_message = "Tác vụ chạy quá thời gian, đã tự động khôi phục"
         if not error_message:
             continue
 
@@ -2490,7 +2490,7 @@ async def _recover_stale_analysis_tasks(
     return recovered_ids
 
 
-@router.post("/{chapter_id}/generate-background-legacy", summary="AI创作章节内容（后台任务，遗留重复实现）")
+@router.post("/{chapter_id}/generate-background-legacy", summary="AI sáng tác nội dung chương (tác vụ nền, bản triển khai trùng lặp cũ)")
 async def generate_chapter_content_background_legacy(
     chapter_id: str,
     request: Request,
@@ -2504,7 +2504,7 @@ async def generate_chapter_content_background_legacy(
     """
     user_id = getattr(request.state, 'user_id', None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
 
     # 验证章节存在
     result = await db.execute(
@@ -2512,7 +2512,7 @@ async def generate_chapter_content_background_legacy(
     )
     chapter = result.scalar_one_or_none()
     if not chapter:
-        raise HTTPException(status_code=404, detail="章节不存在")
+        raise HTTPException(status_code=404, detail="Chương không tồn tại")
 
     # 验证项目权限
     project = await verify_project_access(chapter.project_id, user_id, db)
@@ -2548,7 +2548,7 @@ async def generate_chapter_content_background_legacy(
         AsyncSessionLocal = async_sessionmaker(engine, class_=BgAsyncSession, expire_on_commit=False)
 
         async with AsyncSessionLocal() as bg_db:
-            tracker = TaskProgressTracker(task_id, bg_user_id, "章节")
+            tracker = TaskProgressTracker(task_id, bg_user_id, "Chương")
             try:
                 await tracker.start()
 
@@ -2584,7 +2584,7 @@ async def generate_chapter_content_background_legacy(
         "task_id": task.id,
         "task_type": "chapter_generate",
         "status": "pending",
-        "message": "任务已创建，请通过 GET /api/tasks/{task_id} 查询进度"
+        "message": "Tác vụ đã được tạo, vui lòng kiểm tra tiến độ qua GET /api/tasks/{task_id}"
     }
 
 
@@ -2612,24 +2612,24 @@ async def _run_chapter_generation_bg(
     write_lock = await get_db_write_lock(user_id)
 
     # === 加载阶段 ===
-    await tracker.loading("加载章节信息...", 0.2)
+    await tracker.loading("Đang tải thông tin chương...", 0.2)
 
     chapter_result = await db.execute(
         select(Chapter).where(Chapter.id == chapter_id)
     )
     current_chapter = chapter_result.scalar_one_or_none()
     if not current_chapter:
-        await tracker.error("章节不存在")
+        await tracker.error("Chương không tồn tại")
         return
 
-    await tracker.loading("加载项目信息...", 0.4)
+    await tracker.loading("Đang tải thông tin dự án...", 0.4)
 
     project_result = await db.execute(
         select(Project).where(Project.id == current_chapter.project_id)
     )
     project = project_result.scalar_one_or_none()
     if not project:
-        await tracker.error("项目不存在")
+        await tracker.error("Dự án không tồn tại")
         return
 
     outline_mode = project.outline_mode if project else 'one-to-many'
@@ -2687,7 +2687,7 @@ async def _run_chapter_generation_bg(
             temp_narrative_perspective=temp_narrative_perspective
         )
 
-    await tracker.loading("上下文构建完成", 0.8)
+    await tracker.loading("Đã dựng xong ngữ cảnh", 0.8)
 
     # 确定叙事人称
     chapter_perspective = (
@@ -2707,15 +2707,15 @@ async def _run_chapter_generation_bg(
                 chapter_title=current_chapter.title,
                 chapter_outline=chapter_context.chapter_outline,
                 target_word_count=target_word_count,
-                genre=project.genre or '未设定',
+                genre=project.genre or 'Chưa thiết lập',
                 narrative_perspective=chapter_perspective,
                 previous_chapter_content=chapter_context.continuation_point,
-                previous_chapter_summary=chapter_context.previous_chapter_summary or '（无上一章摘要）',
-                recent_chapters_context=chapter_context.recent_chapters_context or '暂无最近章节摘要',
-                characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
-                relevant_memories=chapter_context.relevant_memories or '暂无相关记忆'
+                previous_chapter_summary=chapter_context.previous_chapter_summary or '（Không có tóm tắt chương trước）',
+                recent_chapters_context=chapter_context.recent_chapters_context or 'Chưa có tóm tắt các chương gần đây',
+                characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
+                relevant_memories=chapter_context.relevant_memories or 'Không có ký ức liên quan'
             )
         else:
             template = await PromptService.get_template("CHAPTER_GENERATION_ONE_TO_ONE", user_id, db)
@@ -2726,16 +2726,16 @@ async def _run_chapter_generation_bg(
                 chapter_title=current_chapter.title,
                 chapter_outline=chapter_context.chapter_outline,
                 target_word_count=target_word_count,
-                genre=project.genre or '未设定',
+                genre=project.genre or 'Chưa thiết lập',
                 narrative_perspective=chapter_perspective,
-                characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
-                relevant_memories=chapter_context.relevant_memories or '暂无相关记忆'
+                characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
+                relevant_memories=chapter_context.relevant_memories or 'Không có ký ức liên quan'
             )
     else:
         if chapter_context.continuation_point:
-            previous_summary = chapter_context.previous_chapter_summary or "（无上一章摘要，请根据锚点续写）"
+            previous_summary = chapter_context.previous_chapter_summary or "（Không có tóm tắt chương trước, hãy viết tiếp theo điểm nối）"
             template = await PromptService.get_template("CHAPTER_GENERATION_ONE_TO_MANY_NEXT", user_id, db)
             base_prompt = PromptService.format_prompt(
                 template,
@@ -2745,11 +2745,11 @@ async def _run_chapter_generation_bg(
                 chapter_outline=chapter_context.chapter_outline,
                 target_word_count=target_word_count,
                 continuation_point=chapter_context.continuation_point,
-                genre=project.genre or '未设定',
+                genre=project.genre or 'Chưa thiết lập',
                 narrative_perspective=chapter_perspective,
-                characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
+                characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
                 previous_chapter_summary=previous_summary,
                 recent_chapters_context=chapter_context.recent_chapters_context or '',
                 relevant_memories=chapter_context.relevant_memories or ''
@@ -2763,12 +2763,12 @@ async def _run_chapter_generation_bg(
                 chapter_title=current_chapter.title,
                 chapter_outline=chapter_context.chapter_outline,
                 target_word_count=target_word_count,
-                genre=project.genre or '未设定',
+                genre=project.genre or 'Chưa thiết lập',
                 narrative_perspective=chapter_perspective,
-                characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
-                relevant_memories=chapter_context.relevant_memories or '暂无相关记忆'
+                characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
+                relevant_memories=chapter_context.relevant_memories or 'Không có ký ức liên quan'
             )
 
     # 应用写作风格
@@ -2778,7 +2778,7 @@ async def _run_chapter_generation_bg(
         prompt = base_prompt
 
     # === 准备阶段 ===
-    await tracker.preparing("准备AI提示词...")
+    await tracker.preparing("Đang chuẩn bị prompt AI...")
 
     system_prompt_with_style = None
     if skill_key:
@@ -2789,15 +2789,15 @@ async def _run_chapter_generation_bg(
             if skill:
                 skill_content = skill["content"]
                 skill_name = skill["template_name"]
-                system_prompt_with_style = f"""【⚡ Skill 工作流：{skill_name}】
+                system_prompt_with_style = f"""【⚡ Quy trình Skill: {skill_name}】
 
 {skill_content}
 
-⚠️ 请严格遵循上述 Skill 工作流指令进行创作！"""
+⚠️ Hãy nghiêm ngặt tuân theo chỉ dẫn của quy trình Skill ở trên khi sáng tác!"""
                 if style_content:
                     system_prompt_with_style += f"""
 
-【🎨 写作风格要求 - 补充】
+【🎨 Yêu cầu phong cách viết - Bổ sung】
 
 {style_content}"""
                 logger.info(f"⚡ 后台生成 - 已将 Skill '{skill_name}' 注入系统提示词（{len(skill_content)}字符）")
@@ -2807,12 +2807,12 @@ async def _run_chapter_generation_bg(
             logger.warning(f"⚠️ 后台生成 - 加载 Skill 失败: {skill_err}")
 
     if not system_prompt_with_style and style_content:
-        system_prompt_with_style = f"""【🎨 写作风格要求 - 最高优先级】
+        system_prompt_with_style = f"""【🎨 Yêu cầu phong cách viết - Ưu tiên cao nhất】
 
 {style_content}
 
-⚠️ 请严格遵循上述写作风格要求进行创作，这是最重要的指令！
-确保在整个章节创作过程中始终保持风格的一致性。"""
+⚠️ Hãy nghiêm ngặt tuân theo yêu cầu phong cách viết ở trên khi sáng tác; đây là chỉ dẫn quan trọng nhất!
+Hãy luôn duy trì sự nhất quán của phong cách trong suốt quá trình sáng tác chương."""
 
     calculated_max_tokens = int(target_word_count * 3)
     calculated_max_tokens = max(2000, min(calculated_max_tokens, 16000))
@@ -2850,13 +2850,13 @@ async def _run_chapter_generation_bg(
             await tracker.generating(
                 current_chars=len(full_content),
                 estimated_total=target_word_count,
-                message=f'正在创作中... 已生成 {len(full_content)} 字'
+                message=f'Đang sáng tác... Đã tạo {len(full_content)} chữ'
             )
 
         await asyncio.sleep(0)
 
     # === 保存阶段 ===
-    await tracker.saving("正在保存章节...", 0.3)
+    await tracker.saving("Đang lưu chương...", 0.3)
 
     async with write_lock:
         # 重新获取章节（确保最新状态）
@@ -2865,7 +2865,7 @@ async def _run_chapter_generation_bg(
         )
         current_chapter = chapter_result.scalar_one_or_none()
         if not current_chapter:
-            await tracker.error("保存时章节不存在")
+            await tracker.error("Không tìm thấy chương khi lưu")
             return
 
         old_word_count = current_chapter.word_count or 0
@@ -2887,7 +2887,7 @@ async def _run_chapter_generation_bg(
         history = GenerationHistory(
             project_id=current_chapter.project_id,
             chapter_id=current_chapter.id,
-            prompt=f"创作章节: 第{current_chapter.chapter_number}章 {current_chapter.title}",
+            prompt=f"Sáng tác chương: Chương {current_chapter.chapter_number} {current_chapter.title}",
             generated_content=full_content[:500] if len(full_content) > 500 else full_content,
             model="default"
         )
@@ -2930,7 +2930,7 @@ async def _run_chapter_generation_bg(
         "word_count": new_word_count,
         "analysis_task_id": analysis_task.id,
     })
-    await tracker.analyzing(0, "章节创作完成，准备分析...")
+    await tracker.analyzing(0, "Sáng tác chương hoàn tất, chuẩn bị phân tích...")
 
     analysis_success = await analyze_chapter_background(
         chapter_id=chapter_id,
@@ -2941,10 +2941,10 @@ async def _run_chapter_generation_bg(
         progress_callback=tracker.analyzing,
     )
     if not analysis_success:
-        raise RuntimeError("章节内容已生成，但章节分析失败")
+        raise RuntimeError("Nội dung chương đã được tạo nhưng phân tích chương thất bại")
 
     # === 完成 ===
-    await tracker.complete(f"创作和分析完成！共 {new_word_count} 字")
+    await tracker.complete(f"Sáng tác và phân tích hoàn tất! Tổng cộng {new_word_count} chữ")
 
 
 def _build_analysis_task_status_payload(
@@ -2981,7 +2981,7 @@ def _build_analysis_task_status_payload(
     }
 
 
-@router.get("/{chapter_id}/analysis/status", summary="查询章节分析任务状态", response_model=AnalysisTaskStatusResponse)
+@router.get("/{chapter_id}/analysis/status", summary="Tra cứu trạng thái tác vụ phân tích chương", response_model=AnalysisTaskStatusResponse)
 async def get_analysis_task_status(
     chapter_id: str,
     request: Request,
@@ -3015,7 +3015,7 @@ async def get_analysis_task_status(
     chapter = chapter_result.scalar_one_or_none()
     
     if not chapter:
-        raise HTTPException(status_code=404, detail="章节不存在")
+        raise HTTPException(status_code=404, detail="Chương không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -3040,7 +3040,7 @@ async def get_analysis_task_status(
     return _build_analysis_task_status_payload(chapter_id, task, auto_recovered)
 
 
-@router.post("/project/{project_id}/analysis/statuses", summary="批量查询章节分析任务状态", response_model=BatchAnalysisStatusResponse)
+@router.post("/project/{project_id}/analysis/statuses", summary="Tra cứu hàng loạt trạng thái tác vụ phân tích chương", response_model=BatchAnalysisStatusResponse)
 async def get_project_analysis_task_statuses(
     project_id: str,
     payload: BatchAnalysisStatusRequest,
@@ -3133,7 +3133,7 @@ async def _run_batch_analysis_in_sequence(
 
 @router.post(
     "/project/{project_id}/analysis/analyze-unanalyzed",
-    summary="一键按章节顺序分析未分析章节",
+    summary="Phân tích một lần các chương chưa phân tích theo thứ tự chương",
     response_model=BatchAnalyzeUnanalyzedResponse
 )
 async def batch_analyze_unanalyzed_chapters(
@@ -3145,7 +3145,7 @@ async def batch_analyze_unanalyzed_chapters(
     """自动识别项目中未完成分析的章节，并按章节顺序逐个启动分析。"""
     user_id = getattr(request.state, "user_id", None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
 
     # 验证项目权限
     await verify_project_access(project_id, user_id, db)
@@ -3232,7 +3232,7 @@ async def batch_analyze_unanalyzed_chapters(
         except Exception as e:
             await db.rollback()
             logger.error(f"❌ 一键分析创建任务失败: {str(e)}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"一键分析创建任务失败: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Tạo tác vụ phân tích hàng loạt thất bại: {str(e)}")
 
         # 提交后立即按章节顺序调度后台分析（逐章执行）
         tasks_queue = [
@@ -3262,7 +3262,7 @@ async def batch_analyze_unanalyzed_chapters(
     }
 
 
-@router.get("/{chapter_id}/analysis", summary="获取章节分析结果")
+@router.get("/{chapter_id}/analysis", summary="Lấy kết quả phân tích chương")
 async def get_chapter_analysis(
     chapter_id: str,
     request: Request,
@@ -3297,7 +3297,7 @@ async def get_chapter_analysis(
     analysis = analysis_result.scalar_one_or_none()
     
     if not analysis:
-        raise HTTPException(status_code=404, detail="该章节暂无分析结果")
+        raise HTTPException(status_code=404, detail="Chương này chưa có kết quả phân tích")
     
     # 获取相关记忆
     memories_result = await db.execute(
@@ -3328,7 +3328,7 @@ async def get_chapter_analysis(
     }
 
 
-@router.get("/{chapter_id}/annotations", summary="获取章节标注数据")
+@router.get("/{chapter_id}/annotations", summary="Lấy dữ liệu chú thích chương")
 async def get_chapter_annotations(
     chapter_id: str,
     request: Request,
@@ -3350,7 +3350,7 @@ async def get_chapter_annotations(
     chapter = chapter_result.scalar_one_or_none()
     
     if not chapter:
-        raise HTTPException(status_code=404, detail="章节不存在")
+        raise HTTPException(status_code=404, detail="Chương không tồn tại")
     
     # 验证项目访问权限
     await verify_project_access(chapter.project_id, user_id, db)
@@ -3474,7 +3474,7 @@ async def get_chapter_annotations(
     }
 
 
-@router.post("/{chapter_id}/analyze", summary="手动触发章节分析")
+@router.post("/{chapter_id}/analyze", summary="Kích hoạt thủ công việc phân tích chương")
 async def trigger_chapter_analysis(
     chapter_id: str,
     request: Request,
@@ -3487,7 +3487,7 @@ async def trigger_chapter_analysis(
     # 从请求中获取用户ID
     user_id = getattr(request.state, "user_id", None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
     
     # 验证章节存在
     chapter_result = await db.execute(
@@ -3496,10 +3496,10 @@ async def trigger_chapter_analysis(
     chapter = chapter_result.scalar_one_or_none()
     
     if not chapter:
-        raise HTTPException(status_code=404, detail="章节不存在")
+        raise HTTPException(status_code=404, detail="Chương không tồn tại")
     
     if not chapter.content or chapter.content.strip() == "":
-        raise HTTPException(status_code=400, detail="章节内容为空，无法分析")
+        raise HTTPException(status_code=400, detail="Nội dung chương trống, không thể phân tích")
     
     # 获取项目信息
     project_result = await db.execute(
@@ -3508,7 +3508,7 @@ async def trigger_chapter_analysis(
     project = project_result.scalar_one_or_none()
     
     if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+        raise HTTPException(status_code=404, detail="Dự án không tồn tại")
 
     # 避免重复点击或状态轮询误判后创建并发分析任务。
     existing_task_result = await db.execute(
@@ -3523,7 +3523,7 @@ async def trigger_chapter_analysis(
             "task_id": existing_task.id,
             "chapter_id": chapter_id,
             "status": existing_task.status,
-            "message": "已有分析任务正在执行"
+            "message": "Đang có tác vụ phân tích chạy"
         }
     
     # 创建分析任务
@@ -3559,7 +3559,7 @@ async def trigger_chapter_analysis(
         "task_id": task_id,
         "chapter_id": chapter_id,
         "status": "pending",
-        "message": "分析任务已创建并开始执行"
+        "message": "Tác vụ phân tích đã được tạo và bắt đầu chạy"
     }
 
 
@@ -3584,7 +3584,7 @@ def calculate_estimated_time(
     return max(1, int(total_time))
 
 
-@router.post("/project/{project_id}/batch-generate", response_model=BatchGenerateResponse, summary="批量顺序生成章节内容")
+@router.post("/project/{project_id}/batch-generate", response_model=BatchGenerateResponse, summary="Tạo nội dung chương hàng loạt theo thứ tự")
 async def batch_generate_chapters_in_order(
     project_id: str,
     batch_request: BatchGenerateRequest,
@@ -3604,7 +3604,7 @@ async def batch_generate_chapters_in_order(
     """
     user_id = getattr(request.state, "user_id", None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
     
     # 验证项目存在和用户权限
     project = await verify_project_access(project_id, user_id, db)
@@ -3618,7 +3618,7 @@ async def batch_generate_chapters_in_order(
     all_chapters = result.scalars().all()
     
     if not all_chapters:
-        raise HTTPException(status_code=404, detail="项目没有章节")
+        raise HTTPException(status_code=404, detail="Dự án không có chương")
     
     # 计算要生成的章节范围
     start_number = batch_request.start_chapter_number
@@ -3631,13 +3631,13 @@ async def batch_generate_chapters_in_order(
     ]
     
     if not chapters_to_generate:
-        raise HTTPException(status_code=404, detail="指定范围内没有章节")
+        raise HTTPException(status_code=404, detail="Không có chương nào trong phạm vi chỉ định")
     
     # 验证起始章节的前置条件
     first_chapter = chapters_to_generate[0]
     can_generate, error_msg, _ = await check_prerequisites(db, first_chapter)
     if not can_generate:
-        raise HTTPException(status_code=400, detail=f"起始章节无法生成：{error_msg}")
+        raise HTTPException(status_code=400, detail=f"Không thể tạo chương bắt đầu: {error_msg}")
 
     # 批量生成必须同步分析，否则下一章无法获得最新角色状态、记忆和伏笔上下文。
     enable_analysis = True
@@ -3688,7 +3688,7 @@ async def batch_generate_chapters_in_order(
     
     return BatchGenerateResponse(
         batch_id=batch_id,
-        message=f"批量生成任务已创建，将生成 {len(chapters_to_generate)} 个章节",
+        message=f"Đã tạo tác vụ tạo hàng loạt, sẽ tạo {len(chapters_to_generate)} chương",
         chapters_to_generate=[
             {
                 "id": ch.id,
@@ -3701,7 +3701,7 @@ async def batch_generate_chapters_in_order(
     )
 
 
-@router.get("/batch-generate/{batch_id}/status", response_model=BatchGenerateStatusResponse, summary="查询批量生成任务状态")
+@router.get("/batch-generate/{batch_id}/status", response_model=BatchGenerateStatusResponse, summary="Tra cứu trạng thái tác vụ tạo hàng loạt")
 async def get_batch_generation_status(
     batch_id: str,
     request: Request,
@@ -3710,7 +3710,7 @@ async def get_batch_generation_status(
     """查询批量生成任务的状态和进度"""
     user_id = getattr(request.state, 'user_id', None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
 
     result = await db.execute(
         select(BatchGenerationTask).where(
@@ -3721,7 +3721,7 @@ async def get_batch_generation_status(
     task = result.scalar_one_or_none()
     
     if not task:
-        raise HTTPException(status_code=404, detail="批量生成任务不存在")
+        raise HTTPException(status_code=404, detail="Tác vụ tạo hàng loạt không tồn tại")
     
     return BatchGenerateStatusResponse(
         batch_id=task.id,
@@ -3740,7 +3740,7 @@ async def get_batch_generation_status(
     )
 
 
-@router.get("/project/{project_id}/batch-generate/active", summary="获取项目当前运行中的批量生成任务")
+@router.get("/project/{project_id}/batch-generate/active", summary="Lấy tác vụ tạo hàng loạt hiện đang chạy của dự án")
 async def get_active_batch_generation(
     project_id: str,
     request: Request,
@@ -3753,7 +3753,7 @@ async def get_active_batch_generation(
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
     await verify_project_access(project_id, user_id, db)
     
     result = await db.execute(
@@ -3787,7 +3787,7 @@ async def get_active_batch_generation(
     }
 
 
-@router.post("/batch-generate/{batch_id}/cancel", summary="取消批量生成任务")
+@router.post("/batch-generate/{batch_id}/cancel", summary="Hủy tác vụ tạo hàng loạt")
 async def cancel_batch_generation(
     batch_id: str,
     request: Request,
@@ -3796,7 +3796,7 @@ async def cancel_batch_generation(
     """取消正在进行的批量生成任务"""
     user_id = getattr(request.state, 'user_id', None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
 
     result = await db.execute(
         select(BatchGenerationTask).where(
@@ -3807,10 +3807,10 @@ async def cancel_batch_generation(
     task = result.scalar_one_or_none()
     
     if not task:
-        raise HTTPException(status_code=404, detail="批量生成任务不存在")
+        raise HTTPException(status_code=404, detail="Tác vụ tạo hàng loạt không tồn tại")
     
     if task.status in ['completed', 'failed', 'cancelled']:
-        raise HTTPException(status_code=400, detail=f"任务已处于 {task.status} 状态，无法取消")
+        raise HTTPException(status_code=400, detail=f"Tác vụ đang ở trạng thái {task.status}, không thể hủy")
     
     task.status = 'cancelled'
     task.completed_at = datetime.now()
@@ -3819,7 +3819,7 @@ async def cancel_batch_generation(
     logger.info(f"🛑 批量生成任务已取消: {batch_id}")
     
     return {
-        "message": "批量生成任务已取消",
+        "message": "Đã hủy tác vụ tạo hàng loạt",
         "batch_id": batch_id,
         "completed_chapters": task.completed_chapters,
         "total_chapters": task.total_chapters
@@ -3921,7 +3921,7 @@ async def execute_batch_generation_in_order(
                     chapter = chapter_result.scalar_one_or_none()
                     
                     if not chapter:
-                        raise Exception(f"章节 {chapter_id} 不存在")
+                        raise Exception(f"Chương {chapter_id} không tồn tại")
                     
                     # 更新当前章节序号和重试次数
                     async with write_lock:
@@ -3930,14 +3930,14 @@ async def execute_batch_generation_in_order(
                         await db_session.commit()
                     
                     if retry_count > 0:
-                        logger.info(f"🔄 [{idx}/{task.total_chapters}] 重试生成章节 (第{retry_count}次): 第{chapter.chapter_number}章 《{chapter.title}》")
+                        logger.info(f"🔄 [{idx}/{task.total_chapters}] 重试生成章节 (第{retry_count}次): 第{chapter.chapter_number}章 «{chapter.title}»")
                     else:
-                        logger.info(f"📝 [{idx}/{task.total_chapters}] 开始生成章节: 第{chapter.chapter_number}章 《{chapter.title}》")
+                        logger.info(f"📝 [{idx}/{task.total_chapters}] 开始生成章节: 第{chapter.chapter_number}章 «{chapter.title}»")
                     
                     # 检查前置条件（每次都检查，确保顺序性）
                     can_generate, error_msg, _ = await check_prerequisites(db_session, chapter)
                     if not can_generate:
-                        raise Exception(f"前置条件不满足: {error_msg}")
+                        raise Exception(f"Điều kiện tiên quyết không thỏa mãn: {error_msg}")
                     analysis_ready, analysis_msg = await check_previous_analysis_ready(db_session, chapter)
                     if not analysis_ready:
                         raise Exception(analysis_msg)
@@ -3967,7 +3967,7 @@ async def execute_batch_generation_in_order(
                     
                     # 更新上一章摘要，供下一章使用
                     if generated_summary:
-                        last_generated_summary = f"第{chapter.chapter_number}章《{chapter.title}》：{generated_summary}"
+                        last_generated_summary = f"Chương {chapter.chapter_number}«{chapter.title}»: {generated_summary}"
                         logger.info(f"📝 已更新上一章摘要上下文: {last_generated_summary[:50]}...")
                     
                     logger.info(f"✅ 章节生成完成: 第{chapter.chapter_number}章")
@@ -4000,14 +4000,14 @@ async def execute_batch_generation_in_order(
                         )
 
                         if not analysis_result:
-                            error_message = "分析函数返回失败"
+                            error_message = "Hàm phân tích trả về thất bại"
                             logger.error(f"❌ 章节分析失败，批量生成中断: 第{chapter.chapter_number}章")
 
                             failed_info = {
                                 'chapter_id': chapter_id,
                                 'chapter_number': chapter.chapter_number,
                                 'title': chapter.title,
-                                'error': f"分析失败: {error_message}",
+                                'error': f"Phân tích thất bại: {error_message}",
                                 'retry_count': 1
                             }
 
@@ -4017,7 +4017,7 @@ async def execute_batch_generation_in_order(
                                 task.failed_chapters.append(failed_info)
 
                                 task.status = 'failed'
-                                task.error_message = f"第{chapter.chapter_number}章分析失败: {error_message}"[:500]
+                                task.error_message = f"Phân tích chương {chapter.chapter_number} thất bại: {error_message}"[:500]
                                 task.completed_at = datetime.now()
                                 task.current_retry_count = 0
                                 await db_session.commit()
@@ -4043,7 +4043,7 @@ async def execute_batch_generation_in_order(
                     if task.status == 'cancelled':
                         logger.info(f"🛑 批量生成任务已被取消: {batch_id}")
                         return
-                    error_msg = f"第{chapter.chapter_number if chapter else '?'}章出错: {last_error}"
+                    error_msg = f"Lỗi ở chương {chapter.chapter_number if chapter else '?'}: {last_error}"
                     logger.error(f"❌ {error_msg}")
                     
                     retry_count += 1
@@ -4060,7 +4060,7 @@ async def execute_batch_generation_in_order(
                         failed_info = {
                             'chapter_id': chapter_id,
                             'chapter_number': chapter.chapter_number if chapter else -1,
-                            'title': chapter.title if chapter else '未知',
+                            'title': chapter.title if chapter else 'Không rõ',
                             'error': last_error,
                             'retry_count': retry_count - 1
                         }
@@ -4072,7 +4072,7 @@ async def execute_batch_generation_in_order(
                             
                             # 标记任务失败并终止
                             task.status = 'failed'
-                            task.error_message = f"第{chapter.chapter_number}章生成失败(重试{retry_count-1}次): {last_error}"[:500]
+                            task.error_message = f"Tạo chương {chapter.chapter_number} thất bại (đã thử lại {retry_count-1} lần): {last_error}"[:500]
                             task.completed_at = datetime.now()
                             task.current_retry_count = 0
                             await db_session.commit()
@@ -4146,7 +4146,7 @@ async def generate_single_chapter_for_batch(
     )
     project = project_result.scalar_one_or_none()
     if not project:
-        raise Exception("项目不存在")
+        raise Exception("Dự án không tồn tại")
     
     # 获取项目的大纲模式
     outline_mode = project.outline_mode if project else 'one-to-many'
@@ -4232,15 +4232,15 @@ async def generate_single_chapter_for_batch(
                 chapter_title=chapter.title,
                 chapter_outline=chapter_context.chapter_outline,
                 target_word_count=target_word_count,
-                genre=project.genre or '未设定',
+                genre=project.genre or 'Chưa thiết lập',
                 narrative_perspective=temp_narrative_perspective or project.narrative_perspective or '第三人称',
                 previous_chapter_content=chapter_context.continuation_point,
-                characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
-                relevant_memories=chapter_context.relevant_memories or '暂无相关记忆',
+                characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
+                relevant_memories=chapter_context.relevant_memories or 'Không có ký ức liên quan',
                 previous_chapter_summary=chapter_context.previous_chapter_summary or '',
-                recent_chapters_context=chapter_context.recent_chapters_context or '暂无最近章节摘要'
+                recent_chapters_context=chapter_context.recent_chapters_context or 'Chưa có tóm tắt các chương gần đây'
             )
         else:
             # 第一章
@@ -4252,19 +4252,19 @@ async def generate_single_chapter_for_batch(
                 chapter_title=chapter.title,
                 chapter_outline=chapter_context.chapter_outline,
                 target_word_count=target_word_count,
-                genre=project.genre or '未设定',
+                genre=project.genre or 'Chưa thiết lập',
                 narrative_perspective=temp_narrative_perspective or project.narrative_perspective or '第三人称',
-                characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
-                relevant_memories=chapter_context.relevant_memories or '暂无相关记忆'
+                characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
+                relevant_memories=chapter_context.relevant_memories or 'Không có ký ức liên quan'
             )
     else:
         # 1-n模式：使用 context_builder 构建的结果，与单章生成保持一致
         if chapter_context.continuation_point:
             # 有前置内容，使用 WITH_CONTEXT 模板
             # 优先使用 context_builder 的摘要，其次使用传入的 previous_summary_context
-            final_prev_summary = "（无上一章摘要，请根据锚点续写）"
+            final_prev_summary = "（Không có tóm tắt chương trước, hãy viết tiếp theo điểm nối）"
             
             if chapter_context.previous_chapter_summary:
                 final_prev_summary = chapter_context.previous_chapter_summary
@@ -4280,11 +4280,11 @@ async def generate_single_chapter_for_batch(
                 chapter_outline=chapter_context.chapter_outline,
                 target_word_count=target_word_count,
                 continuation_point=chapter_context.continuation_point,
-                genre=project.genre or '未设定',
+                genre=project.genre or 'Chưa thiết lập',
                 narrative_perspective=temp_narrative_perspective or project.narrative_perspective or '第三人称',
-                characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
+                characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
                 previous_chapter_summary=final_prev_summary,
                 recent_chapters_context=chapter_context.recent_chapters_context or '',
                 relevant_memories=chapter_context.relevant_memories or ''
@@ -4299,12 +4299,12 @@ async def generate_single_chapter_for_batch(
                 chapter_title=chapter.title,
                 chapter_outline=chapter_context.chapter_outline,
                 target_word_count=target_word_count,
-                genre=project.genre or '未设定',
+                genre=project.genre or 'Chưa thiết lập',
                 narrative_perspective=temp_narrative_perspective or project.narrative_perspective or '第三人称',
-                characters_info=chapter_context.chapter_characters or '暂无角色信息',
-                chapter_careers=chapter_context.chapter_careers or '暂无职业信息',
-                foreshadow_reminders=chapter_context.foreshadow_reminders or '暂无需要关注的伏笔',
-                relevant_memories=chapter_context.relevant_memories or '暂无相关记忆'
+                characters_info=chapter_context.chapter_characters or 'Chưa có thông tin nhân vật',
+                chapter_careers=chapter_context.chapter_careers or 'Chưa có thông tin nghề nghiệp',
+                foreshadow_reminders=chapter_context.foreshadow_reminders or 'Không có phục bút cần chú ý',
+                relevant_memories=chapter_context.relevant_memories or 'Không có ký ức liên quan'
             )
     
     # 应用写作风格
@@ -4325,15 +4325,15 @@ async def generate_single_chapter_for_batch(
             if skill:
                 skill_content = skill["content"]
                 skill_name = skill["template_name"]
-                system_prompt_with_style = f"""【⚡ Skill 工作流：{skill_name}】
+                system_prompt_with_style = f"""【⚡ Quy trình Skill: {skill_name}】
 
 {skill_content}
 
-⚠️ 请严格遵循上述 Skill 工作流指令进行创作！"""
+⚠️ Hãy nghiêm ngặt tuân theo chỉ dẫn của quy trình Skill ở trên khi sáng tác!"""
                 if style_content:
                     system_prompt_with_style += f"""
 
-【🎨 写作风格要求 - 补充】
+【🎨 Yêu cầu phong cách viết - Bổ sung】
 
 {style_content}"""
                 logger.info(f"⚡ 批量生成 - 已将 Skill '{skill_name}' 注入系统提示词（{len(skill_content)}字符）")
@@ -4343,12 +4343,12 @@ async def generate_single_chapter_for_batch(
             logger.warning(f"⚠️ 批量生成 - 加载 Skill 失败: {skill_err}")
 
     if not system_prompt_with_style and style_content:
-        system_prompt_with_style = f"""【🎨 写作风格要求 - 最高优先级】
+        system_prompt_with_style = f"""【🎨 Yêu cầu phong cách viết - Ưu tiên cao nhất】
 
 {style_content}
 
-⚠️ 请严格遵循上述写作风格要求进行创作，这是最重要的指令！
-确保在整个章节创作过程中始终保持风格的一致性。"""
+⚠️ Hãy nghiêm ngặt tuân theo yêu cầu phong cách viết ở trên khi sáng tác; đây là chỉ dẫn quan trọng nhất!
+Hãy luôn duy trì sự nhất quán của phong cách trong suốt quá trình sáng tác chương."""
         logger.info(f"✅ 批量生成 - 已将写作风格注入系统提示词（{len(style_content)}字符）")
     
     # 🔢 计算 max_tokens 限制（批量生成）
@@ -4386,13 +4386,13 @@ async def generate_single_chapter_for_batch(
     async for chunk in ai_service.generate_text_stream(**generate_kwargs):
         if chunk_count % 10 == 0 and await _is_batch_cancelled():
             logger.info(f"🛑 批量生成单章流式生成被取消: batch={batch_id}, chapter={chapter.id}")
-            raise Exception("批量生成任务已取消")
+            raise Exception("Đã hủy tác vụ tạo hàng loạt")
         full_content += chunk
         chunk_count += 1
 
     if await _is_batch_cancelled():
         logger.info(f"🛑 批量生成保存前被取消: batch={batch_id}, chapter={chapter.id}")
-        raise Exception("批量生成任务已取消")
+        raise Exception("Đã hủy tác vụ tạo hàng loạt")
     
     # 更新章节内容到数据库（使用锁保护）
     async with write_lock:
@@ -4410,7 +4410,7 @@ async def generate_single_chapter_for_batch(
         history = GenerationHistory(
             project_id=chapter.project_id,
             chapter_id=chapter.id,
-            prompt=f"批量生成: 第{chapter.chapter_number}章 {chapter.title}",
+            prompt=f"Tạo hàng loạt: Chương {chapter.chapter_number} {chapter.title}",
             generated_content=full_content[:500] if len(full_content) > 500 else full_content,
             model="default"
         )
@@ -4446,7 +4446,7 @@ async def generate_single_chapter_for_batch(
 
 # ==================== 章节重新生成相关API ====================
 
-@router.post("/{chapter_id}/regenerate-stream", summary="流式重新生成章节内容")
+@router.post("/{chapter_id}/regenerate-stream", summary="Tạo lại nội dung chương theo luồng")
 async def regenerate_chapter_stream(
     chapter_id: str,
     request: Request,
@@ -4468,7 +4468,7 @@ async def regenerate_chapter_stream(
     """
     user_id = getattr(request.state, 'user_id', None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
     
     # 验证章节存在
     chapter_result = await db.execute(
@@ -4477,10 +4477,10 @@ async def regenerate_chapter_stream(
     chapter = chapter_result.scalar_one_or_none()
     
     if not chapter:
-        raise HTTPException(status_code=404, detail="章节不存在")
+        raise HTTPException(status_code=404, detail="Chương không tồn tại")
     
     if not chapter.content or chapter.content.strip() == "":
-        raise HTTPException(status_code=400, detail="章节内容为空，无法重新生成")
+        raise HTTPException(status_code=400, detail="Nội dung chương trống, không thể tạo lại")
     
     # 验证用户权限
     await verify_project_access(chapter.project_id, user_id, db)
@@ -4497,7 +4497,7 @@ async def regenerate_chapter_stream(
         analysis = analysis_result.scalar_one_or_none()
         
         if not analysis:
-            raise HTTPException(status_code=404, detail="该章节暂无分析结果")
+            raise HTTPException(status_code=404, detail="Chương này chưa có kết quả phân tích")
     
     # 预先获取项目上下文数据和写作风格
     async for temp_db in get_db(request):
@@ -4601,7 +4601,7 @@ async def regenerate_chapter_stream(
                     # 验证风格是否可用：全局预设风格（user_id为NULL）或者当前用户的自定义风格
                     if style.user_id is None or style.user_id == user_id:
                         style_content = style.prompt_content or ""
-                        style_type = "全局预设" if style.user_id is None else "用户自定义"
+                        style_type = "Cấu hình sẵn chung" if style.user_id is None else "Người dùng tự tạo"
                         logger.info(f"✅ 使用写作风格: {style.name} ({style_type})")
                     else:
                         logger.warning(f"⚠️ 风格 {style_id} 不属于当前项目，跳过")
@@ -4612,15 +4612,15 @@ async def regenerate_chapter_stream(
             
             # 构建项目上下文
             project_context = {
-                'project_title': project.title if project else '未知',
-                'genre': project.genre if project else '未设定',
-                'theme': project.theme if project else '未设定',
+                'project_title': project.title if project else 'Chưa xác định',
+                'genre': project.genre if project else 'Chưa thiết lập',
+                'theme': project.theme if project else 'Chưa thiết lập',
                 'narrative_perspective': project.narrative_perspective if project else '第三人称',
-                'time_period': project.world_time_period if project else '未设定',
-                'location': project.world_location if project else '未设定',
-                'atmosphere': project.world_atmosphere if project else '未设定',
+                'time_period': project.world_time_period if project else 'Chưa thiết lập',
+                'location': project.world_location if project else 'Chưa thiết lập',
+                'atmosphere': project.world_atmosphere if project else 'Chưa thiết lập',
                 'characters_info': characters_info_with_careers,
-                'chapter_outline': outline.content if outline else chapter.summary or '暂无大纲',
+                'chapter_outline': outline.content if outline else chapter.summary or 'Chưa có dàn ý',
                 'previous_context': ''  # 可以后续扩展添加前置章节上下文
             }
         finally:
@@ -4634,14 +4634,14 @@ async def regenerate_chapter_stream(
         
         # 初始化标准进度追踪器
         from app.utils.sse_response import WizardProgressTracker
-        tracker = WizardProgressTracker("章节重新生成")
+        tracker = WizardProgressTracker("Tạo lại chương")
         
         try:
             yield await tracker.start()
             
             # 创建独立数据库会话
             async for db_session in get_db(request):
-                yield await tracker.loading("加载章节信息...", 0.5)
+                yield await tracker.loading("Đang tải thông tin chương...", 0.5)
                 
                 # 创建重新生成任务
                 regen_task = RegenerationTask(
@@ -4670,7 +4670,7 @@ async def regenerate_chapter_stream(
                 task_id = regen_task.id
                 logger.info(f"📝 创建重新生成任务: {task_id}")
                 
-                yield await tracker.preparing("准备重新生成...")
+                yield await tracker.preparing("Đang chuẩn bị tạo lại...")
                 
                 yield await SSEResponse.send_event(
                     event='task_created',
@@ -4710,7 +4710,7 @@ async def regenerate_chapter_stream(
                             yield await tracker.generating(
                                 current_chars=len(full_content),
                                 estimated_total=estimated_total,
-                                message=f'重新生成中... 已生成 {len(full_content)} 字'
+                                message=f'Đang tạo lại... Đã tạo {len(full_content)} chữ'
                             )
                     elif event['type'] == 'progress':
                         # 进度更新 - 映射到对应阶段
@@ -4730,7 +4730,7 @@ async def regenerate_chapter_stream(
                     await asyncio.sleep(0)
                 
                 # === 保存阶段 ===
-                yield await tracker.saving("保存重新生成的内容...", 0.5)
+                yield await tracker.saving("Đang lưu nội dung đã tạo lại...", 0.5)
                 
                 # 更新任务状态
                 regen_task.status = 'completed'
@@ -4744,10 +4744,10 @@ async def regenerate_chapter_stream(
                 await db_session.commit()
                 db_committed = True
                 
-                yield await tracker.saving("保存完成", 0.9)
+                yield await tracker.saving("Đã lưu xong", 0.9)
                 
                 # === 完成阶段 ===
-                yield await tracker.complete("重新生成完成！")
+                yield await tracker.complete("Tạo lại hoàn tất!")
                 
                 # 发送结果数据
                 yield await tracker.result({
@@ -4798,7 +4798,7 @@ async def regenerate_chapter_stream(
     return create_sse_response(event_generator())
 
 
-@router.get("/{chapter_id}/regeneration/tasks", summary="获取章节的重新生成任务列表")
+@router.get("/{chapter_id}/regeneration/tasks", summary="Lấy danh sách tác vụ tạo lại chương")
 async def get_regeneration_tasks(
     chapter_id: str,
     request: Request,
@@ -4814,7 +4814,7 @@ async def get_regeneration_tasks(
     )
     chapter = chapter_result.scalar_one_or_none()
     if not chapter:
-        raise HTTPException(status_code=404, detail="章节不存在")
+        raise HTTPException(status_code=404, detail="Chương không tồn tại")
     
     await verify_project_access(chapter.project_id, user_id, db)
     
@@ -4846,7 +4846,7 @@ async def get_regeneration_tasks(
     }
 
 
-@router.put("/{chapter_id}/expansion-plan", response_model=dict, summary="更新章节规划信息")
+@router.put("/{chapter_id}/expansion-plan", response_model=dict, summary="Cập nhật thông tin kế hoạch chương")
 async def update_chapter_expansion_plan(
     chapter_id: str,
     expansion_plan: ExpansionPlanUpdate,
@@ -4870,7 +4870,7 @@ async def update_chapter_expansion_plan(
     chapter = result.scalar_one_or_none()
     
     if not chapter:
-        raise HTTPException(status_code=404, detail="章节不存在")
+        raise HTTPException(status_code=404, detail="Chương không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -4913,13 +4913,13 @@ async def update_chapter_expansion_plan(
         "id": chapter.id,
         "summary": chapter.summary,
         "expansion_plan": updated_plan,
-        "message": "规划信息更新成功"
+        "message": "Cập nhật thông tin kế hoạch thành công"
     }
 
 
 # ==================== 局部重写相关API ====================
 
-@router.post("/{chapter_id}/partial-regenerate-stream", summary="流式局部重写选中内容")
+@router.post("/{chapter_id}/partial-regenerate-stream", summary="Viết lại một phần nội dung đã chọn theo luồng")
 async def partial_regenerate_stream(
     chapter_id: str,
     request: Request,
@@ -4939,7 +4939,7 @@ async def partial_regenerate_stream(
     """
     user_id = getattr(request.state, 'user_id', None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
     
     # 验证章节存在
     chapter_result = await db.execute(
@@ -4948,10 +4948,10 @@ async def partial_regenerate_stream(
     chapter = chapter_result.scalar_one_or_none()
     
     if not chapter:
-        raise HTTPException(status_code=404, detail="章节不存在")
+        raise HTTPException(status_code=404, detail="Chương không tồn tại")
     
     if not chapter.content or chapter.content.strip() == "":
-        raise HTTPException(status_code=400, detail="章节内容为空")
+        raise HTTPException(status_code=400, detail="Nội dung chương trống")
     
     # 验证用户权限
     await verify_project_access(chapter.project_id, user_id, db)
@@ -4959,11 +4959,11 @@ async def partial_regenerate_stream(
     # 验证位置参数
     content_length = len(chapter.content)
     if partial_request.start_position >= content_length:
-        raise HTTPException(status_code=400, detail="起始位置超出内容范围")
+        raise HTTPException(status_code=400, detail="Vị trí bắt đầu vượt quá phạm vi nội dung")
     if partial_request.end_position > content_length:
-        raise HTTPException(status_code=400, detail="结束位置超出内容范围")
+        raise HTTPException(status_code=400, detail="Vị trí kết thúc vượt quá phạm vi nội dung")
     if partial_request.start_position >= partial_request.end_position:
-        raise HTTPException(status_code=400, detail="起始位置必须小于结束位置")
+        raise HTTPException(status_code=400, detail="Vị trí bắt đầu phải nhỏ hơn vị trí kết thúc")
     
     # 验证选中的文本是否匹配
     actual_selected = chapter.content[partial_request.start_position:partial_request.end_position]
@@ -4982,7 +4982,7 @@ async def partial_regenerate_stream(
         else:
             raise HTTPException(
                 status_code=400,
-                detail="选中的文本与章节内容不匹配，请刷新页面后重试"
+                detail="Đoạn văn bản đã chọn không khớp với nội dung chương, vui lòng làm mới trang rồi thử lại"
             )
     
     # 预先获取项目信息和写作风格
@@ -5016,7 +5016,7 @@ async def partial_regenerate_stream(
         if style:
             if style.user_id is None or style.user_id == user_id:
                 style_content = style.prompt_content or ""
-                style_type = "全局预设" if style.user_id is None else "用户自定义"
+                style_type = "Cấu hình sẵn chung" if style.user_id is None else "Người dùng tự tạo"
                 logger.info(f"✅ 局部重写 - 使用写作风格: {style.name} ({style_type})")
             else:
                 logger.warning(f"⚠️ 风格 {style_id} 不属于当前用户，跳过")
@@ -5024,11 +5024,11 @@ async def partial_regenerate_stream(
     async def event_generator():
         """流式生成事件生成器"""
         from app.utils.sse_response import WizardProgressTracker
-        tracker = WizardProgressTracker("局部重写")
+        tracker = WizardProgressTracker("Viết lại cục bộ")
         
         try:
             yield await tracker.start()
-            yield await tracker.loading("准备重写上下文...", 0.3)
+            yield await tracker.loading("Đang chuẩn bị ngữ cảnh viết lại...", 0.3)
             
             # 截取上下文
             context_chars = partial_request.context_chars
@@ -5049,26 +5049,26 @@ async def partial_regenerate_stream(
             
             logger.info(f"📝 局部重写 - 原文: {original_word_count}字, 前文: {len(context_before)}字, 后文: {len(context_after)}字")
             
-            yield await tracker.loading("构建提示词...", 0.5)
+            yield await tracker.loading("Đang xây dựng prompt...", 0.5)
             
             # 构建字数要求
             length_requirement = ""
             if partial_request.length_mode == "similar":
                 min_words = int(original_word_count * 0.8)
                 max_words = int(original_word_count * 1.2)
-                length_requirement = f"保持与原文相近的字数（约{original_word_count}字，允许{min_words}-{max_words}字浮动）"
+                length_requirement = f"Giữ số chữ gần với bản gốc (khoảng {original_word_count} chữ, cho phép dao động {min_words}-{max_words} chữ)"
             elif partial_request.length_mode == "expand":
                 min_words = int(original_word_count * 1.2)
                 max_words = int(original_word_count * 2.0)
-                length_requirement = f"适当扩展内容（目标{min_words}-{max_words}字）"
+                length_requirement = f"Mở rộng nội dung vừa phải (mục tiêu {min_words}-{max_words} chữ)"
             elif partial_request.length_mode == "condense":
                 min_words = int(original_word_count * 0.5)
                 max_words = int(original_word_count * 0.8)
-                length_requirement = f"精简压缩内容（目标{min_words}-{max_words}字）"
+                length_requirement = f"Tinh gọn và cô đọng nội dung (mục tiêu {min_words}-{max_words} chữ)"
             elif partial_request.length_mode == "custom" and partial_request.target_word_count:
-                length_requirement = f"目标字数：约{partial_request.target_word_count}字（允许±20%浮动）"
+                length_requirement = f"Số chữ mục tiêu: khoảng {partial_request.target_word_count} chữ (cho phép dao động ±20%)"
             else:
-                length_requirement = f"保持与原文相近的字数（约{original_word_count}字）"
+                length_requirement = f"Giữ số chữ gần với bản gốc (khoảng {original_word_count} chữ)"
             
             # 获取提示词模板
             template = await PromptService.get_template("PARTIAL_REGENERATE", user_id, db)
@@ -5078,16 +5078,16 @@ async def partial_regenerate_stream(
             # 构建提示词
             prompt = PromptService.format_prompt(
                 template,
-                context_before=context_before if context_before else "（这是章节开头）",
+                context_before=context_before if context_before else "（Đây là phần đầu chương）",
                 original_word_count=original_word_count,
                 selected_text=original_text,
-                context_after=context_after if context_after else "（这是章节结尾）",
+                context_after=context_after if context_after else "（Đây là phần cuối chương）",
                 user_instructions=partial_request.user_instructions,
                 length_requirement=length_requirement,
-                style_content=style_content if style_content else "保持与原文一致的叙事风格"
+                style_content=style_content if style_content else "Giữ phong cách kể chuyện nhất quán với bản gốc"
             )
             
-            yield await tracker.preparing("开始生成...")
+            yield await tracker.preparing("Bắt đầu tạo...")
             
             # 计算 max_tokens
             if partial_request.length_mode == "expand":
@@ -5123,7 +5123,7 @@ async def partial_regenerate_stream(
                     yield await tracker.generating(
                         current_chars=len(full_content),
                         estimated_total=target_words,
-                        message=f'正在重写中... 已生成 {len(full_content)} 字'
+                        message=f'Đang viết lại... Đã tạo {len(full_content)} chữ'
                     )
                 
                 await asyncio.sleep(0)
@@ -5133,9 +5133,9 @@ async def partial_regenerate_stream(
             
             # 移除常见的AI输出前缀
             prefixes_to_remove = [
-                "重写后：", "重写后:", "改写后：", "改写后:",
-                "以下是重写后的内容：", "以下是重写后的内容:",
-                "重写内容：", "重写内容:"
+                "Sau khi viết lại:", "Sau khi viết lại:", "Sau khi chỉnh sửa:", "Sau khi chỉnh sửa:",
+                "Nội dung sau khi viết lại:", "Nội dung sau khi viết lại:",
+                "Nội dung viết lại:", "Nội dung viết lại:"
             ]
             for prefix in prefixes_to_remove:
                 if full_content.startswith(prefix):
@@ -5155,7 +5155,7 @@ async def partial_regenerate_stream(
             logger.info(f"✅ 局部重写完成: 原文{original_word_count}字 -> 新文{new_word_count}字")
             
             # 完成
-            yield await tracker.complete("重写完成！")
+            yield await tracker.complete("Viết lại hoàn tất!")
             
             # 发送结果数据
             yield await tracker.result({
@@ -5175,7 +5175,7 @@ async def partial_regenerate_stream(
     return create_sse_response(event_generator())
 
 
-@router.post("/{chapter_id}/apply-partial-regenerate", summary="应用局部重写结果")
+@router.post("/{chapter_id}/apply-partial-regenerate", summary="Áp dụng kết quả viết lại cục bộ")
 async def apply_partial_regenerate(
     chapter_id: str,
     request: Request,
@@ -5192,7 +5192,7 @@ async def apply_partial_regenerate(
     """
     user_id = getattr(request.state, 'user_id', None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
     
     # 验证章节存在
     chapter_result = await db.execute(
@@ -5201,7 +5201,7 @@ async def apply_partial_regenerate(
     chapter = chapter_result.scalar_one_or_none()
     
     if not chapter:
-        raise HTTPException(status_code=404, detail="章节不存在")
+        raise HTTPException(status_code=404, detail="Chương không tồn tại")
     
     # 验证用户权限
     await verify_project_access(chapter.project_id, user_id, db)
@@ -5212,12 +5212,12 @@ async def apply_partial_regenerate(
     end_position = apply_request.get('end_position', 0)
     
     if not new_text:
-        raise HTTPException(status_code=400, detail="新内容不能为空")
+        raise HTTPException(status_code=400, detail="Nội dung mới không được để trống")
     
     # 验证位置有效性
     content_length = len(chapter.content)
     if start_position < 0 or end_position > content_length or start_position >= end_position:
-        raise HTTPException(status_code=400, detail="位置参数无效")
+        raise HTTPException(status_code=400, detail="Tham số vị trí không hợp lệ")
     
     # 构建新内容
     old_word_count = chapter.word_count or 0
@@ -5246,6 +5246,6 @@ async def apply_partial_regenerate(
         "chapter_id": chapter_id,
         "word_count": new_word_count,
         "old_word_count": old_word_count,
-        "message": "局部重写已应用"
+        "message": "Đã áp dụng kết quả viết lại cục bộ"
     }
 

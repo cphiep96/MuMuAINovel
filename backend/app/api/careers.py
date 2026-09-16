@@ -30,11 +30,11 @@ from app.logger import get_logger, safe_preview
 from app.api.settings import get_user_ai_service
 from app.api.common import verify_project_access
 
-router = APIRouter(prefix="/careers", tags=["职业管理"])
+router = APIRouter(prefix="/careers", tags=["Quản lý nghề nghiệp"])
 logger = get_logger(__name__)
 
 
-@router.get("", response_model=CareerListResponse, summary="获取职业列表")
+@router.get("", response_model=CareerListResponse, summary="Lấy danh sách nghề nghiệp")
 async def get_careers(
     project_id: str,
     request: Request,
@@ -97,7 +97,7 @@ async def get_careers(
     )
 
 
-@router.post("", response_model=CareerResponse, summary="创建职业")
+@router.post("", response_model=CareerResponse, summary="Tạo nghề nghiệp")
 async def create_career(
     career_data: CareerCreate,
     request: Request,
@@ -153,10 +153,10 @@ async def create_career(
         
     except Exception as e:
         logger.error(f"创建职业失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"创建职业失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Tạo nghề nghiệp thất bại: {str(e)}")
 
 
-@router.post("/generate-system", summary="AI生成新职业（增量式，流式）")
+@router.post("/generate-system", summary="AI tạo nghề nghiệp mới (bổ sung, dạng luồng)")
 async def generate_career_system(
     request_data: CareerGenerateRequest,
     http_request: Request,
@@ -169,7 +169,7 @@ async def generate_career_system(
     通过Server-Sent Events返回实时进度信息
     """
     async def generate() -> AsyncGenerator[str, None]:
-        tracker = WizardProgressTracker("职业体系")
+        tracker = WizardProgressTracker("Hệ nghề nghiệp")
         try:
             # 验证用户权限和项目是否存在
             user_id = getattr(http_request.state, 'user_id', None)
@@ -182,7 +182,7 @@ async def generate_career_system(
             yield await tracker.start()
             
             # 获取已有职业列表
-            yield await tracker.loading("分析已有职业...", 0.3)
+            yield await tracker.loading("Đang phân tích nghề nghiệp hiện có...", 0.3)
             
             existing_careers_result = await db.execute(
                 select(Career).where(Career.project_id == project_id)
@@ -193,7 +193,7 @@ async def generate_career_system(
             existing_main_careers = []
             existing_sub_careers = []
             for career in existing_careers:
-                career_summary = f"- {career.name}（{career.category or '未分类'}，{career.max_stage}阶）"
+                career_summary = f"- {career.name}（{career.category or 'Chưa phân loại'}, tối đa {career.max_stage} giai đoạn）"
                 if career.description:
                     career_summary += f": {career.description[:50]}"
                 
@@ -204,111 +204,111 @@ async def generate_career_system(
             
             existing_careers_text = ""
             if existing_main_careers:
-                existing_careers_text += f"\n已有主职业（{len(existing_main_careers)}个）：\n" + "\n".join(existing_main_careers)
+                existing_careers_text += f"\nNghề chính hiện có ({len(existing_main_careers)} nghề):\n" + "\n".join(existing_main_careers)
             if existing_sub_careers:
-                existing_careers_text += f"\n\n已有副职业（{len(existing_sub_careers)}个）：\n" + "\n".join(existing_sub_careers)
+                existing_careers_text += f"\n\nNghề phụ hiện có ({len(existing_sub_careers)} nghề):\n" + "\n".join(existing_sub_careers)
             
             if not existing_careers_text:
-                existing_careers_text = "\n当前还没有任何职业，这是第一次创建职业体系。"
+                existing_careers_text = "\nHiện chưa có nghề nào, đây là lần đầu tạo hệ nghề."
             
             # 构建项目上下文
-            yield await tracker.loading("分析项目世界观...", 0.6)
+            yield await tracker.loading("Đang phân tích bối cảnh thế giới của dự án...", 0.6)
             
             project_context = f"""
-项目信息：
-- 书名：{project.title}
-- 类型：{project.genre or '未设定'}
-- 主题：{project.theme or '未设定'}
-- 时间背景：{project.world_time_period or '未设定'}
-- 地理位置：{project.world_location or '未设定'}
-- 氛围基调：{project.world_atmosphere or '未设定'}
-- 世界规则：{project.world_rules or '未设定'}
+Thông tin dự án:
+- Tên sách: {project.title}
+- Thể loại: {project.genre or 'Chưa thiết lập'}
+- Chủ đề: {project.theme or 'Chưa thiết lập'}
+- Bối cảnh thời gian: {project.world_time_period or 'Chưa thiết lập'}
+- Địa điểm: {project.world_location or 'Chưa thiết lập'}
+- Sắc thái: {project.world_atmosphere or 'Chưa thiết lập'}
+- Quy tắc thế giới: {project.world_rules or 'Chưa thiết lập'}
 """
             
             sanitized_user_requirements = user_requirements.strip()
             extra_requirement_text = ""
             if sanitized_user_requirements:
                 extra_requirement_text = f"""
-用户额外要求：
+Yêu cầu bổ sung của người dùng:
 {sanitized_user_requirements}
 
-执行要求：
-- 请优先满足用户提出的职业方向、能力风格、限制条件和避雷项
-- 如果用户要求与已有职业高度相似，请保留需求核心，但生成定位差异明确的新职业
-- 如果用户要求与项目世界观冲突，请在不违背世界观的前提下进行合理改写和本土化适配
+Yêu cầu thực hiện:
+- Ưu tiên đáp ứng định hướng nghề nghiệp, phong cách năng lực, điều kiện giới hạn và các điều cần tránh mà người dùng đưa ra
+- Nếu yêu cầu của người dùng quá giống nghề hiện có, hãy giữ trọng tâm yêu cầu nhưng tạo nghề mới có định vị khác biệt rõ ràng
+- Nếu yêu cầu của người dùng xung đột với bối cảnh thế giới, hãy chỉnh sửa và bản địa hóa hợp lý mà không trái với bối cảnh thế giới
 """
 
             generation_requirements = f"""
-已有职业情况：{existing_careers_text}
+Tình hình nghề hiện có: {existing_careers_text}
 
-生成要求（增量式）：
-- 本次新增主职业：{main_career_count}个
-- 本次新增副职业：{sub_career_count}个
-- ⚠️ 重要：请生成与已有职业**不重复**的新职业，形成互补体系
-- 新职业应填补已有职业体系的空缺，丰富职业多样性
-- 主职业必须严格符合世界观规则，体现核心能力体系
-- 副职业可以更加自由灵活，包含生产、辅助、特殊类型
+Yêu cầu tạo (bổ sung):
+- Số nghề chính thêm lần này: {main_career_count}
+- Số nghề phụ thêm lần này: {sub_career_count}
+- ⚠️ Quan trọng: hãy tạo nghề mới **không trùng lặp** với nghề hiện có, hình thành hệ thống bổ trợ
+- Nghề mới cần lấp đầy khoảng trống của hệ nghề hiện có, làm phong phú tính đa dạng nghề nghiệp
+- Nghề chính phải tuân thủ nghiêm ngặt quy tắc thế giới, thể hiện hệ thống năng lực cốt lõi
+- Nghề phụ có thể linh hoạt hơn, bao gồm các loại sản xuất, hỗ trợ và đặc biệt
 
 {extra_requirement_text}"""
             
-            yield await tracker.preparing("构建AI提示词...")
+            yield await tracker.preparing("Đang dựng prompt AI...")
             
             # 构建提示词
             prompt = f"""{project_context}
 
 {generation_requirements}
 
-请为这个小说项目生成新的补充职业（增量式）。要求：
-1. **仔细分析已有职业**，避免生成重复或相似的职业
-2. **填补职业体系的空缺**，让职业体系更加完善和多样化
-3. 如果已有职业较少，可以生成核心基础职业
-4. 如果已有职业较多，可以生成特色化、专精化的职业
+Hãy tạo các nghề bổ sung mới cho dự án tiểu thuyết này (theo hướng bổ sung). Yêu cầu:
+1. **Phân tích kỹ các nghề hiện có**, tránh tạo nghề trùng lặp hoặc tương tự
+2. **Lấp đầy khoảng trống của hệ nghề**, giúp hệ nghề hoàn thiện và đa dạng hơn
+3. Nếu có ít nghề hiện có, có thể tạo các nghề nền tảng cốt lõi
+4. Nếu có nhiều nghề hiện có, có thể tạo các nghề đặc trưng và chuyên môn hóa
 
-返回JSON格式，结构如下：
+Trả về định dạng JSON với cấu trúc như sau:
 
 {{
   "main_careers": [
     {{
-      "name": "职业名称",
-      "description": "职业描述",
-      "category": "职业分类（如：战斗系、法术系等）",
+      "name": "Tên nghề",
+      "description": "Mô tả nghề",
+      "category": "Phân loại nghề (ví dụ: hệ chiến đấu, hệ pháp thuật...)",
       "stages": [
-        {{"level": 1, "name": "阶段名称", "description": "阶段描述"}},
-        {{"level": 2, "name": "阶段名称", "description": "阶段描述"}},
+        {{"level": 1, "name": "Tên giai đoạn", "description": "Mô tả giai đoạn"}},
+        {{"level": 2, "name": "Tên giai đoạn", "description": "Mô tả giai đoạn"}},
         ...
       ],
       "max_stage": 10,
-      "requirements": "职业要求",
-      "special_abilities": "特殊能力",
-      "worldview_rules": "世界观规则关联",
+      "requirements": "Yêu cầu nghề",
+      "special_abilities": "Năng lực đặc biệt",
+      "worldview_rules": "Liên hệ với quy tắc thế giới",
       "attribute_bonuses": {{"strength": "+10%", "intelligence": "+5%"}}
     }}
   ],
   "sub_careers": [
     {{
-      "name": "副职业名称",
-      "description": "职业描述",
-      "category": "生产系/辅助系/特殊系",
+      "name": "Tên nghề phụ",
+      "description": "Mô tả nghề",
+      "category": "hệ sản xuất / hệ hỗ trợ / hệ đặc biệt",
       "stages": [...],
       "max_stage": 5,
-      "requirements": "职业要求",
-      "special_abilities": "特殊能力"
+      "requirements": "Yêu cầu nghề",
+      "special_abilities": "Năng lực đặc biệt"
     }}
   ]
 }}
 
-注意事项：
-1. **避免重复**：生成的职业名称和定位不能与已有职业重复
-2. **互补性**：新职业应与已有职业形成互补，丰富职业体系
-3. 主职业的阶段设定要详细，体现明确的成长路径
-4. 阶段名称要符合世界观特色
-5. 副职业可以相对简化，但要有独特性
-6. 所有职业都要符合项目的整体世界观设定
-7. 如果提供了用户额外要求，请优先满足；若与世界观冲突，必须以世界观为准进行合理改写
-8. 只返回纯JSON，不要添加任何解释文字
+Lưu ý:
+1. **Tránh trùng lặp**: tên và định vị nghề được tạo không được trùng với nghề hiện có
+2. **Tính bổ trợ**: nghề mới cần bổ trợ cho nghề hiện có, làm phong phú hệ nghề
+3. Thiết lập giai đoạn của nghề chính cần chi tiết, thể hiện lộ trình phát triển rõ ràng
+4. Tên giai đoạn phải phù hợp với đặc trưng của bối cảnh thế giới
+5. Nghề phụ có thể đơn giản hơn tương đối nhưng phải có tính độc đáo
+6. Tất cả nghề phải phù hợp với thiết lập bối cảnh thế giới tổng thể của dự án
+7. Nếu có yêu cầu bổ sung của người dùng, hãy ưu tiên đáp ứng; nếu xung đột với bối cảnh thế giới, phải chỉnh sửa hợp lý theo bối cảnh thế giới
+8. Chỉ trả về JSON thuần túy, không thêm bất kỳ lời giải thích nào
 """
             
-            yield await tracker.generating(0, max(3000, len(prompt) * 8), "调用AI生成新职业...")
+            yield await tracker.generating(0, max(3000, len(prompt) * 8), "Đang gọi AI tạo nghề nghiệp mới...")
             logger.info(f"🎯 开始为项目 {project_id} 生成新职业（增量式，已有{len(existing_careers)}个职业）")
             
             try:
@@ -342,14 +342,14 @@ async def generate_career_system(
                 
             except Exception as ai_error:
                 logger.error(f"❌ AI服务调用异常：{str(ai_error)}")
-                yield await tracker.error(f"AI服务调用失败：{str(ai_error)}")
+                yield await tracker.error(f"Gọi dịch vụ AI thất bại: {str(ai_error)}")
                 return
             
             if not ai_response or not ai_response.strip():
-                yield await tracker.error("AI服务返回空响应")
+                yield await tracker.error("Dịch vụ AI trả về phản hồi trống")
                 return
             
-            yield await tracker.parsing("解析AI响应...", 0.5)
+            yield await tracker.parsing("Đang phân tích phản hồi AI...", 0.5)
             
             # 清洗并解析JSON
             try:
@@ -359,10 +359,10 @@ async def generate_career_system(
             except json.JSONDecodeError as e:
                 logger.error(f"❌ 职业体系JSON解析失败: {e}")
                 logger.debug(f"   原始响应预览: {safe_preview(ai_response, 200)}")
-                yield await tracker.error(f"AI返回的内容无法解析为JSON：{str(e)}")
+                yield await tracker.error(f"Nội dung AI trả về không thể phân tích thành JSON: {str(e)}")
                 return
             
-            yield await tracker.saving("保存主职业到数据库...", 0.3)
+            yield await tracker.saving("Đang lưu nghề chính vào cơ sở dữ liệu...", 0.3)
             
             # 保存主职业
             main_careers_created = []
@@ -374,7 +374,7 @@ async def generate_career_system(
                     
                     career = Career(
                         project_id=project_id,
-                        name=career_info.get("name", f"未命名主职业{idx+1}"),
+                        name=career_info.get("name", f"Nghề chính chưa đặt tên {idx+1}"),
                         type="main",
                         description=career_info.get("description"),
                         category=career_info.get("category"),
@@ -394,7 +394,7 @@ async def generate_career_system(
                     logger.error(f"  ❌ 创建主职业失败：{str(e)}")
                     continue
             
-            yield await tracker.saving("保存副职业到数据库...", 0.6)
+            yield await tracker.saving("Đang lưu nghề phụ vào cơ sở dữ liệu...", 0.6)
             
             # 保存副职业
             sub_careers_created = []
@@ -406,7 +406,7 @@ async def generate_career_system(
                     
                     career = Career(
                         project_id=project_id,
-                        name=career_info.get("name", f"未命名副职业{idx+1}"),
+                        name=career_info.get("name", f"Nghề phụ chưa đặt tên {idx+1}"),
                         type="sub",
                         description=career_info.get("description"),
                         category=career_info.get("category"),
@@ -434,7 +434,7 @@ async def generate_career_system(
             logger.info(f"🎉 新职业生成完成：新增主职业{len(main_careers_created)}个，新增副职业{len(sub_careers_created)}个")
             logger.info(f"   职业体系总数：主职业{total_main}个，副职业{total_sub}个")
             
-            yield await tracker.complete(f"新职业生成完成！（主职业{total_main}个，副职业{total_sub}个）")
+            yield await tracker.complete(f"Tạo nghề nghiệp mới hoàn tất! (nghề chính {total_main}, nghề phụ {total_sub})")
             
             # 发送结果数据
             yield await tracker.result({
@@ -451,12 +451,12 @@ async def generate_career_system(
             yield await tracker.error(he.detail, he.status_code)
         except Exception as e:
             logger.error(f"生成职业体系失败: {str(e)}")
-            yield await tracker.error(f"生成新职业失败: {str(e)}")
+            yield await tracker.error(f"Tạo nghề nghiệp mới thất bại: {str(e)}")
     
     return create_sse_response(generate())
 
 
-@router.put("/{career_id}", response_model=CareerResponse, summary="更新职业")
+@router.put("/{career_id}", response_model=CareerResponse, summary="Cập nhật nghề nghiệp")
 async def update_career(
     career_id: str,
     career_update: CareerUpdate,
@@ -470,7 +470,7 @@ async def update_career(
     career = result.scalar_one_or_none()
     
     if not career:
-        raise HTTPException(status_code=404, detail="职业不存在")
+        raise HTTPException(status_code=404, detail="Nghề nghiệp không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -522,7 +522,7 @@ async def update_career(
     )
 
 
-@router.delete("/{career_id}", summary="删除职业")
+@router.delete("/{career_id}", summary="Xóa nghề nghiệp")
 async def delete_career(
     career_id: str,
     request: Request,
@@ -535,7 +535,7 @@ async def delete_career(
     career = result.scalar_one_or_none()
     
     if not career:
-        raise HTTPException(status_code=404, detail="职业不存在")
+        raise HTTPException(status_code=404, detail="Nghề nghiệp không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -550,7 +550,7 @@ async def delete_career(
     if usage_count > 0:
         raise HTTPException(
             status_code=400,
-            detail=f"该职业被{usage_count}个角色使用，无法删除。请先移除角色的职业关联。"
+            detail=f"Nghề nghiệp này đang được {usage_count} nhân vật sử dụng, không thể xóa. Vui lòng gỡ liên kết nghề của nhân vật trước."
         )
     
     await db.delete(career)
@@ -558,10 +558,10 @@ async def delete_career(
     
     logger.info(f"✅ 删除职业成功：{career.name} (ID: {career_id})")
     
-    return {"message": "职业删除成功"}
+    return {"message": "Xóa nghề nghiệp thành công"}
 
 
-@router.get("/{career_id}", response_model=CareerResponse, summary="获取职业详情")
+@router.get("/{career_id}", response_model=CareerResponse, summary="Lấy chi tiết nghề nghiệp")
 async def get_career(
     career_id: str,
     request: Request,
@@ -574,7 +574,7 @@ async def get_career(
     career = result.scalar_one_or_none()
     
     if not career:
-        raise HTTPException(status_code=404, detail="职业不存在")
+        raise HTTPException(status_code=404, detail="Nghề nghiệp không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -605,7 +605,7 @@ async def get_career(
 
 # ===== 角色职业关联API =====
 
-@router.get("/character/{character_id}/careers", response_model=CharacterCareerResponse, summary="获取角色的职业信息")
+@router.get("/character/{character_id}/careers", response_model=CharacterCareerResponse, summary="Lấy thông tin nghề nghiệp của nhân vật")
 async def get_character_careers(
     character_id: str,
     request: Request,
@@ -619,7 +619,7 @@ async def get_character_careers(
     character = char_result.scalar_one_or_none()
     
     if not character:
-        raise HTTPException(status_code=404, detail="角色不存在")
+        raise HTTPException(status_code=404, detail="Nhân vật không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -642,11 +642,11 @@ async def get_character_careers(
         stages = json.loads(career.stages) if career.stages else []
         
         # 找到当前阶段信息
-        stage_name = "未知阶段"
+        stage_name = "Giai đoạn chưa xác định"
         stage_description = None
         for stage in stages:
             if stage.get("level") == char_career.current_stage:
-                stage_name = stage.get("name", f"第{char_career.current_stage}阶段")
+                stage_name = stage.get("name", f"Giai đoạn {char_career.current_stage}")
                 stage_description = stage.get("description")
                 break
         
@@ -679,7 +679,7 @@ async def get_character_careers(
     )
 
 
-@router.post("/character/{character_id}/careers/main", summary="设置角色主职业")
+@router.post("/character/{character_id}/careers/main", summary="Thiết lập nghề chính cho nhân vật")
 async def set_main_career(
     character_id: str,
     career_request: SetMainCareerRequest,
@@ -694,7 +694,7 @@ async def set_main_career(
     character = char_result.scalar_one_or_none()
     
     if not character:
-        raise HTTPException(status_code=404, detail="角色不存在")
+        raise HTTPException(status_code=404, detail="Nhân vật không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -710,16 +710,16 @@ async def set_main_career(
     career = career_result.scalar_one_or_none()
     
     if not career:
-        raise HTTPException(status_code=404, detail="职业不存在")
+        raise HTTPException(status_code=404, detail="Nghề nghiệp không tồn tại")
     
     if career.type != "main":
-        raise HTTPException(status_code=400, detail="该职业不是主职业类型，无法设置为主职业")
+        raise HTTPException(status_code=400, detail="Nghề này không phải loại nghề chính, không thể đặt làm nghề chính")
     
     # 验证阶段有效性
     if career_request.current_stage > career.max_stage:
         raise HTTPException(
             status_code=400,
-            detail=f"阶段超出范围，该职业最大阶段为{career.max_stage}"
+            detail=f"Giai đoạn vượt phạm vi, giai đoạn tối đa của nghề này là {career.max_stage}"
         )
     
     # 检查是否已有主职业
@@ -751,10 +751,10 @@ async def set_main_career(
     
     logger.info(f"✅ 设置主职业成功：角色{character.name} -> {career.name}（第{career_request.current_stage}阶段）")
     
-    return {"message": "主职业设置成功", "career_name": career.name}
+    return {"message": "Đặt nghề chính thành công", "career_name": career.name}
 
 
-@router.post("/character/{character_id}/careers/sub", summary="添加角色副职业")
+@router.post("/character/{character_id}/careers/sub", summary="Thêm nghề phụ cho nhân vật")
 async def add_sub_career(
     character_id: str,
     career_request: AddSubCareerRequest,
@@ -769,7 +769,7 @@ async def add_sub_career(
     character = char_result.scalar_one_or_none()
     
     if not character:
-        raise HTTPException(status_code=404, detail="角色不存在")
+        raise HTTPException(status_code=404, detail="Nhân vật không tồn tại")
     
     # 验证用户权限
     user_id = getattr(request.state, 'user_id', None)
@@ -785,16 +785,16 @@ async def add_sub_career(
     career = career_result.scalar_one_or_none()
     
     if not career:
-        raise HTTPException(status_code=404, detail="职业不存在")
+        raise HTTPException(status_code=404, detail="Nghề nghiệp không tồn tại")
     
     if career.type != "sub":
-        raise HTTPException(status_code=400, detail="该职业不是副职业类型，无法添加为副职业")
+        raise HTTPException(status_code=400, detail="Nghề này không phải loại nghề phụ, không thể thêm làm nghề phụ")
     
     # 验证阶段有效性
     if career_request.current_stage > career.max_stage:
         raise HTTPException(
             status_code=400,
-            detail=f"阶段超出范围，该职业最大阶段为{career.max_stage}"
+            detail=f"Giai đoạn vượt phạm vi, giai đoạn tối đa của nghề này là {career.max_stage}"
         )
     
     # 检查是否已存在
@@ -805,7 +805,7 @@ async def add_sub_career(
         )
     )
     if existing_check.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="该角色已拥有此副职业")
+        raise HTTPException(status_code=400, detail="Nhân vật này đã có nghề phụ này")
     
     # 检查副职业数量限制（可选，这里设置为最多5个）
     sub_count_result = await db.execute(
@@ -817,7 +817,7 @@ async def add_sub_career(
     sub_count = sub_count_result.scalar_one()
     
     if sub_count >= 5:
-        raise HTTPException(status_code=400, detail="副职业数量已达上限（最多5个）")
+        raise HTTPException(status_code=400, detail="Số nghề phụ đã đạt giới hạn (tối đa 5)")
     
     # 创建副职业关联
     char_career = CharacterCareer(
@@ -834,10 +834,10 @@ async def add_sub_career(
     
     logger.info(f"✅ 添加副职业成功：角色{character.name} -> {career.name}（第{career_request.current_stage}阶段）")
     
-    return {"message": "副职业添加成功", "career_name": career.name}
+    return {"message": "Thêm nghề phụ thành công", "career_name": career.name}
 
 
-@router.put("/character/{character_id}/careers/{career_id}/stage", summary="更新职业阶段")
+@router.put("/character/{character_id}/careers/{career_id}/stage", summary="Cập nhật giai đoạn nghề nghiệp")
 async def update_career_stage(
     character_id: str,
     career_id: str,
@@ -859,7 +859,7 @@ async def update_career_stage(
     relation_data = result.one_or_none()
     
     if not relation_data:
-        raise HTTPException(status_code=404, detail="角色职业关联不存在")
+        raise HTTPException(status_code=404, detail="Liên kết nghề nghiệp của nhân vật không tồn tại")
     
     char_career, career, character = relation_data
     
@@ -871,7 +871,7 @@ async def update_career_stage(
     if stage_request.current_stage > career.max_stage:
         raise HTTPException(
             status_code=400,
-            detail=f"阶段超出范围，该职业最大阶段为{career.max_stage}"
+            detail=f"Giai đoạn vượt phạm vi, giai đoạn tối đa của nghề này là {career.max_stage}"
         )
     
     # 验证阶段递增规则（不能倒退，除非降级）
@@ -891,13 +891,13 @@ async def update_career_stage(
     logger.info(f"✅ 更新职业阶段成功：{character.name}的{career.name} -> 第{stage_request.current_stage}阶段")
     
     return {
-        "message": "职业阶段更新成功",
+        "message": "Cập nhật giai đoạn nghề thành công",
         "career_name": career.name,
         "new_stage": stage_request.current_stage
     }
 
 
-@router.delete("/character/{character_id}/careers/{career_id}", summary="删除角色副职业")
+@router.delete("/character/{character_id}/careers/{career_id}", summary="Xóa nghề phụ của nhân vật")
 async def remove_sub_career(
     character_id: str,
     career_id: str,
@@ -917,7 +917,7 @@ async def remove_sub_career(
     relation_data = result.one_or_none()
     
     if not relation_data:
-        raise HTTPException(status_code=404, detail="角色职业关联不存在")
+        raise HTTPException(status_code=404, detail="Liên kết nghề nghiệp của nhân vật không tồn tại")
     
     char_career, character = relation_data
     
@@ -927,11 +927,11 @@ async def remove_sub_career(
     
     # 不允许删除主职业
     if char_career.career_type == "main":
-        raise HTTPException(status_code=400, detail="无法删除主职业，只能更换")
+        raise HTTPException(status_code=400, detail="Không thể xóa nghề chính, chỉ có thể thay đổi")
     
     await db.delete(char_career)
     await db.commit()
     
     logger.info(f"✅ 删除副职业成功：角色{character.name}移除职业{career_id}")
     
-    return {"message": "副职业删除成功"}
+    return {"message": "Xóa nghề phụ thành công"}

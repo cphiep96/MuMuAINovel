@@ -20,10 +20,10 @@ const qqDefaults: Pick<SystemSMTPSettings, 'smtp_provider' | 'smtp_host' | 'smtp
 };
 
 const announcementLevelText: Record<AnnouncementLevel, string> = {
-  info: '通知',
-  success: '成功',
-  warning: '警告',
-  error: '重要',
+  info: 'Thông báo',
+  success: 'Thành công',
+  warning: 'Cảnh báo',
+  error: 'Quan trọng',
 };
 
 const announcementLevelColor: Record<AnnouncementLevel, string> = {
@@ -34,9 +34,9 @@ const announcementLevelColor: Record<AnnouncementLevel, string> = {
 };
 
 const announcementStatusText: Record<AnnouncementStatus, string> = {
-  draft: '草稿',
-  published: '已发布',
-  hidden: '已隐藏',
+  draft: 'Bản nháp',
+  published: 'Đã đăng',
+  hidden: 'Đã ẩn',
 };
 
 const announcementStatusColor: Record<AnnouncementStatus, string> = {
@@ -107,8 +107,8 @@ export default function SystemSettingsPage() {
       setAnnouncementStatus(status);
       return status;
     } catch (error) {
-      console.error('加载公告服务状态失败:', error);
-      message.error('加载公告服务状态失败');
+      console.error('Tải trạng thái dịch vụ thông báo thất bại:', error);
+      message.error('Tải trạng thái dịch vụ thông báo thất bại');
       return null;
     } finally {
       setAnnouncementStatusLoading(false);
@@ -138,8 +138,8 @@ export default function SystemSettingsPage() {
         total: result.data?.total || 0,
       });
     } catch (error) {
-      console.error('加载公告列表失败:', error);
-      message.error('加载公告列表失败，请确认当前实例为服务端模式且账号拥有管理员权限');
+      console.error('Tải danh sách thông báo thất bại:', error);
+      message.error('Tải danh sách thông báo thất bại, vui lòng xác nhận instance hiện tại là chế độ máy chủ và tài khoản có quyền quản trị viên');
     } finally {
       setAnnouncementLoading(false);
     }
@@ -157,8 +157,8 @@ export default function SystemSettingsPage() {
       setAnnouncementStatus(status);
       form.setFieldsValue(smtpSettings);
     } catch (error) {
-      console.error('加载系统设置失败:', error);
-      message.error('加载系统设置失败');
+      console.error('Tải cài đặt hệ thống thất bại:', error);
+      message.error('Tải cài đặt hệ thống thất bại');
     } finally {
       setInitialLoading(false);
     }
@@ -204,10 +204,10 @@ export default function SystemSettingsPage() {
         : values;
       const result = await settingsApi.updateSystemSMTPSettings(payload);
       form.setFieldsValue(result);
-      message.success('系统 SMTP 设置已保存');
+      message.success('Đã lưu cài đặt SMTP hệ thống');
     } catch (error) {
-      console.error('保存系统设置失败:', error);
-      message.error('保存系统设置失败');
+      console.error('Lưu cài đặt hệ thống thất bại:', error);
+      message.error('Lưu cài đặt hệ thống thất bại');
     } finally {
       setSaving(false);
     }
@@ -216,7 +216,7 @@ export default function SystemSettingsPage() {
   const handleTest = async () => {
     const toEmail = testTargetEmail.trim();
     if (!toEmail) {
-      message.warning('请先填写测试目标邮箱');
+      message.warning('Vui lòng nhập email nhận thử nghiệm trước');
       return;
     }
 
@@ -226,11 +226,11 @@ export default function SystemSettingsPage() {
       if (result.success) {
         message.success(result.message);
       } else {
-        message.error(result.message || 'SMTP 测试失败');
+        message.error(result.message || 'Kiểm tra SMTP thất bại');
       }
     } catch (error) {
-      console.error('测试 SMTP 配置失败:', error);
-      message.error('测试 SMTP 配置失败');
+      console.error('Kiểm tra cấu hình SMTP thất bại:', error);
+      message.error('Kiểm tra cấu hình SMTP thất bại');
     } finally {
       setTesting(false);
     }
@@ -238,7 +238,7 @@ export default function SystemSettingsPage() {
 
   const openCreateAnnouncementModal = () => {
     if (!announcementAdminAvailable) {
-      message.warning('公告发布仅在服务端模式可用');
+      message.warning('Chỉ có thể đăng thông báo ở chế độ máy chủ');
       return;
     }
     setEditingAnnouncement(null);
@@ -278,7 +278,7 @@ export default function SystemSettingsPage() {
 
   const validateAnnouncementWindow = (values: AnnouncementFormValues) => {
     if (values.publish_at && values.expire_at && !values.expire_at.isAfter(values.publish_at)) {
-      message.warning('过期时间必须晚于发布时间');
+      message.warning('Thời gian hết hạn phải sau thời gian đăng');
       return false;
     }
     return true;
@@ -332,16 +332,16 @@ export default function SystemSettingsPage() {
     try {
       if (editingAnnouncement) {
         await announcementApi.adminUpdate(editingAnnouncement.id, buildAnnouncementUpdatePayload(values));
-        message.success('公告已更新');
+        message.success('Đã cập nhật thông báo');
       } else {
         await announcementApi.adminCreate(buildAnnouncementCreatePayload(values));
-        message.success('公告已创建');
+        message.success('Đã tạo thông báo');
       }
       closeAnnouncementModal();
       await loadAnnouncements(announcementPagination.current, announcementPagination.pageSize, announcementSearchKeyword);
     } catch (error) {
-      console.error('保存公告失败:', error);
-      message.error('保存公告失败，请确认当前实例为服务端模式且账号拥有管理员权限');
+      console.error('Lưu thông báo thất bại:', error);
+      message.error('Lưu thông báo thất bại, vui lòng xác nhận instance hiện tại là chế độ máy chủ và tài khoản có quyền quản trị viên');
     } finally {
       setAnnouncementSaving(false);
     }
@@ -350,11 +350,11 @@ export default function SystemSettingsPage() {
   const handleDeleteAnnouncement = async (announcementId: string) => {
     try {
       await announcementApi.adminDelete(announcementId);
-      message.success('公告已删除');
+      message.success('Đã xóa thông báo');
       await loadAnnouncements(announcementPagination.current, announcementPagination.pageSize, announcementSearchKeyword);
     } catch (error) {
-      console.error('删除公告失败:', error);
-      message.error('删除公告失败');
+      console.error('Xóa thông báo thất bại:', error);
+      message.error('Xóa thông báo thất bại');
     }
   };
 
@@ -362,15 +362,15 @@ export default function SystemSettingsPage() {
     try {
       if (action === 'publish') {
         await announcementApi.adminPublish(announcementId);
-        message.success('公告已发布');
+        message.success('Đã đăng thông báo');
       } else {
         await announcementApi.adminHide(announcementId);
-        message.success('公告已隐藏');
+        message.success('Đã ẩn thông báo');
       }
       await loadAnnouncements(announcementPagination.current, announcementPagination.pageSize, announcementSearchKeyword);
     } catch (error) {
-      console.error('更新公告状态失败:', error);
-      message.error('更新公告状态失败');
+      console.error('Cập nhật trạng thái thông báo thất bại:', error);
+      message.error('Cập nhật trạng thái thông báo thất bại');
     }
   };
 
@@ -389,7 +389,7 @@ export default function SystemSettingsPage() {
 
   const announcementColumns: ColumnsType<Announcement> = [
     {
-      title: '标题',
+      title: 'Tiêu đề',
       dataIndex: 'title',
       key: 'title',
       width: 240,
@@ -397,21 +397,21 @@ export default function SystemSettingsPage() {
         <Space direction="vertical" size={4}>
           <Space size={6} wrap>
             <Text strong>{title}</Text>
-            {record.pinned && <Tag color="gold">置顶</Tag>}
+            {record.pinned && <Tag color="gold">Ghim</Tag>}
           </Space>
           {record.summary && <Text type="secondary" style={{ fontSize: 12 }}>{record.summary}</Text>}
         </Space>
       ),
     },
     {
-      title: '级别',
+      title: 'Mức độ',
       dataIndex: 'level',
       key: 'level',
       width: 100,
       render: (level: AnnouncementLevel) => <Tag color={announcementLevelColor[level]}>{announcementLevelText[level]}</Tag>,
     },
     {
-      title: '状态',
+      title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
       width: 100,
@@ -421,28 +421,28 @@ export default function SystemSettingsPage() {
       },
     },
     {
-      title: '发布时间',
+      title: 'Thời gian đăng',
       dataIndex: 'publish_at',
       key: 'publish_at',
       width: 150,
       render: (value?: string | null) => <Text type="secondary">{formatDateTime(value)}</Text>,
     },
     {
-      title: '过期时间',
+      title: 'Thời gian hết hạn',
       dataIndex: 'expire_at',
       key: 'expire_at',
       width: 150,
       render: (value?: string | null) => <Text type="secondary">{formatDateTime(value)}</Text>,
     },
     {
-      title: '作者',
+      title: 'Tác giả',
       dataIndex: 'author_name',
       key: 'author_name',
       width: 120,
       render: (value?: string | null) => value || '-',
     },
     {
-      title: '操作',
+      title: 'Thao tác',
       key: 'actions',
       fixed: 'right',
       width: 240,
@@ -451,28 +451,28 @@ export default function SystemSettingsPage() {
         return (
           <Space size="small" wrap>
             <Button size="small" icon={<EditOutlined />} disabled={!announcementAdminAvailable} onClick={() => openEditAnnouncementModal(record)}>
-              编辑
+              Chỉnh sửa
             </Button>
             {currentStatus !== 'published' ? (
               <Button size="small" type="primary" icon={<SendOutlined />} disabled={!announcementAdminAvailable} onClick={() => void handleAnnouncementStatusChange(record.id, 'publish')}>
-                发布
+                Đăng
               </Button>
             ) : (
               <Button size="small" icon={<EyeInvisibleOutlined />} disabled={!announcementAdminAvailable} onClick={() => void handleAnnouncementStatusChange(record.id, 'hide')}>
-                隐藏
+                Ẩn
               </Button>
             )}
             <Popconfirm
-              title="删除公告"
-              description="删除后客户端将不再同步该公告，确认删除吗？"
-              okText="删除"
-              cancelText="取消"
+              title="Xóa thông báo"
+              description="Sau khi xóa, máy khách sẽ không đồng bộ thông báo này nữa, xác nhận xóa?"
+              okText="Xóa"
+              cancelText="Hủy"
               okButtonProps={{ danger: true }}
               onConfirm={() => void handleDeleteAnnouncement(record.id)}
               disabled={!announcementAdminAvailable}
             >
               <Button size="small" danger icon={<DeleteOutlined />} disabled={!announcementAdminAvailable}>
-                删除
+                Xóa
               </Button>
             </Popconfirm>
           </Space>
@@ -492,7 +492,7 @@ export default function SystemSettingsPage() {
   if (!currentUser?.is_admin) {
     return (
       <div style={{ padding: 24 }}>
-        <Alert type="error" showIcon message="无权限访问" description="只有管理员可以访问系统设置。" />
+        <Alert type="error" showIcon message="Không có quyền truy cập" description="Chỉ quản trị viên mới có thể truy cập cài đặt hệ thống." />
       </div>
     );
   }
@@ -522,10 +522,10 @@ export default function SystemSettingsPage() {
           <Space direction="vertical" size={6}>
             <Space>
               <SettingOutlined />
-              <Title level={3} style={{ color: '#fff', margin: 0 }}>系统设置</Title>
+              <Title level={3} style={{ color: '#fff', margin: 0 }}>Cài đặt hệ thống</Title>
             </Space>
             <Paragraph style={{ color: 'rgba(255,255,255,0.88)', margin: 0 }}>
-              仅管理员可见，用于维护 SMTP 发信能力、邮箱注册参数与服务端公告发布。
+              Chỉ quản trị viên có thể xem, dùng để duy trì khả năng gửi thư SMTP, tham số đăng ký bằng email và việc đăng thông báo phía máy chủ.
             </Paragraph>
           </Space>
         </div>
@@ -539,58 +539,58 @@ export default function SystemSettingsPage() {
             label: (
               <Space>
                 <MailOutlined />
-                SMTP 配置
+                Cấu hình SMTP
               </Space>
             ),
             children: (
               <Form form={form} layout="vertical" onFinish={handleSave}>
                 <Row gutter={24}>
                   <Col xs={24} xl={16}>
-                    <Card title="邮件服务配置" bordered={false} style={{ borderRadius: 16 }}>
+                    <Card title="Cấu hình dịch vụ email" bordered={false} style={{ borderRadius: 16 }}>
                       <Alert
                         type="info"
                         showIcon
                         style={{ marginBottom: 20 }}
-                        message="QQ 邮箱配置说明"
-                        description="如果选择 QQ 邮箱，请使用完整 QQ 邮箱地址作为用户名，密码处填写 SMTP 授权码，而不是 QQ 登录密码。默认推荐 smtp.qq.com + SSL 465。"
+                        message="Hướng dẫn cấu hình email QQ"
+                        description="Nếu chọn email QQ, vui lòng dùng địa chỉ email QQ đầy đủ làm tên đăng nhập, mục mật khẩu điền mã ủy quyền SMTP chứ không phải mật khẩu đăng nhập QQ. Mặc định khuyến nghị smtp.qq.com + SSL 465."
                       />
 
                       <Row gutter={16}>
                         <Col xs={24} md={12}>
-                          <Form.Item name="smtp_provider" label="邮件服务商" rules={[{ required: true, message: '请选择邮件服务商' }]}>
+                          <Form.Item name="smtp_provider" label="Nhà cung cấp dịch vụ email" rules={[{ required: true, message: 'Vui lòng chọn nhà cung cấp dịch vụ email' }]}>
                             <Select onChange={handleProviderChange}>
-                              <Option value="qq">QQ 邮箱</Option>
-                              <Option value="custom">自定义 SMTP</Option>
+                              <Option value="qq">Email QQ</Option>
+                              <Option value="custom">SMTP tùy chỉnh</Option>
                             </Select>
                           </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                          <Form.Item name="smtp_host" label="SMTP 主机" rules={[{ required: true, message: '请输入 SMTP 主机' }]}>
-                            <Input placeholder="例如：smtp.qq.com" />
+                          <Form.Item name="smtp_host" label="Máy chủ SMTP" rules={[{ required: true, message: 'Vui lòng nhập máy chủ SMTP' }]}>
+                            <Input placeholder="Ví dụ: smtp.qq.com" />
                           </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                          <Form.Item name="smtp_port" label="SMTP 端口" rules={[{ required: true, message: '请输入 SMTP 端口' }]}>
+                          <Form.Item name="smtp_port" label="Cổng SMTP" rules={[{ required: true, message: 'Vui lòng nhập cổng SMTP' }]}>
                             <InputNumber style={{ width: '100%' }} min={1} max={65535} />
                           </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                          <Form.Item name="smtp_username" label="SMTP 用户名" rules={[{ required: true, message: '请输入 SMTP 用户名' }]}>
-                            <Input placeholder="完整邮箱地址" />
+                          <Form.Item name="smtp_username" label="Tên đăng nhập SMTP" rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập SMTP' }]}>
+                            <Input placeholder="Địa chỉ email đầy đủ" />
                           </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                          <Form.Item name="smtp_password" label="SMTP 密码 / 授权码" rules={[{ required: true, message: '请输入 SMTP 授权码' }]}>
-                            <Input.Password placeholder="QQ 邮箱请填写授权码" />
+                          <Form.Item name="smtp_password" label="Mật khẩu SMTP / mã ủy quyền" rules={[{ required: true, message: 'Vui lòng nhập mã ủy quyền SMTP' }]}>
+                            <Input.Password placeholder="Email QQ vui lòng điền mã ủy quyền" />
                           </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                          <Form.Item name="smtp_from_email" label="发件人邮箱">
-                            <Input placeholder="默认可与用户名一致" />
+                          <Form.Item name="smtp_from_email" label="Email người gửi">
+                            <Input placeholder="Mặc định có thể giống tên đăng nhập" />
                           </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                          <Form.Item name="smtp_from_name" label="发件人名称" rules={[{ required: true, message: '请输入发件人名称' }]}>
+                          <Form.Item name="smtp_from_name" label="Tên người gửi" rules={[{ required: true, message: 'Vui lòng nhập tên người gửi' }]}>
                             <Input placeholder="MuMuAINovel" />
                           </Form.Item>
                         </Col>
@@ -598,12 +598,12 @@ export default function SystemSettingsPage() {
 
                       <Row gutter={16}>
                         <Col xs={24} md={12}>
-                          <Form.Item name="smtp_use_ssl" label="启用 SSL" valuePropName="checked">
+                          <Form.Item name="smtp_use_ssl" label="Bật SSL" valuePropName="checked">
                             <Switch />
                           </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                          <Form.Item name="smtp_use_tls" label="启用 TLS" valuePropName="checked">
+                          <Form.Item name="smtp_use_tls" label="Bật TLS" valuePropName="checked">
                             <Switch />
                           </Form.Item>
                         </Col>
@@ -612,43 +612,43 @@ export default function SystemSettingsPage() {
                   </Col>
 
                   <Col xs={24} xl={8}>
-                    <Card title="注册与验证码策略" bordered={false} style={{ borderRadius: 16, marginBottom: 24 }}>
-                      <Form.Item name="email_auth_enabled" label="启用邮箱认证" valuePropName="checked">
+                    <Card title="Chiến lược đăng ký và mã xác minh" bordered={false} style={{ borderRadius: 16, marginBottom: 24 }}>
+                      <Form.Item name="email_auth_enabled" label="Bật xác thực email" valuePropName="checked">
                         <Switch />
                       </Form.Item>
-                      <Form.Item name="email_register_enabled" label="启用邮箱注册" valuePropName="checked">
+                      <Form.Item name="email_register_enabled" label="Bật đăng ký bằng email" valuePropName="checked">
                         <Switch />
                       </Form.Item>
-                      <Form.Item name="verification_code_ttl_minutes" label="验证码有效期（分钟）" rules={[{ required: true, message: '请输入验证码有效期' }]}>
+                      <Form.Item name="verification_code_ttl_minutes" label="Hiệu lực mã xác minh (phút)" rules={[{ required: true, message: 'Vui lòng nhập hiệu lực mã xác minh' }]}>
                         <InputNumber style={{ width: '100%' }} min={1} max={120} />
                       </Form.Item>
-                      <Form.Item name="verification_resend_interval_seconds" label="验证码重发间隔（秒）" rules={[{ required: true, message: '请输入验证码重发间隔' }]}>
+                      <Form.Item name="verification_resend_interval_seconds" label="Khoảng cách gửi lại mã xác minh (giây)" rules={[{ required: true, message: 'Vui lòng nhập khoảng cách gửi lại mã xác minh' }]}>
                         <InputNumber style={{ width: '100%' }} min={10} max={3600} />
                       </Form.Item>
                     </Card>
 
-                    <Card title="操作" bordered={false} style={{ borderRadius: 16 }}>
+                    <Card title="Thao tác" bordered={false} style={{ borderRadius: 16 }}>
                       <Space direction="vertical" style={{ width: '100%' }} size={12}>
                         <Input
                           value={testTargetEmail}
                           onChange={(e) => setTestTargetEmail(e.target.value)}
-                          placeholder="请输入测试目标邮箱，如 123456@qq.com"
+                          placeholder="Vui lòng nhập email nhận thử nghiệm, ví dụ 123456@qq.com"
                         />
                         <Button icon={<ReloadOutlined />} onClick={loadData} block>
-                          重新加载
+                          Tải lại
                         </Button>
                         <Button icon={<SendOutlined />} loading={testing} onClick={handleTest} block>
-                          发送测试邮件
+                          Gửi email thử nghiệm
                         </Button>
                         <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={saving} block onClick={() => form.submit()}>
-                          保存系统设置
+                          Lưu cài đặt hệ thống
                         </Button>
                         <Alert
                           type="success"
                           showIcon
                           icon={<CheckCircleOutlined />}
-                          message="建议使用 QQ 默认配置"
-                          description={<Text type="secondary">先保存 SMTP 配置，再填写测试目标邮箱，点击“发送测试邮件”后由后端通过 SMTP 实际发信。</Text>}
+                          message="Khuyến nghị dùng cấu hình QQ mặc định"
+                          description={<Text type="secondary">Lưu cấu hình SMTP trước, sau đó điền email nhận thử nghiệm, nhấn "Gửi email thử nghiệm" để backend thực sự gửi thư qua SMTP.</Text>}
                         />
                       </Space>
                     </Card>
@@ -662,7 +662,7 @@ export default function SystemSettingsPage() {
             label: (
               <Space>
                 <BellOutlined />
-                公告管理
+                Quản lý thông báo
               </Space>
             ),
             children: (
@@ -671,24 +671,24 @@ export default function SystemSettingsPage() {
                   <Alert
                     type={announcementAdminAvailable ? 'info' : 'warning'}
                     showIcon
-                    message={announcementAdminAvailable ? '公告发布入口' : '当前实例不是公告发布端'}
+                    message={announcementAdminAvailable ? 'Khu vực đăng thông báo' : 'Instance hiện tại không phải phía đăng thông báo'}
                     description={announcementAdminAvailable
-                      ? '公告只能由服务端模式下的管理员发布、编辑、隐藏或删除；客户端实例会定时从服务端同步已发布且未过期的公告。'
-                      : `公告发布仅在云端服务端可用。当前模式：${announcementStatus?.mode || '未知'}${announcementStatus?.cloud_url ? `，云端地址：${announcementStatus.cloud_url}` : ''}`}
+                      ? 'Thông báo chỉ có thể được đăng, chỉnh sửa, ẩn hoặc xóa bởi quản trị viên ở chế độ máy chủ; instance máy khách sẽ định kỳ đồng bộ thông báo đã đăng và chưa hết hạn từ máy chủ.'
+                      : `Chỉ có thể đăng thông báo ở máy chủ đám mây. Chế độ hiện tại: ${announcementStatus?.mode || 'không xác định'}${announcementStatus?.cloud_url ? `, địa chỉ đám mây: ${announcementStatus.cloud_url}` : ''}`}
                   />
 
                   <Row gutter={[16, 16]} justify="space-between" align="middle">
                     <Col xs={24} lg={14}>
                       <Space wrap>
                         <Button type="primary" icon={<PlusOutlined />} disabled={!announcementAdminAvailable} onClick={openCreateAnnouncementModal}>
-                          新建公告
+                          Tạo thông báo
                         </Button>
                         <Button icon={<ReloadOutlined />} loading={announcementLoading || announcementStatusLoading} onClick={() => { void loadAnnouncementStatus(); void loadAnnouncements(announcementPagination.current, announcementPagination.pageSize, announcementSearchKeyword); }}>
-                          刷新列表
+                          Làm mới danh sách
                         </Button>
                         {announcementStatus && (
                           <Tag color={announcementAdminAvailable ? 'green' : 'orange'}>
-                            {announcementStatus.mode === 'server' ? '服务端模式' : '客户端模式'}
+                            {announcementStatus.mode === 'server' ? 'Chế độ máy chủ' : 'Chế độ máy khách'}
                           </Tag>
                         )}
                       </Space>
@@ -697,12 +697,12 @@ export default function SystemSettingsPage() {
                       <Space wrap>
                         <Search
                           allowClear
-                          placeholder="搜索标题、摘要或正文"
+                          placeholder="Tìm kiếm tiêu đề, tóm tắt hoặc nội dung"
                           style={{ width: 220 }}
                           onSearch={handleAnnouncementSearch}
                           disabled={!announcementAdminAvailable}
                         />
-                        <Text type="secondary">状态</Text>
+                        <Text type="secondary">Trạng thái</Text>
                         <Select<AnnouncementStatusFilter>
                           style={{ width: 120, textAlign: 'left' }}
                           value={announcementStatusFilter}
@@ -712,10 +712,10 @@ export default function SystemSettingsPage() {
                             setAnnouncementPagination(prev => ({ ...prev, current: 1 }));
                           }}
                           options={[
-                            { label: '全部', value: 'all' },
-                            { label: '草稿', value: 'draft' },
-                            { label: '已发布', value: 'published' },
-                            { label: '已隐藏', value: 'hidden' },
+                            { label: 'Tất cả', value: 'all' },
+                            { label: 'Bản nháp', value: 'draft' },
+                            { label: 'Đã đăng', value: 'published' },
+                            { label: 'Đã ẩn', value: 'hidden' },
                           ]}
                         />
                       </Space>
@@ -732,7 +732,7 @@ export default function SystemSettingsPage() {
                       pageSize: announcementPagination.pageSize,
                       total: announcementPagination.total,
                       showSizeChanger: true,
-                      showTotal: (total) => `共 ${total} 条公告`,
+                      showTotal: (total) => `Tổng ${total} thông báo`,
                     }}
                     onChange={handleAnnouncementTableChange}
                     scroll={{ x: 1200 }}
@@ -746,13 +746,13 @@ export default function SystemSettingsPage() {
       </div>
 
       <Modal
-        title={editingAnnouncement ? '编辑公告' : '新建公告'}
+        title={editingAnnouncement ? 'Chỉnh sửa thông báo' : 'Tạo thông báo'}
         open={announcementModalOpen}
         onCancel={closeAnnouncementModal}
         onOk={() => announcementForm.submit()}
         confirmLoading={announcementSaving}
-        okText={editingAnnouncement ? '保存修改' : '创建公告'}
-        cancelText="取消"
+        okText={editingAnnouncement ? 'Lưu thay đổi' : 'Tạo thông báo'}
+        cancelText="Hủy"
         width={1200}
         destroyOnClose
       >
@@ -761,81 +761,81 @@ export default function SystemSettingsPage() {
             <Col xs={24} md={16}>
               <Form.Item
                 name="title"
-                label="公告标题"
+                label="Tiêu đề thông báo"
                 rules={[
-                  { required: true, message: '请输入公告标题' },
-                  { max: 120, message: '公告标题不能超过 120 个字符' },
-                  { whitespace: true, message: '公告标题不能为空白字符' },
+                  { required: true, message: 'Vui lòng nhập tiêu đề thông báo' },
+                  { max: 120, message: 'Tiêu đề thông báo không được vượt quá 120 ký tự' },
+                  { whitespace: true, message: 'Tiêu đề thông báo không được chỉ chứa khoảng trắng' },
                 ]}
               >
-                <Input placeholder="请输入公告标题" maxLength={120} showCount />
+                <Input placeholder="Vui lòng nhập tiêu đề thông báo" maxLength={120} showCount />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
-              <Form.Item name="level" label="公告级别" rules={[{ required: true, message: '请选择公告级别' }]}>
+              <Form.Item name="level" label="Mức độ thông báo" rules={[{ required: true, message: 'Vui lòng chọn mức độ thông báo' }]}>
                 <Select>
-                  <Option value="info">通知</Option>
-                  <Option value="success">成功</Option>
-                  <Option value="warning">警告</Option>
-                  <Option value="error">重要</Option>
+                  <Option value="info">Thông báo</Option>
+                  <Option value="success">Thành công</Option>
+                  <Option value="warning">Cảnh báo</Option>
+                  <Option value="error">Quan trọng</Option>
                 </Select>
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item name="summary" label="摘要" rules={[{ max: 255, message: '摘要不能超过 255 个字符' }]}>
-            <Input placeholder="可选，用于列表和时间轴的简短说明" maxLength={255} showCount />
+          <Form.Item name="summary" label="Tóm tắt" rules={[{ max: 255, message: 'Tóm tắt không được vượt quá 255 ký tự' }]}>
+            <Input placeholder="Tùy chọn, mô tả ngắn dùng cho danh sách và dòng thời gian" maxLength={255} showCount />
           </Form.Item>
 
           <Card
             size="small"
-            title="公告正文（Markdown / 安全 HTML）"
+            title="Nội dung thông báo (Markdown / HTML an toàn)"
             style={{ marginBottom: 24, borderRadius: 12 }}
-            extra={<Text type="secondary">支持 Markdown，以及居中图片、换行、强调等安全 HTML</Text>}
+            extra={<Text type="secondary">Hỗ trợ Markdown, cùng HTML an toàn như ảnh căn giữa, ngắt dòng, nhấn mạnh</Text>}
           >
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <Space wrap>
-                <Button size="small" onClick={() => appendMarkdownSnippet('## 小标题')}>标题</Button>
-                <Button size="small" onClick={() => appendMarkdownSnippet('**重点内容**')}>粗体</Button>
-                <Button size="small" onClick={() => appendMarkdownSnippet('- 列表项\n- 列表项')}>列表</Button>
-                <Button size="small" onClick={() => appendMarkdownSnippet('> 引用说明')}>引用</Button>
-                <Button size="small" onClick={() => appendMarkdownSnippet('[链接文字](https://example.com)')}>链接</Button>
-                <Button size="small" onClick={() => appendMarkdownSnippet('<p align="center">\n  <img src="https://avatars.githubusercontent.com/u/283105808?s=48&v=4" alt="DolOffer Logo" width="200"/>\n  <br>\n  <em>专注于优质数字产品推荐与超值优惠分享的领先平台</em>\n</p>')}>居中图片</Button>
-                <Button size="small" onClick={() => appendMarkdownSnippet('```\n代码内容\n```')}>代码块</Button>
+                <Button size="small" onClick={() => appendMarkdownSnippet('## Tiêu đề nhỏ')}>Tiêu đề</Button>
+                <Button size="small" onClick={() => appendMarkdownSnippet('**Nội dung quan trọng**')}>In đậm</Button>
+                <Button size="small" onClick={() => appendMarkdownSnippet('- Mục danh sách\n- Mục danh sách')}>Danh sách</Button>
+                <Button size="small" onClick={() => appendMarkdownSnippet('> Ghi chú trích dẫn')}>Trích dẫn</Button>
+                <Button size="small" onClick={() => appendMarkdownSnippet('[Văn bản liên kết](https://example.com)')}>Liên kết</Button>
+                <Button size="small" onClick={() => appendMarkdownSnippet('<p align="center">\n  <img src="https://avatars.githubusercontent.com/u/283105808?s=48&v=4" alt="DolOffer Logo" width="200"/>\n  <br>\n  <em>Nền tảng hàng đầu chuyên giới thiệu sản phẩm số chất lượng và chia sẻ ưu đãi giá trị</em>\n</p>')}>Ảnh căn giữa</Button>
+                <Button size="small" onClick={() => appendMarkdownSnippet('```\nNội dung mã\n```')}>Khối mã</Button>
               </Space>
 
               <Row gutter={16}>
                 <Col xs={24} lg={12}>
                   <Form.Item
                     name="content"
-                    label="编辑"
+                    label="Chỉnh sửa"
                     rules={[
-                      { required: true, message: '请输入公告正文' },
-                      { whitespace: true, message: '公告正文不能为空白字符' },
+                      { required: true, message: 'Vui lòng nhập nội dung thông báo' },
+                      { whitespace: true, message: 'Nội dung thông báo không được chỉ chứa khoảng trắng' },
                     ]}
                     style={{ marginBottom: 0 }}
                   >
                     <TextArea
                       style={{ height: 420, resize: 'vertical' }}
                       placeholder={[
-                        '请输入 Markdown 或安全 HTML 公告内容，例如：',
-                        '## 更新说明',
-                        '- 支持列表',
-                        '- 支持 **重点内容**',
-                        '> 支持引用说明',
-                        '[查看详情](https://example.com)',
+                        'Nhập nội dung thông báo bằng Markdown hoặc HTML an toàn, ví dụ:',
+                        '## Ghi chú cập nhật',
+                        '- Hỗ trợ danh sách',
+                        '- Hỗ trợ **nội dung quan trọng**',
+                        '> Hỗ trợ ghi chú trích dẫn',
+                        '[Xem chi tiết](https://example.com)',
                         '',
                         '<p align="center">',
                         '  <img src="https://avatars.githubusercontent.com/u/283105808?s=48&v=4" alt="DolOffer Logo" width="200"/>',
                         '  <br>',
-                        '  <em>专注于优质数字产品推荐与超值优惠分享的领先平台</em>',
+                        '  <em>Nền tảng hàng đầu chuyên giới thiệu sản phẩm số chất lượng và chia sẻ ưu đãi giá trị</em>',
                         '</p>',
                       ].join('\n')}
                     />
                   </Form.Item>
                 </Col>
                 <Col xs={24} lg={12}>
-                  <Text strong>预览</Text>
+                  <Text strong>Xem trước</Text>
                   <div
                     style={{
                       marginTop: 8,
@@ -857,23 +857,23 @@ export default function SystemSettingsPage() {
 
           <Row gutter={16}>
             <Col xs={24} md={8}>
-              <Form.Item name="status" label="发布状态" rules={[{ required: true, message: '请选择发布状态' }]}>
+              <Form.Item name="status" label="Trạng thái đăng" rules={[{ required: true, message: 'Vui lòng chọn trạng thái đăng' }]}>
                 <Select>
-                  <Option value="draft">草稿</Option>
-                  <Option value="published">立即发布</Option>
-                  <Option value="hidden">隐藏</Option>
+                  <Option value="draft">Bản nháp</Option>
+                  <Option value="published">Đăng ngay</Option>
+                  <Option value="hidden">Ẩn</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
-              <Form.Item name="publish_at" label="发布时间">
+              <Form.Item name="publish_at" label="Thời gian đăng">
                 <DatePicker style={{ width: '100%' }} showTime={{ format: 'HH:mm' }} format="YYYY-MM-DD HH:mm" allowClear />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
               <Form.Item
                 name="expire_at"
-                label="过期时间"
+                label="Thời gian hết hạn"
                 dependencies={['publish_at']}
                 rules={[
                   ({ getFieldValue }) => ({
@@ -882,7 +882,7 @@ export default function SystemSettingsPage() {
                       if (!value || !publishAt || value.isAfter(publishAt)) {
                         return Promise.resolve();
                       }
-                      return Promise.reject(new Error('过期时间必须晚于发布时间'));
+                      return Promise.reject(new Error('Thời gian hết hạn phải sau thời gian đăng'));
                     },
                   }),
                 ]}
@@ -892,7 +892,7 @@ export default function SystemSettingsPage() {
             </Col>
           </Row>
 
-          <Form.Item name="pinned" label="置顶公告" valuePropName="checked" extra="置顶公告会优先展示在客户端公告时间轴顶部。">
+          <Form.Item name="pinned" label="Ghim thông báo" valuePropName="checked" extra="Thông báo ghim sẽ được hiển thị ưu tiên ở đầu dòng thời gian thông báo của máy khách.">
             <Switch />
           </Form.Item>
         </Form>

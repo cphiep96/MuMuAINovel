@@ -1346,14 +1346,14 @@ export interface AnnouncementStatusResponse {
 
 // 提示词工坊分类常量
 export const PROMPT_CATEGORIES: Record<string, string> = {
-  general: '通用',
-  fantasy: '玄幻/仙侠',
-  martial: '武侠',
-  romance: '言情',
-  scifi: '科幻',
-  horror: '悬疑/惊悚',
-  history: '历史',
-  urban: '都市',
-  game: '游戏/电竞',
-  other: '其他',
+  general: 'Chung',
+  fantasy: 'Huyền huyễn / Tiên hiệp',
+  martial: 'Võ hiệp',
+  romance: 'Ngôn tình',
+  scifi: 'Khoa học viễn tưởng',
+  horror: 'Huyền nghi / Kinh dị',
+  history: 'Lịch sử',
+  urban: 'Đô thị',
+  game: 'Game / Thể thao điện tử',
+  other: 'Khác',
 };

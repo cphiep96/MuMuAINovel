@@ -15,7 +15,7 @@ export default function ChangelogFloatingButton() {
       <FloatButton
         icon={<FileTextOutlined />}
         type="primary"
-        tooltip="查看更新日志"
+        tooltip="Xem nhật ký cập nhật"
         style={{
           // 桌面端时，确保按钮在主内容区域内（侧边栏右侧）
           right: 24,

@@ -1,5 +1,5 @@
 """
-用户密码管理模块 - 使用数据库存储
+Module quản lý mật khẩu người dùng - lưu trữ bằng database
 """
 import asyncio
 import hashlib
@@ -61,15 +61,15 @@ class UserPasswordManager:
     
     async def set_password(self, user_id: str, username: str, password: Optional[str] = None) -> str:
         """
-        设置用户密码
+        Thiết lập mật khẩu người dùng
         
         Args:
-            user_id: 用户ID
-            username: 用户名
-            password: 密码，如果为None则使用默认密码（username+@666）
+            user_id: ID người dùng
+            username: Tên người dùng
+            password: Mật khẩu; nếu None thì dùng mật khẩu mặc định (username+@666)
             
         Returns:
-            实际使用的密码（明文，仅用于首次设置时返回给用户）
+            Mật khẩu thực tế dùng (plain text, chỉ trả về khi thiết lập lần đầu)
         """
         from app.models.user import UserPassword as UserPasswordModel
         
@@ -107,14 +107,14 @@ class UserPasswordManager:
     
     async def verify_password(self, user_id: str, password: str) -> bool:
         """
-        验证用户密码
+        Xác minh mật khẩu người dùng
         
         Args:
-            user_id: 用户ID
-            password: 待验证的密码
+            user_id: ID người dùng
+            password: Mật khẩu cần xác minh
             
         Returns:
-            是否验证通过
+            Có xác minh thành công hay không
         """
         from app.models.user import UserPassword as UserPasswordModel
         
@@ -136,13 +136,13 @@ class UserPasswordManager:
     
     async def has_password(self, user_id: str) -> bool:
         """
-        检查用户是否已设置密码
+        Kiểm tra người dùng đã đặt mật khẩu chưa
         
         Args:
-            user_id: 用户ID
+            user_id: ID người dùng
             
         Returns:
-            是否已设置密码
+            Đã đặt mật khẩu hay chưa
         """
         from app.models.user import UserPassword as UserPasswordModel
         
@@ -156,13 +156,13 @@ class UserPasswordManager:
     
     async def has_custom_password(self, user_id: str) -> bool:
         """
-        检查用户是否设置了自定义密码（非默认密码）
+        Kiểm tra người dùng đã đặt mật khẩu tùy chỉnh (không phải mặc định)
         
         Args:
-            user_id: 用户ID
+            user_id: ID người dùng
             
         Returns:
-            是否使用自定义密码
+            Có dùng mật khẩu tùy chỉnh hay không
         """
         from app.models.user import UserPassword as UserPasswordModel
         
@@ -179,13 +179,13 @@ class UserPasswordManager:
     
     async def get_username(self, user_id: str) -> Optional[str]:
         """
-        获取用户名
+        Lấy tên người dùng
         
         Args:
-            user_id: 用户ID
+            user_id: ID người dùng
             
         Returns:
-            用户名，如果不存在返回None
+            Tên người dùng; nếu không tồn tại trả về None
         """
         from app.models.user import UserPassword as UserPasswordModel
         

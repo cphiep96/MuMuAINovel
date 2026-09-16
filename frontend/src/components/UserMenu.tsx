@@ -33,24 +33,24 @@ export default function UserMenu({ showFullInfo = false, compact = false }: User
       const user = await authApi.getCurrentUser();
       setCurrentUser(user);
     } catch (error) {
-      console.error('获取用户信息失败:', error);
+      console.error('Lấy thông tin người dùng thất bại:', error);
     }
   };
 
   const handleLogout = async () => {
     try {
       await authApi.logout();
-      message.success('已退出登录');
+      message.success('Đã đăng xuất');
       window.location.href = '/login';
     } catch (error) {
-      console.error('退出登录失败:', error);
-      message.error('退出登录失败');
+      console.error('Đăng xuất thất bại:', error);
+      message.error('Đăng xuất thất bại');
     }
   };
 
   const handleShowUserManagement = () => {
     if (!currentUser?.is_admin) {
-      message.warning('只有管理员可以访问用户管理');
+      message.warning('Chỉ quản trị viên mới có thể truy cập quản lý người dùng');
       return;
     }
     navigate('/user-management');
@@ -60,13 +60,13 @@ export default function UserMenu({ showFullInfo = false, compact = false }: User
     try {
       setChangingPassword(true);
       await authApi.setPassword(values.newPassword);
-      message.success('密码修改成功');
+      message.success('Đổi mật khẩu thành công');
       setShowChangePassword(false);
       changePasswordForm.resetFields();
     } catch (error: unknown) {
-      console.error('修改密码失败:', error);
+      console.error('Đổi mật khẩu thất bại:', error);
       const err = error as { response?: { data?: { detail?: string } } };
-      message.error(err.response?.data?.detail || '修改密码失败');
+      message.error(err.response?.data?.detail || 'Đổi mật khẩu thất bại');
     } finally {
       setChangingPassword(false);
     }
@@ -81,7 +81,7 @@ export default function UserMenu({ showFullInfo = false, compact = false }: User
           <br />
           <Text type="secondary" style={{ fontSize: 12 }}>
             Trust Level: {currentUser?.trust_level}
-            {currentUser?.is_admin && ' · 管理员'}
+            {currentUser?.is_admin && ' · Quản trị viên'}
           </Text>
         </div>
       ),
@@ -94,7 +94,7 @@ export default function UserMenu({ showFullInfo = false, compact = false }: User
       {
         key: 'user-management',
         icon: <TeamOutlined />,
-        label: '用户管理',
+        label: 'Quản lý người dùng',
         onClick: handleShowUserManagement,
       },
       {
@@ -104,7 +104,7 @@ export default function UserMenu({ showFullInfo = false, compact = false }: User
     {
       key: 'change-password',
       icon: <LockOutlined />,
-      label: '修改密码',
+      label: 'Đổi mật khẩu',
       onClick: () => setShowChangePassword(true),
     },
     {
@@ -113,7 +113,7 @@ export default function UserMenu({ showFullInfo = false, compact = false }: User
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: '退出登录',
+      label: 'Đăng xuất',
       onClick: handleLogout,
     },
   ];
@@ -194,14 +194,14 @@ export default function UserMenu({ showFullInfo = false, compact = false }: User
               fontSize: 12,
               lineHeight: '18px',
             }}>
-              {currentUser.is_admin ? '👑 管理员' : `🎖️ Trust Level ${currentUser.trust_level}`}
+              {currentUser.is_admin ? '👑 Quản trị viên' : `🎖️ Trust Level ${currentUser.trust_level}`}
             </Text>
           </Space>
         </div>
       </Dropdown>
 
       <Modal
-        title="修改密码"
+        title="Đổi mật khẩu"
         open={showChangePassword}
         onCancel={() => {
           setShowChangePassword(false);
@@ -218,39 +218,39 @@ export default function UserMenu({ showFullInfo = false, compact = false }: User
           autoComplete="off"
         >
           <Form.Item
-            label="新密码"
+            label="Mật khẩu mới"
             name="newPassword"
             rules={[
-              { required: true, message: '请输入新密码' },
-              { min: 6, message: '密码至少6个字符' },
+              { required: true, message: 'Vui lòng nhập mật khẩu mới' },
+              { min: 6, message: 'Mật khẩu ít nhất 6 ký tự' },
             ]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="请输入新密码（至少6个字符）"
+              placeholder="Vui lòng nhập mật khẩu mới (ít nhất 6 ký tự)"
               autoComplete="new-password"
             />
           </Form.Item>
 
           <Form.Item
-            label="确认密码"
+            label="Xác nhận mật khẩu"
             name="confirmPassword"
             dependencies={['newPassword']}
             rules={[
-              { required: true, message: '请确认新密码' },
+              { required: true, message: 'Vui lòng xác nhận mật khẩu mới' },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue('newPassword') === value) {
                     return Promise.resolve();
                   }
-                  return Promise.reject(new Error('两次输入的密码不一致'));
+                  return Promise.reject(new Error('Hai lần nhập mật khẩu không khớp'));
                 },
               }),
             ]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="请再次输入新密码"
+              placeholder="Vui lòng nhập lại mật khẩu mới"
               autoComplete="new-password"
             />
           </Form.Item>
@@ -261,10 +261,10 @@ export default function UserMenu({ showFullInfo = false, compact = false }: User
                 setShowChangePassword(false);
                 changePasswordForm.resetFields();
               }}>
-                取消
+                Hủy
               </Button>
               <Button type="primary" htmlType="submit" loading={changingPassword}>
-                确认修改
+                Xác nhận đổi
               </Button>
             </Space>
           </Form.Item>

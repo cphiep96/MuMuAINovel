@@ -46,7 +46,7 @@ class EventBus {
         try {
           cb(data);
         } catch (error) {
-          console.error(`事件处理器执行失败 [${event}]:`, error);
+          console.error(`Trình xử lý sự kiện thực thi thất bại [${event}]:`, error);
         }
       });
     }

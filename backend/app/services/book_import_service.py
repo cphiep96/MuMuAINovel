@@ -70,7 +70,7 @@ class _BookImportTask:
     tail_chapter_count: int = 10
     status: str = "pending"
     progress: int = 0
-    message: Optional[str] = "任务已创建"
+    message: Optional[str] = "Đã tạo tác vụ"
     error: Optional[str] = None
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
@@ -132,19 +132,19 @@ class BookImportService:
     async def get_preview(self, *, task_id: str, user_id: str) -> BookImportPreviewResponse:
         task = await self._get_task(task_id=task_id, user_id=user_id)
         if task.status != "completed":
-            raise HTTPException(status_code=400, detail="任务尚未完成，无法获取预览")
+            raise HTTPException(status_code=400, detail="Tác vụ chưa hoàn thành, không thể lấy bản xem trước")
         if not task.preview:
-            raise HTTPException(status_code=500, detail="预览数据不存在")
+            raise HTTPException(status_code=500, detail="Dữ liệu xem trước không tồn tại")
         return task.preview
 
     async def cancel_task(self, *, task_id: str, user_id: str) -> dict:
         task = await self._get_task(task_id=task_id, user_id=user_id)
         if task.status in {"completed", "failed", "cancelled"}:
-            return {"success": True, "message": f"任务已是终态：{task.status}"}
+            return {"success": True, "message": f"Tác vụ đã ở trạng thái cuối: {task.status}"}
 
         task.cancelled = True
-        self._set_task_state(task, status="cancelled", progress=task.progress, message="任务已取消")
-        return {"success": True, "message": "取消成功"}
+        self._set_task_state(task, status="cancelled", progress=task.progress, message="Tác vụ đã bị hủy")
+        return {"success": True, "message": "Hủy thành công"}
 
     async def apply_import(
         self,
@@ -156,7 +156,7 @@ class BookImportService:
     ) -> BookImportApplyResponse:
         task = await self._get_task(task_id=task_id, user_id=user_id)
         if task.status != "completed":
-            raise HTTPException(status_code=400, detail="任务未完成，无法导入")
+            raise HTTPException(status_code=400, detail="Tác vụ chưa hoàn thành, không thể nhập")
 
         statistics = {
             "chapters": 0,
@@ -174,7 +174,7 @@ class BookImportService:
             warnings.append(
                 BookImportWarning(
                     code="apply_trimmed_for_extract_mode",
-                    message=f"导入阶段已按解析配置仅保留 {len(chapters_to_import)} 章",
+                    message=f"Giai đoạn nhập đã chỉ giữ {len(chapters_to_import)} chương theo cấu hình phân tích",
                     level="info",
                 )
             )
@@ -236,7 +236,7 @@ class BookImportService:
         except Exception as exc:
             await db.rollback()
             logger.error(f"拆书导入落库失败: {exc}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"导入失败: {exc}")
+            raise HTTPException(status_code=500, detail=f"Nhập thất bại: {exc}")
 
     # ---- 类型别名：进度回调 ----
     ProgressCallback = Optional[Any]  # Callable[[str, int, str], Awaitable[None]]
@@ -257,7 +257,7 @@ class BookImportService:
         """
         task = await self._get_task(task_id=task_id, user_id=user_id)
         if task.status != "completed":
-            raise HTTPException(status_code=400, detail="任务未完成，无法导入")
+            raise HTTPException(status_code=400, detail="Tác vụ chưa hoàn thành, không thể nhập")
 
         statistics: Dict[str, int] = {
             "chapters": 0,
@@ -275,7 +275,7 @@ class BookImportService:
             warnings.append(
                 BookImportWarning(
                     code="apply_trimmed_for_extract_mode",
-                    message=f"导入阶段已按解析配置仅保留 {len(chapters_to_import)} 章",
+                    message=f"Giai đoạn nhập đã chỉ giữ {len(chapters_to_import)} chương theo cấu hình phân tích",
                     level="info",
                 )
             )
@@ -286,7 +286,7 @@ class BookImportService:
 
         try:
             # -- 步骤1: 创建项目 (0-5%)
-            await _notify("正在创建项目...", 2)
+            await _notify("Đang tạo dự án...", 2)
             project = await self._prepare_project(
                 db=db,
                 user_id=user_id,
@@ -295,10 +295,10 @@ class BookImportService:
                 chapters=chapters_to_import,
                 import_mode=payload.import_mode,
             )
-            await _notify("项目创建完成", 5)
+            await _notify("Tạo dự án hoàn tất", 5)
 
             # -- 步骤2: 导入大纲 (5-10%)
-            await _notify("正在导入大纲...", 6)
+            await _notify("Đang nhập dàn ý...", 6)
             outline_id_map = await self._import_outlines(
                 db=db,
                 project_id=project.id,
@@ -306,10 +306,10 @@ class BookImportService:
                 import_mode=payload.import_mode,
             )
             statistics["outlines"] = len(outlines_to_import)
-            await _notify(f"已导入 {len(outlines_to_import)} 个大纲", 10)
+            await _notify(f"Đã nhập {len(outlines_to_import)} dàn ý", 10)
 
             # -- 步骤3: 导入章节 (10-20%)
-            await _notify(f"正在导入 {len(chapters_to_import)} 个章节...", 12)
+            await _notify(f"Đang nhập {len(chapters_to_import)} chương...", 12)
             chapter_count, words_delta = await self._import_chapters(
                 db=db,
                 project_id=project.id,
@@ -323,12 +323,12 @@ class BookImportService:
                 project.current_words = words_delta
             else:
                 project.current_words = (project.current_words or 0) + words_delta
-            await _notify(f"已导入 {chapter_count} 个章节（{words_delta}字）", 20)
+            await _notify(f"Đã nhập {chapter_count} chương ({words_delta} chữ)", 20)
 
             # -- 步骤4: 生成世界观 (20-40%)
             failed_steps: list[_StepFailure] = []
 
-            await _notify("🌍 正在生成世界观...", 22)
+            await _notify("🌍 Đang tạo bối cảnh thế giới...", 22)
             try:
                 generated_world = await self._generate_world_building_from_project(
                     db=db,
@@ -340,18 +340,18 @@ class BookImportService:
                     raise_on_error=True,
                 )
                 statistics["generated_world_building"] = generated_world
-                await _notify("🌍 世界观生成完成", 40)
+                await _notify("🌍 Tạo bối cảnh thế giới hoàn tất", 40)
             except Exception as exc:
                 logger.warning(f"拆书导入：世界观生成失败（将继续后续步骤）: {exc}")
                 failed_steps.append(_StepFailure(
                     step_name="world_building",
-                    step_label="世界观生成",
+                    step_label="Tạo bối cảnh thế giới",
                     error_message=str(exc),
                 ))
-                await _notify(f"⚠️ 世界观生成失败：{str(exc)[:80]}，将继续后续步骤", 40, "warning")
+                await _notify(f"⚠️ Tạo bối cảnh thế giới thất bại: {str(exc)[:80]}, sẽ tiếp tục các bước sau", 40, "warning")
 
             # -- 步骤5: 生成职业体系 (40-65%)
-            await _notify("💼 正在生成职业体系...", 42)
+            await _notify("💼 Đang tạo hệ nghề...", 42)
             try:
                 generated_careers = await self._generate_career_system_from_project(
                     db=db,
@@ -362,19 +362,19 @@ class BookImportService:
                     progress_range=(42, 65),
                 )
                 statistics["generated_careers"] = generated_careers
-                await _notify(f"💼 职业体系生成完成（{generated_careers}个）", 65)
+                await _notify(f"💼 Tạo hệ nghề hoàn tất ({generated_careers})", 65)
             except Exception as exc:
                 logger.warning(f"拆书导入：职业体系生成失败（将继续后续步骤）: {exc}")
                 failed_steps.append(_StepFailure(
                     step_name="career_system",
-                    step_label="职业体系生成",
+                    step_label="Tạo hệ nghề",
                     error_message=str(exc),
                 ))
-                await _notify(f"⚠️ 职业体系生成失败：{str(exc)[:80]}，将继续后续步骤", 65, "warning")
+                await _notify(f"⚠️ Tạo hệ nghề thất bại: {str(exc)[:80]}, sẽ tiếp tục các bước sau", 65, "warning")
 
             # -- 步骤6: 生成角色/组织 (65-92%)
             character_count_target = max(project.character_count or 0, 5)
-            await _notify("👥 正在生成角色与组织...", 67)
+            await _notify("👥 Đang tạo nhân vật và tổ chức...", 67)
             try:
                 generated_entities = await self._generate_characters_and_organizations_from_project(
                     db=db,
@@ -386,15 +386,15 @@ class BookImportService:
                     progress_range=(67, 92),
                 )
                 statistics["generated_entities"] = generated_entities
-                await _notify(f"👥 角色/组织生成完成（{generated_entities}个）", 92)
+                await _notify(f"👥 Tạo nhân vật/tổ chức hoàn tất ({generated_entities})", 92)
             except Exception as exc:
                 logger.warning(f"拆书导入：角色/组织生成失败: {exc}")
                 failed_steps.append(_StepFailure(
                     step_name="characters",
-                    step_label="角色与组织生成",
+                    step_label="Tạo nhân vật và tổ chức",
                     error_message=str(exc),
                 ))
-                await _notify(f"⚠️ 角色/组织生成失败：{str(exc)[:80]}", 92, "warning")
+                await _notify(f"⚠️ Tạo nhân vật/tổ chức thất bại: {str(exc)[:80]}", 92, "warning")
 
             # 标记向导完成并将项目置为创作中
             project.wizard_step = 3
@@ -402,9 +402,9 @@ class BookImportService:
             project.status = "writing"
 
             # -- 步骤7: 提交数据库 (92-98%)
-            await _notify("正在保存到数据库...", 95)
+            await _notify("Đang lưu vào cơ sở dữ liệu...", 95)
             await db.commit()
-            await _notify("数据保存完成", 98)
+            await _notify("Lưu dữ liệu hoàn tất", 98)
 
             # 记录失败步骤和项目ID到任务中，供重试使用
             task.imported_project_id = project.id
@@ -417,7 +417,7 @@ class BookImportService:
                     for f in failed_steps
                 ]
                 await _notify(
-                    f"⚠️ 导入完成，但有 {len(failed_steps)} 个生成步骤失败，可点击重试",
+                    f"⚠️ Nhập hoàn tất, nhưng có {len(failed_steps)} bước tạo thất bại, có thể nhấn thử lại",
                     98,
                     "warning",
                 )
@@ -441,7 +441,7 @@ class BookImportService:
         except Exception as exc:
             await db.rollback()
             logger.error(f"拆书导入落库失败: {exc}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"导入失败: {exc}")
+            raise HTTPException(status_code=500, detail=f"Nhập thất bại: {exc}")
 
     async def retry_failed_steps_stream(
         self,
@@ -460,7 +460,7 @@ class BookImportService:
         task = await self._get_task(task_id=task_id, user_id=user_id)
         project_id = task.imported_project_id
         if not project_id:
-            raise HTTPException(status_code=400, detail="该任务尚未完成导入，无法重试")
+            raise HTTPException(status_code=400, detail="Tác vụ này chưa hoàn tất nhập, không thể thử lại")
 
         # 验证 steps_to_retry 都是合法的失败步骤
         failed_step_names = {f.step_name for f in task.failed_steps}
@@ -468,7 +468,7 @@ class BookImportService:
         if invalid_steps:
             raise HTTPException(
                 status_code=400,
-                detail=f"以下步骤不在失败列表中，无法重试: {', '.join(invalid_steps)}",
+                detail=f"Các bước sau không nằm trong danh sách thất bại, không thể thử lại: {', '.join(invalid_steps)}",
             )
 
         async def _notify(message: str, progress: int, status: str = "processing") -> None:
@@ -492,7 +492,7 @@ class BookImportService:
                 retry_count = (original_failure.retry_count if original_failure else 0) + 1
 
                 if step_name == "world_building":
-                    await _notify("🔄 正在重试世界观生成...", step_start_pct)
+                    await _notify("🔄 Đang thử lại tạo bối cảnh thế giới...", step_start_pct)
                     try:
                         result = await self._generate_world_building_from_project(
                             db=db,
@@ -504,19 +504,19 @@ class BookImportService:
                             raise_on_error=True,
                         )
                         retry_results["generated_world_building"] = result
-                        await _notify("✅ 世界观重试成功", step_end_pct)
+                        await _notify("✅ Thử lại bối cảnh thế giới thành công", step_end_pct)
                     except Exception as exc:
                         logger.warning(f"世界观重试失败 (第{retry_count}次): {exc}")
                         still_failed.append(_StepFailure(
                             step_name="world_building",
-                            step_label="世界观生成",
+                            step_label="Tạo bối cảnh thế giới",
                             error_message=str(exc),
                             retry_count=retry_count,
                         ))
-                        await _notify(f"⚠️ 世界观重试失败：{str(exc)[:80]}", step_end_pct, "warning")
+                        await _notify(f"⚠️ Thử lại bối cảnh thế giới thất bại: {str(exc)[:80]}", step_end_pct, "warning")
 
                 elif step_name == "career_system":
-                    await _notify("🔄 正在重试职业体系生成...", step_start_pct)
+                    await _notify("🔄 Đang thử lại tạo hệ nghề...", step_start_pct)
                     try:
                         result = await self._generate_career_system_from_project(
                             db=db,
@@ -527,20 +527,20 @@ class BookImportService:
                             progress_range=(step_start_pct, step_end_pct),
                         )
                         retry_results["generated_careers"] = result
-                        await _notify(f"✅ 职业体系重试成功（{result}个）", step_end_pct)
+                        await _notify(f"✅ Thử lại hệ nghề thành công ({result})", step_end_pct)
                     except Exception as exc:
                         logger.warning(f"职业体系重试失败 (第{retry_count}次): {exc}")
                         still_failed.append(_StepFailure(
                             step_name="career_system",
-                            step_label="职业体系生成",
+                            step_label="Tạo hệ nghề",
                             error_message=str(exc),
                             retry_count=retry_count,
                         ))
-                        await _notify(f"⚠️ 职业体系重试失败：{str(exc)[:80]}", step_end_pct, "warning")
+                        await _notify(f"⚠️ Thử lại hệ nghề thất bại: {str(exc)[:80]}", step_end_pct, "warning")
 
                 elif step_name == "characters":
                     character_count_target = max(project.character_count or 0, 5)
-                    await _notify("🔄 正在重试角色与组织生成...", step_start_pct)
+                    await _notify("🔄 Đang thử lại tạo nhân vật và tổ chức...", step_start_pct)
                     try:
                         result = await self._generate_characters_and_organizations_from_project(
                             db=db,
@@ -552,21 +552,21 @@ class BookImportService:
                             progress_range=(step_start_pct, step_end_pct),
                         )
                         retry_results["generated_entities"] = result
-                        await _notify(f"✅ 角色/组织重试成功（{result}个）", step_end_pct)
+                        await _notify(f"✅ Thử lại nhân vật/tổ chức thành công ({result})", step_end_pct)
                     except Exception as exc:
                         logger.warning(f"角色/组织重试失败 (第{retry_count}次): {exc}")
                         still_failed.append(_StepFailure(
                             step_name="characters",
-                            step_label="角色与组织生成",
+                            step_label="Tạo nhân vật và tổ chức",
                             error_message=str(exc),
                             retry_count=retry_count,
                         ))
-                        await _notify(f"⚠️ 角色/组织重试失败：{str(exc)[:80]}", step_end_pct, "warning")
+                        await _notify(f"⚠️ Thử lại nhân vật/tổ chức thất bại: {str(exc)[:80]}", step_end_pct, "warning")
 
             # 提交数据库
-            await _notify("正在保存到数据库...", 93)
+            await _notify("Đang lưu vào cơ sở dữ liệu...", 93)
             await db.commit()
-            await _notify("数据保存完成", 96)
+            await _notify("Lưu dữ liệu hoàn tất", 96)
 
             # 更新任务的失败步骤记录
             task.failed_steps = still_failed
@@ -598,7 +598,7 @@ class BookImportService:
         except Exception as exc:
             await db.rollback()
             logger.error(f"拆书重试失败: {exc}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"重试失败: {exc}")
+            raise HTTPException(status_code=500, detail=f"Thử lại thất bại: {exc}")
 
     async def _run_pipeline(self, *, task_id: str, file_content: bytes) -> None:
         task = self._tasks.get(task_id)
@@ -607,26 +607,26 @@ class BookImportService:
 
         try:
             # 进度分配：编码识别 5%，文本清洗 10%，章节切分 15%，按配置筛选章节 18%，AI反向生成 20%-95%，完成 100%
-            self._set_task_state(task, status="running", progress=5, message="正在识别编码并读取文本...")
+            self._set_task_state(task, status="running", progress=5, message="Đang nhận dạng mã hóa và đọc văn bản...")
             self._check_cancelled(task)
 
             text, encoding = txt_parser_service.decode_bytes(file_content)
             cleaned = txt_parser_service.clean_text(text)
 
-            self._set_task_state(task, status="running", progress=10, message=f"文本清洗完成（编码：{encoding}）")
+            self._set_task_state(task, status="running", progress=10, message=f"Làm sạch văn bản hoàn tất (mã hóa: {encoding})")
             self._check_cancelled(task)
 
             chapters_data = txt_parser_service.split_chapters(cleaned)
             if not chapters_data:
-                raise ValueError("未能识别到有效章节，请检查TXT内容")
+                raise ValueError("Không nhận dạng được chương hợp lệ, vui lòng kiểm tra nội dung TXT")
 
             self._set_task_state(
                 task, status="running", progress=15,
-                message=f"已识别 {len(chapters_data)} 个章节，正在构建预览结构...",
+                message=f"Đã nhận dạng {len(chapters_data)} chương, đang dựng cấu trúc xem trước...",
             )
             self._check_cancelled(task)
 
-            self._set_task_state(task, status="running", progress=18, message="正在按解析配置筛选章节并构建预览...")
+            self._set_task_state(task, status="running", progress=18, message="Đang lọc chương theo cấu hình phân tích và dựng bản xem trước...")
             preview = await self._build_preview(
                 task=task,
                 filename=task.filename,
@@ -636,16 +636,16 @@ class BookImportService:
 
             self._check_cancelled(task)
             task.preview = preview
-            self._set_task_state(task, status="completed", progress=100, message="解析完成，可预览并确认导入")
+            self._set_task_state(task, status="completed", progress=100, message="Phân tích hoàn tất, có thể xem trước và xác nhận nhập")
         except asyncio.CancelledError:
-            self._set_task_state(task, status="cancelled", progress=task.progress, message="任务已取消")
+            self._set_task_state(task, status="cancelled", progress=task.progress, message="Tác vụ đã bị hủy")
         except Exception as exc:
             logger.error(f"拆书任务失败 task_id={task_id}: {exc}", exc_info=True)
             self._set_task_state(
                 task,
                 status="failed",
                 progress=task.progress,
-                message="解析失败",
+                message="Phân tích thất bại",
                 error=str(exc),
             )
 
@@ -689,7 +689,7 @@ class BookImportService:
             return project
 
         if not task.project_id:
-            raise HTTPException(status_code=400, detail="缺少目标项目ID")
+            raise HTTPException(status_code=400, detail="Thiếu ID dự án đích")
 
         project = await verify_project_access(task.project_id, user_id, db)
 
@@ -912,8 +912,8 @@ class BookImportService:
 
     def _get_extract_mode_label(self, extract_mode: BookImportExtractMode, selected_total: int) -> str:
         if extract_mode == "full" or selected_total > 50:
-            return "整本"
-        return f"末{selected_total}章"
+            return "Toàn bộ"
+        return f"{selected_total} chương cuối"
 
     def _derive_world_settings(
         self,
@@ -944,63 +944,63 @@ class BookImportService:
         return time_period, location, atmosphere, rules
 
     def _detect_time_period(self, text: str, genre: str) -> str:
-        if any(k in text for k in ("民国", "军阀", "北洋", "租界")):
-            return "近代民国时期"
-        if any(k in text for k in ("星际", "宇宙", "机甲", "赛博", "未来", "人工智能")):
-            return "未来科技时代"
-        if any(k in text for k in ("古代", "王朝", "皇帝", "后宫", "朝堂", "将军", "宗门", "修仙", "江湖", "武林")):
-            return "古代架空时代"
-        if any(k in text for k in ("校园", "大学", "高中", "公司", "都市", "地铁")):
-            return "现代都市"
+        if any(k in text for k in ("Dân quốc", "quân phiệt", "Bắc Dương", "tô giới")):
+            return "Thời kỳ Dân quốc cận đại"
+        if any(k in text for k in ("liên sao", "vũ trụ", "cơ giáp", "cyber", "tương lai", "trí tuệ nhân tạo")):
+            return "Kỷ nguyên công nghệ tương lai"
+        if any(k in text for k in ("cổ đại", "triều đại", "hoàng đế", "hậu cung", "triều đình", "tướng quân", "tông môn", "tu tiên", "giang hồ", "võ lâm")):
+            return "Thời đại cổ đại hư cấu"
+        if any(k in text for k in ("trường học", "đại học", "trung học", "công ty", "đô thị", "tàu điện")):
+            return "Đô thị hiện đại"
 
-        if any(k in genre for k in ("科幻", "星际")):
-            return "未来科技时代"
-        if any(k in genre for k in ("仙侠", "玄幻", "武侠", "历史", "古言")):
-            return "古代架空时代"
-        return "现代都市（可在世界设定页调整）"
+        if any(k in genre for k in ("khoa học viễn tưởng", "liên sao")):
+            return "Kỷ nguyên công nghệ tương lai"
+        if any(k in genre for k in ("tiên hiệp", "huyền huyễn", "võ hiệp", "lịch sử", "cổ ngôn")):
+            return "Thời đại cổ đại hư cấu"
+        return "Đô thị hiện đại (có thể điều chỉnh tại trang thiết lập thế giới)"
 
     def _detect_location(self, text: str, genre: str) -> str:
-        if any(k in text for k in ("星际", "宇宙", "舰队", "空间站", "机甲")):
-            return "多星系宇宙与舰队文明"
-        if any(k in text for k in ("宗门", "仙门", "秘境", "灵脉", "江湖", "武林")):
-            return "宗门林立的江湖/仙侠世界"
-        if any(k in text for k in ("王朝", "都城", "皇宫", "边关", "朝堂")):
-            return "王朝都城与边疆并存的古代世界"
-        if any(k in text for k in ("校园", "大学", "高中")):
-            return "校园与城市生活场景"
-        if any(k in text for k in ("都市", "城市", "街区", "公司", "医院")):
-            return "现代城市社会"
+        if any(k in text for k in ("liên sao", "vũ trụ", "hạm đội", "trạm không gian", "cơ giáp")):
+            return "Nền văn minh vũ trụ đa hệ sao và hạm đội"
+        if any(k in text for k in ("tông môn", "tiên môn", "bí cảnh", "linh mạch", "giang hồ", "võ lâm")):
+            return "Thế giới giang hồ/tiên hiệp với nhiều tông môn"
+        if any(k in text for k in ("triều đại", "kinh đô", "hoàng cung", "biên ải", "triều đình")):
+            return "Thế giới cổ đại gồm kinh đô và biên cương"
+        if any(k in text for k in ("trường học", "đại học", "trung học")):
+            return "Bối cảnh trường học và đời sống đô thị"
+        if any(k in text for k in ("đô thị", "thành phố", "khu phố", "công ty", "bệnh viện")):
+            return "Xã hội đô thị hiện đại"
 
-        if "悬疑" in genre:
-            return "现代城市与封闭场景并行"
-        return "以人物活动区域为核心的现实场景"
+        if "trinh thám" in genre:
+            return "Đô thị hiện đại đan xen các bối cảnh khép kín"
+        return "Bối cảnh hiện thực xoay quanh khu vực hoạt động của nhân vật"
 
     def _detect_atmosphere(self, text: str, genre: str, theme: str) -> str:
-        if any(k in text for k in ("悬疑", "谜", "诡", "凶案", "惊悚", "追查")):
-            return "紧张悬疑、危机渐进"
-        if any(k in text for k in ("热血", "战斗", "对决", "复仇", "战争")):
-            return "高压对抗、节奏强烈"
-        if any(k in text for k in ("治愈", "日常", "温馨", "轻松", "搞笑")):
-            return "日常细腻、轻松温暖"
-        if any(k in text for k in ("权谋", "宫斗", "朝堂", "家族斗争")):
-            return "权谋博弈、暗流涌动"
+        if any(k in text for k in ("trinh thám", "bí ẩn", "quỷ dị", "án mạng", "kinh dị", "truy tìm")):
+            return "Trinh thám căng thẳng, khủng hoảng tăng dần"
+        if any(k in text for k in ("nhiệt huyết", "chiến đấu", "đối đầu", "báo thù", "chiến tranh")):
+            return "Đối đầu áp lực cao, nhịp độ mạnh"
+        if any(k in text for k in ("chữa lành", "đời thường", "ấm áp", "thư thái", "hài hước")):
+            return "Đời thường tinh tế, nhẹ nhàng ấm áp"
+        if any(k in text for k in ("mưu lược", "đấu đá hậu cung", "triều đình", "tranh đấu gia tộc")):
+            return "Đấu trí quyền mưu, dòng ngầm cuộn trào"
 
-        if "言情" in genre:
-            return "情感拉扯、细腻克制"
+        if "ngôn tình" in genre:
+            return "Giằng co cảm xúc, tinh tế tiết chế"
         if theme:
-            return f"{theme}导向、人物驱动"
-        return "人物驱动、冲突递进"
+            return f"Định hướng {theme}, dẫn dắt bởi nhân vật"
+        return "Dẫn dắt bởi nhân vật, xung đột tăng tiến"
 
     def _detect_world_rules(self, text: str, genre: str) -> str:
-        if any(k in text for k in ("修仙", "玄幻", "灵气", "境界", "宗门", "飞升")) or any(k in genre for k in ("仙侠", "玄幻")):
-            return "存在修炼体系与等级秩序，资源与传承决定势力格局。"
-        if any(k in text for k in ("星际", "机甲", "赛博", "人工智能", "基因")) or any(k in genre for k in ("科幻", "星际")):
-            return "科技规则主导社会运行，组织制度与技术能力决定角色行动边界。"
-        if any(k in text for k in ("江湖", "门派", "武林", "侠客")) or "武侠" in genre:
-            return "江湖门派秩序与恩怨规则并行，强者与名望影响话语权。"
-        if any(k in text for k in ("王朝", "皇权", "朝堂", "礼法")) or any(k in genre for k in ("历史", "古言")):
-            return "以礼法与权力秩序为基础，家国与阶层关系深刻影响人物命运。"
-        return "以现实逻辑为基础，结合剧情推进逐步补充特殊设定。"
+        if any(k in text for k in ("tu tiên", "huyền huyễn", "linh khí", "cảnh giới", "tông môn", "phi thăng")) or any(k in genre for k in ("tiên hiệp", "huyền huyễn")):
+            return "Tồn tại hệ thống tu luyện và trật tự cấp bậc; tài nguyên cùng truyền thừa quyết định cục diện thế lực."
+        if any(k in text for k in ("liên sao", "cơ giáp", "cyber", "trí tuệ nhân tạo", "gen")) or any(k in genre for k in ("khoa học viễn tưởng", "liên sao")):
+            return "Quy tắc công nghệ chi phối vận hành xã hội; thể chế tổ chức và năng lực công nghệ quyết định ranh giới hành động của nhân vật."
+        if any(k in text for k in ("giang hồ", "môn phái", "võ lâm", "hiệp khách")) or "võ hiệp" in genre:
+            return "Trật tự môn phái giang hồ song hành với quy tắc ân oán; cường giả và danh vọng ảnh hưởng đến quyền phát ngôn."
+        if any(k in text for k in ("triều đại", "hoàng quyền", "triều đình", "lễ pháp")) or any(k in genre for k in ("lịch sử", "cổ ngôn")):
+            return "Lấy lễ pháp và trật tự quyền lực làm nền tảng; quan hệ quốc gia và giai tầng ảnh hưởng sâu sắc đến số phận nhân vật."
+        return "Lấy logic hiện thực làm nền tảng, từng bước bổ sung thiết lập đặc biệt cùng diễn tiến cốt truyện."
 
     def _strip_chapter_prefix(self, title: str) -> str:
         """移除章节标题前缀“第X章/节/回/卷”，保留真实标题。"""
@@ -1025,8 +1025,8 @@ class BookImportService:
         chapters_data: list[dict],
     ) -> BookImportPreviewResponse:
         suggestion = ProjectSuggestion(
-            title=Path(filename).stem[:200] or "拆书导入项目",
-            description="由拆书功能自动生成，可在导入前修改",
+            title=Path(filename).stem[:200] or "Dự án đọc tách sách",
+            description="Được tự động tạo bởi tính năng đọc tách sách, có thể chỉnh sửa trước khi nhập",
             theme=None,
             genre=None,
             narrative_perspective="第三人称",
@@ -1046,7 +1046,7 @@ class BookImportService:
 
         title_counter: Counter[str] = Counter()
         for idx, chapter in enumerate(selected_chapters_raw, start=1):
-            raw_title = (chapter.get("title") or f"第{idx}章").strip()[:200]
+            raw_title = (chapter.get("title") or f"Chương {idx}").strip()[:200]
             title = self._strip_chapter_prefix(raw_title)[:200]
             content = (chapter.get("content") or "").strip()
             summary = self._build_summary(content)
@@ -1066,7 +1066,7 @@ class BookImportService:
                 warnings.append(
                     BookImportWarning(
                         code="chapter_too_short",
-                        message=f"章节「{title}」内容较短，建议检查切分结果",
+                        message=f"Nội dung chương «{title}» khá ngắn, nên kiểm tra kết quả tách chương",
                         level="warning",
                     )
                 )
@@ -1074,7 +1074,7 @@ class BookImportService:
                 warnings.append(
                     BookImportWarning(
                         code="chapter_too_long",
-                        message=f"章节「{title}」内容较长，建议确认是否应继续拆分",
+                        message=f"Nội dung chương «{title}» khá dài, nên xác nhận có cần tách tiếp không",
                         level="info",
                     )
                 )
@@ -1086,7 +1086,7 @@ class BookImportService:
                     task,
                     status="running",
                     progress=chapter_progress,
-                    message=f"已处理{selection_label} {idx}/{selected_total} 个章节结构...",
+                    message=f"Đã xử lý {selection_label} {idx}/{selected_total} cấu trúc chương...",
                 )
 
         for title, count in title_counter.items():
@@ -1094,7 +1094,7 @@ class BookImportService:
                 warnings.append(
                     BookImportWarning(
                         code="duplicate_chapter_title",
-                        message=f"检测到重复章节标题「{title}」共 {count} 次",
+                        message=f"Phát hiện tiêu đề chương trùng «{title}» tổng {count} lần",
                         level="warning",
                     )
                 )
@@ -1103,7 +1103,7 @@ class BookImportService:
             warnings.append(
                 BookImportWarning(
                     code="trimmed_for_extract_mode",
-                    message=f"已按解析配置仅保留{selection_label} {selected_total} 章用于导入（原始识别 {len(chapters_data)} 章）",
+                    message=f"Đã chỉ giữ {selection_label} {selected_total} chương để nhập theo cấu hình phân tích (nhận dạng gốc {len(chapters_data)} chương)",
                     level="info",
                 )
             )
@@ -1113,7 +1113,7 @@ class BookImportService:
             task,
             status="running",
             progress=20,
-            message="正在调用AI反向生成项目信息（标题/简介/主题/类型）...",
+            message="Đang gọi AI suy ngược thông tin dự án (tiêu đề/mô tả/chủ đề/thể loại)...",
         )
         suggestion = await self._generate_reverse_project_suggestion(
             user_id=task.user_id,
@@ -1157,18 +1157,18 @@ class BookImportService:
 
         sampled_chapters = chapters[:3]
         sampled_text = "\n\n".join(
-            f"【第{idx + 1}章 {chapter.title}】\n{(chapter.content or '')[:2000]}"
+            f"【Chương {idx + 1} {chapter.title}】\n{(chapter.content or '')[:2000]}"
             for idx, chapter in enumerate(sampled_chapters)
         ).strip()
 
         if not sampled_text:
             if task:
-                self._set_task_state(task, status="running", progress=95, message="文本样本不足，使用规则推断项目信息")
+                self._set_task_state(task, status="running", progress=95, message="Mẫu văn bản không đủ, dùng quy tắc suy luận thông tin dự án")
             return fallback
 
         try:
             if task:
-                self._set_task_state(task, status="running", progress=25, message="正在初始化AI服务...")
+                self._set_task_state(task, status="running", progress=25, message="Đang khởi tạo dịch vụ AI...")
 
             engine = await get_engine(user_id)
             session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
@@ -1176,17 +1176,17 @@ class BookImportService:
                 ai_service = await self._build_user_ai_service(db=db, user_id=user_id)
 
                 if task:
-                    self._set_task_state(task, status="running", progress=30, message="正在准备AI提示词...")
+                    self._set_task_state(task, status="running", progress=30, message="Đang chuẩn bị prompt AI...")
 
                 template = await PromptService.get_template("BOOK_IMPORT_REVERSE_PROJECT_SUGGESTION", user_id, db)
                 prompt = PromptService.format_prompt(
                     template,
-                    title=suggestion.title or "拆书导入项目",
+                    title=suggestion.title or "Dự án đọc tách sách",
                     sampled_text=sampled_text,
                 )
 
                 if task:
-                    self._set_task_state(task, status="running", progress=35, message="AI正在分析文本内容...")
+                    self._set_task_state(task, status="running", progress=35, message="AI đang phân tích nội dung văn bản...")
 
                 # 启动一个模拟进度推进的协程，在AI调用期间持续更新进度
                 ai_done = asyncio.Event()
@@ -1197,11 +1197,11 @@ class BookImportService:
                         return
                     current = 35
                     messages = [
-                        "AI正在分析文本内容...",
-                        "AI正在识别故事主题与类型...",
-                        "AI正在推断叙事角度...",
-                        "AI正在生成项目简介...",
-                        "AI正在整理生成结果...",
+                        "AI đang phân tích nội dung văn bản...",
+                        "AI đang nhận diện chủ đề và thể loại câu chuyện...",
+                        "AI đang suy luận góc nhìn trần thuật...",
+                        "AI đang tạo phần giới thiệu dự án...",
+                        "AI đang sắp xếp kết quả tạo...",
                     ]
                     msg_idx = 0
                     while not ai_done.is_set() and current < 85:
@@ -1226,7 +1226,7 @@ class BookImportService:
                     await ticker_task
 
                 if task:
-                    self._set_task_state(task, status="running", progress=90, message="AI生成完成，正在整理项目信息...")
+                    self._set_task_state(task, status="running", progress=90, message="AI tạo xong, đang sắp xếp thông tin dự án...")
 
                 result = ProjectSuggestion(
                     title=suggestion.title,
@@ -1244,13 +1244,13 @@ class BookImportService:
                 )
 
                 if task:
-                    self._set_task_state(task, status="running", progress=95, message="项目信息生成完毕，准备预览...")
+                    self._set_task_state(task, status="running", progress=95, message="Tạo thông tin dự án xong, chuẩn bị xem trước...")
 
                 return result
         except Exception as exc:
             logger.warning(f"反向生成项目信息失败，回退规则推断: {exc}")
             if task:
-                self._set_task_state(task, status="running", progress=95, message="AI生成失败，使用规则推断项目信息")
+                self._set_task_state(task, status="running", progress=95, message="AI tạo thất bại, dùng quy tắc suy luận thông tin dự án")
             return fallback
 
     async def _generate_reverse_outlines(
@@ -1280,7 +1280,7 @@ class BookImportService:
 
         try:
             if task:
-                self._set_task_state(task, status="running", progress=95, message="正在反向生成章节大纲（分批5章）...")
+                self._set_task_state(task, status="running", progress=95, message="Đang suy ngược dàn ý chương (mỗi lô 5 chương)...")
 
             engine = await get_engine(user_id)
             session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
@@ -1308,14 +1308,14 @@ class BookImportService:
                             task,
                             status="running",
                             progress=progress,
-                            message=f"正在生成大纲批次 {batch_idx}/{total_batches}（第{start_chapter}-{end_chapter}章）...",
+                            message=f"Đang tạo lô dàn ý {batch_idx}/{total_batches} (chương {start_chapter}-{end_chapter})...",
                         )
 
                     prompt = PromptService.format_prompt(
                         template,
-                        title=suggestion.title or "拆书导入项目",
-                        genre=suggestion.genre or "通用",
-                        theme=suggestion.theme or "未设定",
+                        title=suggestion.title or "Dự án đọc tách sách",
+                        genre=suggestion.genre or "Phổ thông",
+                        theme=suggestion.theme or "Chưa thiết lập",
                         narrative_perspective=suggestion.narrative_perspective or "第三人称",
                         start_chapter=start_chapter,
                         end_chapter=end_chapter,
@@ -1351,13 +1351,13 @@ class BookImportService:
                 ]
 
                 if task:
-                    self._set_task_state(task, status="running", progress=99, message="大纲反向生成完成，正在整理预览...")
+                    self._set_task_state(task, status="running", progress=99, message="Suy ngược dàn ý hoàn tất, đang sắp xếp bản xem trước...")
 
                 return outlines
         except Exception as exc:
             logger.warning(f"反向生成章节大纲失败，回退规则大纲: {exc}")
             if task:
-                self._set_task_state(task, status="running", progress=99, message="AI大纲生成失败，使用规则大纲")
+                self._set_task_state(task, status="running", progress=99, message="AI tạo dàn ý thất bại, dùng dàn ý theo quy tắc")
             return fallback_outlines
 
     def _build_reverse_outline_chapters_text(self, chapters: list[BookImportChapter]) -> str:
@@ -1366,9 +1366,9 @@ class BookImportService:
             summary = (chapter.summary or "").strip()
             excerpt = (chapter.content or "").strip()[:2200]
             parts.append(
-                f"【第{chapter.chapter_number}章 {chapter.title}】\n"
-                f"章节摘要：{summary or '无'}\n"
-                f"正文节选：\n{excerpt or '无'}"
+                f"【Chương {chapter.chapter_number} {chapter.title}】\n"
+                f"Tóm tắt chương: {summary or 'Không có'}\n"
+                f"Trích đoạn nội dung chính:\n{excerpt or 'Không có'}"
             )
         return "\n\n".join(parts)
 
@@ -1429,8 +1429,8 @@ class BookImportService:
         if not key_points:
             key_points = list(fallback.get("key_points") or [])
 
-        emotion = str(raw.get("emotion") or fallback.get("emotion") or "剧情递进").strip() or "剧情递进"
-        goal = str(raw.get("goal") or fallback.get("goal") or "推进主线冲突").strip() or "推进主线冲突"
+        emotion = str(raw.get("emotion") or fallback.get("emotion") or "Cốt truyện tăng tiến").strip() or "Cốt truyện tăng tiến"
+        goal = str(raw.get("goal") or fallback.get("goal") or "Đẩy mạnh xung đột tuyến chính").strip() or "Đẩy mạnh xung đột tuyến chính"
 
         return {
             "chapter_number": chapter_number,
@@ -1446,23 +1446,23 @@ class BookImportService:
     def _build_fallback_outline_structure(self, chapter: BookImportChapter) -> dict[str, Any]:
         summary = (chapter.summary or self._build_summary(chapter.content or "")).strip()
         if not summary:
-            summary = "本章围绕主要人物与核心冲突推进剧情。"
+            summary = "Chương này phát triển cốt truyện xoay quanh các nhân vật chính và xung đột cốt lõi."
 
         return {
             "chapter_number": chapter.chapter_number,
             "title": chapter.title,
             "summary": summary[:1200],
             "scenes": [
-                "主角在当前处境中做出关键选择",
-                "冲突升级并形成新的悬念",
+                "Nhân vật chính đưa ra lựa chọn then chốt trong hoàn cảnh hiện tại",
+                "Xung đột leo thang và hình thành nút thắt mới",
             ],
             "characters": [],
             "key_points": [
-                "推进主线冲突",
-                "呈现角色动机与关系变化",
+                "Đẩy mạnh xung đột tuyến chính",
+                "Thể hiện động cơ và thay đổi quan hệ của nhân vật",
             ],
-            "emotion": "紧张递进",
-            "goal": "承接前章并推动后续剧情发展",
+            "emotion": "Căng thẳng tăng tiến",
+            "goal": "Tiếp nối chương trước và thúc đẩy diễn biến tiếp theo",
         }
 
     def _build_fallback_project_suggestion(
@@ -1478,7 +1478,7 @@ class BookImportService:
         ).strip()
         fallback_description = (
             self._build_summary(fallback_description_source)
-            or "由拆书功能基于前3章自动提炼：该故事围绕核心人物与主要冲突展开，可在导入前继续修改。"
+            or "Được tính năng đọc tách sách tự động chắt lọc từ 3 chương đầu: câu chuyện xoay quanh nhân vật cốt lõi và xung đột chính, có thể tiếp tục chỉnh sửa trước khi nhập."
         )
 
         return ProjectSuggestion(
@@ -1491,30 +1491,30 @@ class BookImportService:
         )
 
     def _detect_theme_from_text(self, text: str) -> str:
-        if any(k in text for k in ("复仇", "报仇", "雪恨")):
-            return "复仇与救赎"
-        if any(k in text for k in ("成长", "蜕变", "逆袭")):
-            return "成长与逆袭"
-        if any(k in text for k in ("真相", "谜团", "秘密", "调查")):
-            return "真相与抉择"
-        if any(k in text for k in ("权谋", "争权", "朝堂", "家族")):
-            return "权力与人性"
-        if any(k in text for k in ("爱情", "喜欢", "恋爱", "婚约")):
-            return "爱情与选择"
-        return "命运与选择"
+        if any(k in text for k in ("báo thù", "trả thù", "rửa hận")):
+            return "Báo thù và cứu chuộc"
+        if any(k in text for k in ("trưởng thành", "lột xác", "lội ngược dòng")):
+            return "Trưởng thành và lội ngược dòng"
+        if any(k in text for k in ("sự thật", "bí ẩn", "bí mật", "điều tra")):
+            return "Sự thật và lựa chọn"
+        if any(k in text for k in ("quyền mưu", "tranh quyền", "triều đình", "gia tộc")):
+            return "Quyền lực và nhân tính"
+        if any(k in text for k in ("tình yêu", "thích", "yêu đương", "hôn ước")):
+            return "Tình yêu và lựa chọn"
+        return "Số phận và lựa chọn"
 
     def _detect_genre_from_text(self, text: str) -> str:
-        if any(k in text for k in ("修仙", "宗门", "灵气", "飞升", "仙门")):
+        if any(k in text for k in ("tu tiên", "tông môn", "linh khí", "phi thăng", "tiên môn")):
             return "仙侠"
-        if any(k in text for k in ("玄幻", "异界", "魔法", "斗气")):
+        if any(k in text for k in ("huyền huyễn", "dị giới", "ma pháp", "đấu khí")):
             return "玄幻"
-        if any(k in text for k in ("星际", "机甲", "赛博", "人工智能", "宇宙")):
+        if any(k in text for k in ("liên sao", "cơ giáp", "cyber", "trí tuệ nhân tạo", "vũ trụ")):
             return "科幻"
-        if any(k in text for k in ("悬疑", "凶案", "推理", "谜案", "诡")):
+        if any(k in text for k in ("trinh thám", "án mạng", "suy luận", "vụ án bí ẩn", "quỷ dị")):
             return "悬疑"
-        if any(k in text for k in ("总裁", "职场", "都市", "豪门")):
+        if any(k in text for k in ("tổng tài", "công sở", "đô thị", "hào môn")):
             return "都市"
-        if any(k in text for k in ("恋爱", "言情", "心动", "告白")):
+        if any(k in text for k in ("yêu đương", "ngôn tình", "rung động", "tỏ tình")):
             return "言情"
         return "通用"
 
@@ -1621,7 +1621,7 @@ class BookImportService:
         enable_mcp = any(plugin.enabled for plugin in mcp_plugins) if mcp_plugins else False
 
         if not user_settings.api_key:
-            raise HTTPException(status_code=400, detail="未配置AI Key，无法执行拆书反向生成")
+            raise HTTPException(status_code=400, detail="Chưa cấu hình AI Key, không thể thực hiện suy ngược phân tích sách")
 
         return create_user_ai_service_with_mcp(
             api_provider=user_settings.api_provider,
@@ -1696,20 +1696,20 @@ class BookImportService:
                 await progress_callback(msg, p)
 
         try:
-            await _notify("🌍 正在初始化AI服务...", 0.1)
+            await _notify("🌍 Đang khởi tạo dịch vụ AI...", 0.1)
             ai_service = ai_service or await self._build_user_ai_service(db=db, user_id=user_id)
 
-            await _notify("🌍 正在准备世界观提示词...", 0.2)
+            await _notify("🌍 Đang chuẩn bị prompt bối cảnh thế giới...", 0.2)
             template = await PromptService.get_template("WORLD_BUILDING", user_id, db)
             prompt = PromptService.format_prompt(
                 template,
-                title=project.title or "拆书导入项目",
-                genre=project.genre or "通用",
-                theme=project.theme or "未设定",
-                description=project.description or "暂无简介",
+                title=project.title or "Dự án đọc tách sách",
+                genre=project.genre or "Phổ thông",
+                theme=project.theme or "Chưa thiết lập",
+                description=project.description or "Chưa có phần giới thiệu",
             )
 
-            await _notify("🌍 AI正在生成世界观...", 0.3)
+            await _notify("🌍 AI đang tạo bối cảnh thế giới...", 0.3)
             world_data = await ai_service.call_with_json_retry(
                 prompt=prompt,
                 max_retries=3,
@@ -1718,7 +1718,7 @@ class BookImportService:
             if not isinstance(world_data, dict):
                 return 0
 
-            await _notify("🌍 正在解析世界观数据...", 0.8)
+            await _notify("🌍 Đang phân tích dữ liệu bối cảnh thế giới...", 0.8)
             time_period = str(world_data.get("time_period") or "").strip()
             location = str(world_data.get("location") or "").strip()
             atmosphere = str(world_data.get("atmosphere") or "").strip()
@@ -1738,7 +1738,7 @@ class BookImportService:
                 project.world_rules = rules
                 updated = 1
 
-            await _notify("🌍 世界观写入完成", 1.0)
+            await _notify("🌍 Ghi bối cảnh thế giới hoàn tất", 1.0)
             return updated
         except Exception as exc:
             logger.warning(f"拆书导入阶段生成世界观失败，沿用现有世界观: {exc}")
@@ -1763,31 +1763,31 @@ class BookImportService:
                 p = progress_range[0] + int((progress_range[1] - progress_range[0]) * sub)
                 await progress_callback(msg, p)
 
-        await _notify("💼 正在初始化AI服务...", 0.1)
+        await _notify("💼 Đang khởi tạo dịch vụ AI...", 0.1)
         ai_service = ai_service or await self._build_user_ai_service(db=db, user_id=user_id)
 
-        await _notify("💼 正在准备职业体系提示词...", 0.2)
+        await _notify("💼 Đang chuẩn bị prompt hệ nghề...", 0.2)
         template = await PromptService.get_template("CAREER_SYSTEM_GENERATION", user_id, db)
         prompt = PromptService.format_prompt(
             template,
             title=project.title,
-            genre=project.genre or "未设定",
-            theme=project.theme or "未设定",
-            description=project.description or "暂无简介",
-            time_period=project.world_time_period or "未设定",
-            location=project.world_location or "未设定",
-            atmosphere=project.world_atmosphere or "未设定",
-            rules=project.world_rules or "未设定",
+            genre=project.genre or "Chưa thiết lập",
+            theme=project.theme or "Chưa thiết lập",
+            description=project.description or "Chưa có phần giới thiệu",
+            time_period=project.world_time_period or "Chưa thiết lập",
+            location=project.world_location or "Chưa thiết lập",
+            atmosphere=project.world_atmosphere or "Chưa thiết lập",
+            rules=project.world_rules or "Chưa thiết lập",
         )
 
-        await _notify("💼 AI正在生成职业体系...", 0.3)
+        await _notify("💼 AI đang tạo hệ nghề...", 0.3)
         career_data = await ai_service.call_with_json_retry(
             prompt=prompt,
             max_retries=3,
             expected_type="object",
         )
 
-        await _notify("💼 正在解析职业数据...", 0.7)
+        await _notify("💼 Đang phân tích dữ liệu nghề nghiệp...", 0.7)
         main_careers = career_data.get("main_careers", [])
         sub_careers = career_data.get("sub_careers", [])
         if not isinstance(main_careers, list):
@@ -1817,7 +1817,7 @@ class BookImportService:
 
             return Career(
                 project_id=project.id,
-                name=(item.get("name") or f"未命名{'主' if career_type == 'main' else '副'}职业{idx + 1}")[:100],
+                name=(item.get("name") or f"Nghề {'chính' if career_type == 'main' else 'phụ'} chưa đặt tên {idx + 1}")[:100],
                 type=career_type,
                 description=item.get("description"),
                 category=item.get("category"),
@@ -1869,7 +1869,7 @@ class BookImportService:
             except (TypeError, ValueError):
                 return default
 
-        await _notify("👥 正在初始化AI服务...", 0.05)
+        await _notify("👥 Đang khởi tạo dịch vụ AI...", 0.05)
         ai_service = ai_service or await self._build_user_ai_service(db=db, user_id=user_id)
 
         # 控制数量区间，避免过多生成
@@ -1883,45 +1883,45 @@ class BookImportService:
         main_career_map = {c.name: c for c in main_careers}
         sub_career_map = {c.name: c for c in sub_careers}
 
-        await _notify("👥 正在准备角色生成提示词...", 0.15)
+        await _notify("👥 Đang chuẩn bị prompt tạo nhân vật...", 0.15)
         template = await PromptService.get_template("CHARACTERS_BATCH_GENERATION", user_id, db)
         requirements = (
-            "请生成能够支撑前期剧情推进的关键角色与组织，"
-            "角色和组织都要与世界观、职业体系一致。"
-            "如果包含组织，数量不超过2个。"
-            "请尽量为非组织角色补充 organization_memberships。"
+            "Hãy tạo các nhân vật và tổ chức then chốt có thể hỗ trợ diễn biến cốt truyện giai đoạn đầu,"
+            "nhân vật và tổ chức phải nhất quán với bối cảnh thế giới và hệ nghề."
+            "Nếu có tổ chức, số lượng không vượt quá 2."
+            "Hãy cố gắng bổ sung organization_memberships cho các nhân vật không phải tổ chức."
         )
 
         if main_careers or sub_careers:
-            careers_context = "\n\n【职业分配要求】\n"
-            careers_context += "请为每个非组织角色返回 career_assignment 字段："
-            careers_context += '{"main_career":"主职业名称","main_stage":2,"sub_careers":[{"career":"副职业名称","stage":1}]}'
-            careers_context += "\n职业名称必须从以下列表中选择：\n"
+            careers_context = "\n\n【Yêu cầu phân bổ nghề】\n"
+            careers_context += "Hãy trả về trường career_assignment cho mỗi nhân vật không phải tổ chức:"
+            careers_context += '{"main_career":"Tên nghề chính","main_stage":2,"sub_careers":[{"career":"Tên nghề phụ","stage":1}]}'
+            careers_context += "\nTên nghề phải được chọn từ danh sách sau:\n"
             if main_careers:
-                careers_context += "- 可用主职业：" + "、".join([c.name for c in main_careers]) + "\n"
+                careers_context += "- Nghề chính có thể dùng: " + ", ".join([c.name for c in main_careers]) + "\n"
             if sub_careers:
-                careers_context += "- 可用副职业：" + "、".join([c.name for c in sub_careers]) + "\n"
+                careers_context += "- Nghề phụ có thể dùng: " + ", ".join([c.name for c in sub_careers]) + "\n"
             requirements += careers_context
 
         prompt = PromptService.format_prompt(
             template,
             count=target_count,
-            time_period=project.world_time_period or "未设定",
-            location=project.world_location or "未设定",
-            atmosphere=project.world_atmosphere or "未设定",
-            rules=project.world_rules or "未设定",
-            theme=project.theme or "未设定",
-            genre=project.genre or "未设定",
+            time_period=project.world_time_period or "Chưa thiết lập",
+            location=project.world_location or "Chưa thiết lập",
+            atmosphere=project.world_atmosphere or "Chưa thiết lập",
+            rules=project.world_rules or "Chưa thiết lập",
+            theme=project.theme or "Chưa thiết lập",
+            genre=project.genre or "Chưa thiết lập",
             requirements=requirements,
         )
 
-        await _notify("👥 AI正在生成角色与组织...", 0.25)
+        await _notify("👥 AI đang tạo nhân vật và tổ chức...", 0.25)
         generated_data = await ai_service.call_with_json_retry(
             prompt=prompt,
             max_retries=3,
             expected_type="array",
         )
-        await _notify("👥 正在解析角色数据...", 0.7)
+        await _notify("👥 Đang phân tích dữ liệu nhân vật...", 0.7)
         if isinstance(generated_data, dict):
             generated_entities = [generated_data]
         elif isinstance(generated_data, list):
@@ -2129,7 +2129,7 @@ class BookImportService:
                 if pair in relationship_pairs:
                     continue
 
-                relationship_name = (rel.get("relationship_type") or "未知关系").strip()[:100]
+                relationship_name = (rel.get("relationship_type") or "Quan hệ chưa xác định").strip()[:100]
                 intimacy_level = max(-100, min(_to_int(rel.get("intimacy_level", 50), 50), 100))
                 status = (rel.get("status") or "active")[:20]
                 description = rel.get("description")
@@ -2180,7 +2180,7 @@ class BookImportService:
                     OrganizationMember(
                         organization_id=org.id,
                         character_id=character.id,
-                        position=(membership.get("position") or "成员")[:100],
+                        position=(membership.get("position") or "Thành viên")[:100],
                         rank=max(0, min(_to_int(membership.get("rank", 0), 0), 10)),
                         loyalty=max(0, min(_to_int(membership.get("loyalty", 50), 50), 100)),
                         joined_at=membership.get("joined_at"),
@@ -2220,7 +2220,7 @@ class BookImportService:
                     OrganizationMember(
                         organization_id=org.id,
                         character_id=member_char.id,
-                        position="成员",
+                        position="Thành viên",
                         rank=0,
                         loyalty=50,
                         status="active",
@@ -2246,9 +2246,9 @@ class BookImportService:
             task = self._tasks.get(task_id)
 
         if not task:
-            raise HTTPException(status_code=404, detail="任务不存在")
+            raise HTTPException(status_code=404, detail="Tác vụ không tồn tại")
         if task.user_id != user_id:
-            raise HTTPException(status_code=403, detail="无权访问该任务")
+            raise HTTPException(status_code=403, detail="Không có quyền truy cập tác vụ này")
         return task
 
     def _to_status(self, task: _BookImportTask) -> BookImportTaskStatusResponse:
@@ -2279,7 +2279,7 @@ class BookImportService:
 
     def _check_cancelled(self, task: _BookImportTask) -> None:
         if task.cancelled or task.status == "cancelled":
-            raise asyncio.CancelledError("任务已取消")
+            raise asyncio.CancelledError("Tác vụ đã bị hủy")
 
 
 book_import_service = BookImportService()

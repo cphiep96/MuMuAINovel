@@ -59,8 +59,8 @@ interface NavigationData {
 }
 
 /**
- * 项目内的章节剧情分析页面
- * 显示章节列表和带标注的章节内容
+ * 项目内的ChươngPhân tích cốt truyện页面
+ * 显示Chương列表和带标注的Chương内容
  */
 const ChapterAnalysis: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -90,7 +90,7 @@ const ChapterAnalysis: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 加载章节列表
+  // 加载Chương列表
   useEffect(() => {
     const loadChapters = async () => {
       if (!projectId) return;
@@ -103,14 +103,14 @@ const ChapterAnalysis: React.FC = () => {
         const chapterList = data.items || [];
         setChapters(chapterList);
         
-        // 自动选择第一个有内容的章节
+        // 自动选择第一个有内容的Chương
         const firstChapterWithContent = chapterList.find((ch: ChapterItem) => ch.content && ch.content.trim() !== '');
         if (firstChapterWithContent) {
           loadChapterContent(firstChapterWithContent.id);
         }
       } catch (error) {
-        console.error('加载章节列表失败:', error);
-        message.error('加载章节列表失败');
+        console.error('Tải danh sách chương thất bại:', error);
+        message.error('Tải danh sách chương thất bại');
       } finally {
         setLoading(false);
       }
@@ -119,7 +119,7 @@ const ChapterAnalysis: React.FC = () => {
     loadChapters();
   }, [projectId]);
 
-  // 加载章节内容和标注
+  // 加载Chương内容和标注
   const loadChapterContent = async (chapterId: string) => {
     try {
       setContentLoading(true);
@@ -135,8 +135,8 @@ const ChapterAnalysis: React.FC = () => {
       setAnnotationsData(annotationsResponse ? (annotationsResponse.data || annotationsResponse) : null);
       setNavigation(navigationResponse ? (navigationResponse.data || navigationResponse) : null);
     } catch (error) {
-      console.error('加载章节内容失败:', error);
-      message.error('加载章节内容失败');
+      console.error('Tải nội dung chương thất bại:', error);
+      message.error('Tải nội dung chương thất bại');
     } finally {
       setContentLoading(false);
     }
@@ -199,7 +199,7 @@ const ChapterAnalysis: React.FC = () => {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '100px 0' }}>
-        <Spin size="large" tip="加载章节中..." />
+        <Spin size="large" tip="Đang tải chương..." />
       </div>
     );
   }
@@ -215,7 +215,7 @@ const ChapterAnalysis: React.FC = () => {
         }}>
           <h2 style={{ margin: 0, fontSize: 24 }}>
             <FundOutlined style={{ marginRight: 8 }} />
-            剧情分析
+            Phân tích cốt truyện
           </h2>
         </div>
       )}
@@ -227,15 +227,15 @@ const ChapterAnalysis: React.FC = () => {
         flexDirection: isMobile ? 'column' : 'row',
         overflow: 'hidden'
       }}>
-        {/* 左侧章节列表 - 桌面端 */}
+        {/* 左侧Chương列表 - 桌面端 */}
         {!isMobile && (
         <Card
-          title="章节列表"
+          title="Danh sách chương"
           style={{ width: 280, height: '100%', overflow: 'hidden' }}
           bodyStyle={{ padding: 0, height: 'calc(100% - 57px)', overflow: 'auto' }}
         >
           {chapters.length === 0 ? (
-            <Empty description="暂无章节" style={{ marginTop: 60 }} />
+            <Empty description="Chưa có chương" style={{ marginTop: 60 }} />
           ) : (
             <List
               dataSource={chapters}
@@ -253,13 +253,13 @@ const ChapterAnalysis: React.FC = () => {
                   <List.Item.Meta
                     title={
                       <span style={{ fontSize: 14, fontWeight: selectedChapter?.id === chapter.id ? 600 : 400 }}>
-                        第{chapter.chapter_number}章: {chapter.title}
+                        Chương {chapter.chapter_number}: {chapter.title}
                       </span>
                     }
                     description={
                       <Space size={4}>
                         <Tag color={chapter.content && chapter.content.trim() !== '' ? 'success' : 'default'}>
-                          {chapter.word_count || 0}字
+                          {chapter.word_count || 0} chữ
                         </Tag>
                       </Space>
                     }
@@ -271,10 +271,10 @@ const ChapterAnalysis: React.FC = () => {
         </Card>
         )}
 
-        {/* 移动端章节列表抽屉 */}
+        {/* 移动端Chương列表抽屉 */}
       {isMobile && (
         <Drawer
-          title="章节列表"
+          title="Danh sách chương"
           placement="left"
           onClose={() => setChapterListVisible(false)}
           open={chapterListVisible}
@@ -282,7 +282,7 @@ const ChapterAnalysis: React.FC = () => {
           styles={{ body: { padding: 0 } }}
         >
           {chapters.length === 0 ? (
-            <Empty description="暂无章节" style={{ marginTop: 60 }} />
+            <Empty description="Chưa có chương" style={{ marginTop: 60 }} />
           ) : (
             <List
               dataSource={chapters}
@@ -300,13 +300,13 @@ const ChapterAnalysis: React.FC = () => {
                   <List.Item.Meta
                     title={
                       <span style={{ fontSize: 14, fontWeight: selectedChapter?.id === chapter.id ? 600 : 400 }}>
-                        第{chapter.chapter_number}章: {chapter.title}
+                        Chương {chapter.chapter_number}: {chapter.title}
                       </span>
                     }
                     description={
                       <Space size={4}>
                         <Tag color={chapter.content && chapter.content.trim() !== '' ? 'success' : 'default'}>
-                          {chapter.word_count || 0}字
+                          {chapter.word_count || 0} chữ
                         </Tag>
                       </Space>
                     }
@@ -322,7 +322,7 @@ const ChapterAnalysis: React.FC = () => {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         {!selectedChapter ? (
           <Card style={{ height: '100%' }}>
-            <Empty description="请从左侧选择一个章节查看" style={{ marginTop: 100 }} />
+            <Empty description="Hãy chọn một chương bên trái để xem" style={{ marginTop: 100 }} />
           </Card>
         ) : (
           <>
@@ -342,7 +342,7 @@ const ChapterAnalysis: React.FC = () => {
                       icon={<LeftOutlined />}
                       onClick={handlePreviousChapter}
                       disabled={!navigation?.previous}
-                      title={navigation?.previous ? `上一章: ${navigation.previous.title}` : '已是第一章'}
+                      title={navigation?.previous ? `Chương trước: ${navigation.previous.title}` : 'Đã là chương đầu'}
                       size="small"
                     />
                     <span style={{
@@ -355,18 +355,18 @@ const ChapterAnalysis: React.FC = () => {
                       textOverflow: 'ellipsis',
                       padding: '0 8px'
                     }}>
-                      第{selectedChapter.chapter_number}章: {selectedChapter.title}
+                      Chương {selectedChapter.chapter_number}: {selectedChapter.title}
                     </span>
                     <Button
                       icon={<RightOutlined />}
                       onClick={handleNextChapter}
                       disabled={!navigation?.next}
-                      title={navigation?.next ? `下一章: ${navigation.next.title}` : '已是最后一章'}
+                      title={navigation?.next ? `Chương sau: ${navigation.next.title}` : 'Đã là chương cuối'}
                       size="small"
                     />
                   </div>
 
-                  {/* 第二行：章节、开关、分析按钮 */}
+                  {/* 第二行：Chương、开关、Phân tích按钮 */}
                   <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -378,7 +378,7 @@ const ChapterAnalysis: React.FC = () => {
                       onClick={() => setChapterListVisible(true)}
                       size="small"
                     >
-                      章节
+                      Chương
                     </Button>
 
                     {hasAnnotations && (
@@ -401,7 +401,7 @@ const ChapterAnalysis: React.FC = () => {
                           onClick={() => setSidebarVisible(true)}
                           size="small"
                         >
-                          分析
+                          Phân tích
                         </Button>
                       </>
                     )}
@@ -419,20 +419,20 @@ const ChapterAnalysis: React.FC = () => {
                       icon={<LeftOutlined />}
                       onClick={handlePreviousChapter}
                       disabled={!navigation?.previous}
-                      title={navigation?.previous ? `上一章: ${navigation.previous.title}` : '已是第一章'}
+                      title={navigation?.previous ? `Chương trước: ${navigation.previous.title}` : 'Đã là chương đầu'}
                     >
-                      上一章
+                      Chương trước
                     </Button>
                     <span style={{ fontSize: 16, fontWeight: 600 }}>
-                      第{selectedChapter.chapter_number}章: {selectedChapter.title}
+                      Chương {selectedChapter.chapter_number}: {selectedChapter.title}
                     </span>
                     <Button
                       icon={<RightOutlined />}
                       onClick={handleNextChapter}
                       disabled={!navigation?.next}
-                      title={navigation?.next ? `下一章: ${navigation.next.title}` : '已是最后一章'}
+                      title={navigation?.next ? `Chương sau: ${navigation.next.title}` : 'Đã là chương cuối'}
                     >
-                      下一章
+                      Chương sau
                     </Button>
                   </Space>
 
@@ -445,7 +445,7 @@ const ChapterAnalysis: React.FC = () => {
                           checkedChildren={<EyeOutlined />}
                           unCheckedChildren={<EyeInvisibleOutlined />}
                         />
-                        <span style={{ fontSize: 13, color: token.colorTextSecondary }}>显示标注</span>
+                        <span style={{ fontSize: 13, color: token.colorTextSecondary }}>Hiện chú thích</span>
                       </>
                     )}
                   </Space>
@@ -459,14 +459,14 @@ const ChapterAnalysis: React.FC = () => {
                   color: token.colorTextTertiary,
                   lineHeight: 1.5
                 }}>
-                  共有 {annotationsData.summary.total_annotations} 个标注：
-                  {annotationsData.summary.hooks > 0 && ` 🎣${annotationsData.summary.hooks}个钩子`}
+                  Tổng {annotationsData.summary.total_annotations} chú thích:
+                  {annotationsData.summary.hooks > 0 && ` 🎣${annotationsData.summary.hooks} móc`}
                   {annotationsData.summary.foreshadows > 0 &&
-                    ` 🌟${annotationsData.summary.foreshadows}个伏笔`}
+                    ` 🌟${annotationsData.summary.foreshadows} phục bút`}
                   {annotationsData.summary.plot_points > 0 &&
-                    ` 💎${annotationsData.summary.plot_points}个情节点`}
+                    ` 💎${annotationsData.summary.plot_points} điểm tình tiết`}
                   {annotationsData.summary.character_events > 0 &&
-                    ` 👤${annotationsData.summary.character_events}个角色事件`}
+                    ` 👤${annotationsData.summary.character_events} sự kiện nhân vật`}
                 </div>
               )}
             </Card>
@@ -478,7 +478,7 @@ const ChapterAnalysis: React.FC = () => {
               gap: isMobile ? 0 : 16,
               overflow: 'hidden'
             }}>
-              {/* 章节内容 */}
+              {/* Chương内容 */}
               <Card
                 style={{ flex: 1, overflow: 'auto' }}
                 bodyStyle={{ padding: isMobile ? '12px' : '24px' }}
@@ -488,8 +488,8 @@ const ChapterAnalysis: React.FC = () => {
                   <>
                     {!hasAnnotations && (
                       <Alert
-                        message="暂无分析数据"
-                        description="该章节尚未进行AI分析，无法显示记忆标注。"
+                        message="Chưa có dữ liệu phân tích"
+                        description="Chương này chưa được AI phân tích nên không thể hiển thị chú thích ký ức."
                         type="info"
                         showIcon
                         style={{ marginBottom: 24 }}
@@ -543,7 +543,7 @@ const ChapterAnalysis: React.FC = () => {
             {/* 移动端抽屉 */}
             {hasAnnotations && annotationsData && (
               <Drawer
-                title="章节分析"
+                title="ChươngPhân tích"
                 placement="right"
                 onClose={() => setSidebarVisible(false)}
                 open={sidebarVisible}

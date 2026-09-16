@@ -28,7 +28,7 @@ from app.security import validate_public_http_url
 
 logger = get_logger(__name__)
 
-router = APIRouter(prefix="/mcp/plugins", tags=["MCP插件管理"])
+router = APIRouter(prefix="/mcp/plugins", tags=["Quản lý plugin MCP"])
 
 HTTP_PLUGIN_TYPES = {"http", "streamable_http", "sse"}
 
@@ -36,7 +36,7 @@ HTTP_PLUGIN_TYPES = {"http", "streamable_http", "sse"}
 def _validate_mcp_server_url(plugin_type: str, server_url: Optional[str]) -> Optional[str]:
     if plugin_type in HTTP_PLUGIN_TYPES:
         if not server_url:
-            raise HTTPException(status_code=400, detail=f"{plugin_type}类型插件必须提供server_url")
+            raise HTTPException(status_code=400, detail=f"Plugin kiểu {plugin_type} phải cung cấp server_url")
         return validate_public_http_url(server_url)
     return server_url
 
@@ -44,7 +44,7 @@ def _validate_mcp_server_url(plugin_type: str, server_url: Optional[str]) -> Opt
 def require_login(request: Request) -> User:
     """依赖：要求用户已登录"""
     if not hasattr(request.state, "user") or not request.state.user:
-        raise HTTPException(status_code=401, detail="需要登录")
+        raise HTTPException(status_code=401, detail="Cần đăng nhập")
     return request.state.user
 
 
@@ -102,7 +102,7 @@ async def _register_plugin_background(
                 logger.info(f"后台注册MCP插件成功: {plugin_name}")
                 return
             else:
-                last_error = "连接失败"
+                last_error = "Kết nối thất bại"
                 
         except Exception as e:
             last_error = str(e)
@@ -117,7 +117,7 @@ async def _register_plugin_background(
             stmt = (
                 update(MCPPlugin)
                 .where(MCPPlugin.user_id == user_id, MCPPlugin.plugin_name == plugin_name)
-                .values(status="error", last_error=str(last_error)[:500] if last_error else "连接失败")
+                .values(status="error", last_error=str(last_error)[:500] if last_error else "Kết nối thất bại")
             )
             await db.execute(stmt)
             await db.commit()
@@ -206,7 +206,7 @@ async def create_plugin(
     existing = result.scalar_one_or_none()
     
     if existing:
-        raise HTTPException(status_code=400, detail=f"插件名已存在: {data.plugin_name}")
+        raise HTTPException(status_code=400, detail=f"Tên plugin đã tồn tại: {data.plugin_name}")
     
     # 创建插件数据
     plugin_data = data.model_dump()
@@ -272,11 +272,11 @@ async def create_plugin_simple(
         
         # 验证格式
         if "mcpServers" not in config:
-            raise HTTPException(status_code=400, detail="配置JSON必须包含mcpServers字段")
+            raise HTTPException(status_code=400, detail="JSON cấu hình phải chứa trường mcpServers")
         
         servers = config["mcpServers"]
         if not servers or len(servers) == 0:
-            raise HTTPException(status_code=400, detail="mcpServers不能为空")
+            raise HTTPException(status_code=400, detail="mcpServers không được để trống")
         
         # 自动提取第一个插件名称
         plugin_name = list(servers.keys())[0]
@@ -288,7 +288,7 @@ async def create_plugin_simple(
         server_type = server_config.get("type", "http")
         
         if server_type not in ["http", "stdio", "streamable_http", "sse"]:
-            raise HTTPException(status_code=400, detail=f"不支持的服务器类型: {server_type}")
+            raise HTTPException(status_code=400, detail=f"Loại máy chủ không được hỗ trợ: {server_type}")
         
         # 检查插件名是否已存在
         result = await db.execute(
@@ -319,7 +319,7 @@ async def create_plugin_simple(
             plugin_data["env"] = server_config.get("env", {})
             
             if not plugin_data["command"]:
-                raise HTTPException(status_code=400, detail="Stdio类型插件必须提供command字段")
+                raise HTTPException(status_code=400, detail="Plugin kiểu Stdio phải cung cấp trường command")
         
         if existing:
             # 更新现有插件
@@ -389,12 +389,12 @@ async def create_plugin_simple(
         return plugin
         
     except json.JSONDecodeError as e:
-        raise HTTPException(status_code=400, detail=f"配置JSON格式错误: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Lỗi định dạng JSON cấu hình: {str(e)}")
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"创建插件失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"创建插件失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Tạo plugin thất bại: {str(e)}")
 
 
 @router.get("/{plugin_id}", response_model=MCPPluginResponse)
@@ -415,7 +415,7 @@ async def get_plugin(
     plugin = result.scalar_one_or_none()
     
     if not plugin:
-        raise HTTPException(status_code=404, detail="插件不存在")
+        raise HTTPException(status_code=404, detail="Plugin không tồn tại")
     
     return plugin
 
@@ -439,7 +439,7 @@ async def update_plugin(
     plugin = result.scalar_one_or_none()
     
     if not plugin:
-        raise HTTPException(status_code=404, detail="插件不存在")
+        raise HTTPException(status_code=404, detail="Plugin không tồn tại")
     
     # 更新字段
     update_data = data.model_dump(exclude_unset=True)
@@ -496,7 +496,7 @@ async def delete_plugin(
     plugin = result.scalar_one_or_none()
     
     if not plugin:
-        raise HTTPException(status_code=404, detail="插件不存在")
+        raise HTTPException(status_code=404, detail="Plugin không tồn tại")
     
     # 保存插件信息用于后台注销
     plugin_name = plugin.plugin_name
@@ -510,7 +510,7 @@ async def delete_plugin(
     asyncio.create_task(_unregister_plugin_safe(user_id, plugin_name))
     
     logger.info(f"用户 {user.user_id} 删除插件: {plugin_name}（MCP注销在后台执行）")
-    return {"message": "插件已删除", "plugin_name": plugin_name}
+    return {"message": "Plugin đã bị xóa", "plugin_name": plugin_name}
 
 
 @router.post("/{plugin_id}/toggle", response_model=MCPPluginResponse)
@@ -536,7 +536,7 @@ async def toggle_plugin(
     plugin = result.scalar_one_or_none()
     
     if not plugin:
-        raise HTTPException(status_code=404, detail="插件不存在")
+        raise HTTPException(status_code=404, detail="Plugin không tồn tại")
     
     # 保存插件信息用于后续MCP操作
     plugin_name = plugin.plugin_name
@@ -572,7 +572,7 @@ async def toggle_plugin(
         # 禁用：后台从统一门面注销（不影响数据库状态）
         asyncio.create_task(_unregister_plugin_safe(user.user_id, plugin_name))
     
-    action = "启用" if enabled else "禁用"
+    action = "bật" if enabled else "tắt"
     logger.info(f"用户 {user.user_id} {action}插件: {plugin_name}（MCP操作在后台执行）")
     return plugin
 
@@ -599,14 +599,14 @@ async def test_plugin(
     plugin = result.scalar_one_or_none()
 
     if not plugin:
-        raise HTTPException(status_code=404, detail="插件不存在")
+        raise HTTPException(status_code=404, detail="Plugin không tồn tại")
 
     if not plugin.enabled:
         return MCPTestResult(
             success=False,
-            message="插件未启用",
-            error="请先启用插件",
-            suggestions=["点击开关按钮启用插件"]
+            message="Plugin chưa được bật",
+            error="Vui lòng bật plugin trước",
+            suggestions=["Nhấn nút công tắc để bật plugin"]
         )
 
     # 检查会话是否已注册
@@ -634,12 +634,12 @@ async def test_plugin(
 
         return MCPTestResult(
             success=False,
-            message="正在建立连接...",
-            error="插件会话正在初始化，请稍后重试",
+            message="Đang thiết lập kết nối...",
+            error="Phiên plugin đang khởi tạo, vui lòng thử lại sau",
             suggestions=[
-                "插件正在连接MCP服务器",
-                "请等待2-3秒后再次点击测试",
-                "如果持续失败，请检查服务器地址是否正确"
+                "Plugin đang kết nối máy chủ MCP",
+                "Vui lòng đợi 2-3 giây rồi nhấn kiểm tra lại",
+                "Nếu vẫn thất bại, hãy kiểm tra địa chỉ máy chủ có đúng không"
             ]
         )
 
@@ -666,7 +666,7 @@ async def test_plugin(
         plugin.last_error = str(e)
         plugin.last_test_at = datetime.now()
         await db.commit()
-        raise HTTPException(status_code=500, detail=f"测试失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Kiểm tra thất bại: {str(e)}")
 
 
 async def _ensure_plugin_registered(
@@ -704,7 +704,7 @@ async def _ensure_plugin_registered(
         if not success:
             raise HTTPException(
                 status_code=500,
-                detail=f"插件注册失败: {plugin.plugin_name}"
+                detail=f"Đăng ký plugin thất bại: {plugin.plugin_name}"
             )
         return True
 
@@ -725,7 +725,7 @@ async def get_plugin_status(
     plugin = result.scalar_one_or_none()
     
     if not plugin:
-        raise HTTPException(status_code=404, detail="插件不存在")
+        raise HTTPException(status_code=404, detail="Plugin không tồn tại")
     
     session_stats = mcp_client.get_session_stats()
     session_key = f"{user.user_id}:{plugin.plugin_name}"
@@ -837,7 +837,7 @@ async def clear_cache(
     """
     # 非管理员只能清理自己的缓存
     if user_id and user_id != user.user_id:
-        raise HTTPException(status_code=403, detail="无权清理其他用户的缓存")
+        raise HTTPException(status_code=403, detail="Không có quyền xóa bộ nhớ đệm của người dùng khác")
     
     # 如果没有指定user_id，使用当前用户
     target_user_id = user_id or user.user_id
@@ -845,13 +845,13 @@ async def clear_cache(
     # 使用统一门面清理缓存
     mcp_client.clear_cache(target_user_id, plugin_name)
     
-    message = "已清理"
+    message = "Đã dọn sạch"
     if plugin_name:
-        message += f"插件 {plugin_name} 的缓存"
+        message += f" bộ nhớ đệm của plugin {plugin_name}"
     elif target_user_id:
-        message += f"用户 {target_user_id} 的所有缓存"
+        message += f" toàn bộ bộ nhớ đệm của người dùng {target_user_id}"
     else:
-        message += "所有缓存"
+        message += " toàn bộ bộ nhớ đệm"
     
     logger.info(f"用户 {user.user_id} {message}")
     
@@ -880,10 +880,10 @@ async def get_plugin_tools(
     plugin = result.scalar_one_or_none()
     
     if not plugin:
-        raise HTTPException(status_code=404, detail="插件不存在")
+        raise HTTPException(status_code=404, detail="Plugin không tồn tại")
     
     if not plugin.enabled:
-        raise HTTPException(status_code=400, detail="插件未启用")
+        raise HTTPException(status_code=400, detail="Plugin chưa được bật")
     
     try:
         # 确保插件已注册
@@ -905,7 +905,7 @@ async def get_plugin_tools(
         raise
     except Exception as e:
         logger.error(f"获取工具列表失败: {plugin.plugin_name}, 错误: {e}")
-        raise HTTPException(status_code=500, detail=f"获取工具列表失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Lấy danh sách công cụ thất bại: {str(e)}")
 
 
 @router.post("/call")
@@ -927,10 +927,10 @@ async def call_mcp_tool(
     plugin = result.scalar_one_or_none()
     
     if not plugin:
-        raise HTTPException(status_code=404, detail="插件不存在")
+        raise HTTPException(status_code=404, detail="Plugin không tồn tại")
     
     if not plugin.enabled:
-        raise HTTPException(status_code=400, detail="插件未启用")
+        raise HTTPException(status_code=400, detail="Plugin chưa được bật")
     
     try:
         # 确保插件已注册
@@ -954,4 +954,4 @@ async def call_mcp_tool(
         raise
     except Exception as e:
         logger.error(f"调用工具失败: {plugin.plugin_name}.{data.tool_name}, 错误: {e}")
-        raise HTTPException(status_code=500, detail=f"工具调用失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Gọi công cụ thất bại: {str(e)}")

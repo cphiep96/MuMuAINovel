@@ -21,8 +21,17 @@ import {
 } from '@xyflow/react';
 import type { Node, Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { genderLabel } from '../utils/displayLabels';
 
 const { Text } = Typography;
+
+// Tiền tố nhãn quan hệ dạng đặc biệt. Nhận cả nhãn cũ bằng tiếng Trung để tương thích dữ liệu đã tạo trước đây.
+const ORG_MEMBER_PREFIXES = ['Thành viên tổ chức·', '组织成员·'];
+const MAIN_CAREER_PREFIXES = ['Nghề chính·', '主职业·'];
+const SUB_CAREER_PREFIXES = ['Nghề phụ·', '副职业·'];
+const CAREER_CLASS_PREFIXES = ['Phân loại nghề·', '职业分类·'];
+
+const hasAnyPrefix = (value: string, prefixes: string[]) => prefixes.some((prefix) => value.startsWith(prefix));
 
 interface GraphNode {
   id: string;
@@ -103,15 +112,15 @@ const GROUP_SUB_CAREER_NODE_ID = '__career_group_sub__';
 type EdgeColorPreset = 'primary' | 'warning' | 'info' | 'textTertiary' | 'error' | 'success';
 
 const EDGE_CATEGORY_META: Record<string, { label: string; colorPreset: EdgeColorPreset; order: number }> = {
-  organization: { label: '组织成员', colorPreset: 'primary', order: 1 },
-  career_main: { label: '主职业关联', colorPreset: 'warning', order: 2 },
-  career_sub: { label: '副职业关联', colorPreset: 'info', order: 3 },
-  career_group: { label: '职业分类', colorPreset: 'textTertiary', order: 4 },
-  family: { label: '亲属关系', colorPreset: 'warning', order: 5 },
-  hostile: { label: '敌对关系', colorPreset: 'error', order: 6 },
-  professional: { label: '职业关系', colorPreset: 'info', order: 7 },
-  social: { label: '社交关系', colorPreset: 'success', order: 8 },
-  default: { label: '其他关系', colorPreset: 'textTertiary', order: 99 },
+  organization: { label: 'Thành viên tổ chức', colorPreset: 'primary', order: 1 },
+  career_main: { label: 'Liên kết nghề chính', colorPreset: 'warning', order: 2 },
+  career_sub: { label: 'Liên kết nghề phụ', colorPreset: 'info', order: 3 },
+  career_group: { label: 'Phân loại nghề', colorPreset: 'textTertiary', order: 4 },
+  family: { label: 'Quan hệ họ hàng', colorPreset: 'warning', order: 5 },
+  hostile: { label: 'Quan hệ thù địch', colorPreset: 'error', order: 6 },
+  professional: { label: 'Quan hệ nghề nghiệp', colorPreset: 'info', order: 7 },
+  social: { label: 'Quan hệ xã hội', colorPreset: 'success', order: 8 },
+  default: { label: 'Quan hệ khác', colorPreset: 'textTertiary', order: 99 },
 };
 
 const getEdgeCategory = (edge: Edge) =>
@@ -119,7 +128,7 @@ const getEdgeCategory = (edge: Edge) =>
 
 const getEdgeCategoryMeta = (category: string) =>
   EDGE_CATEGORY_META[category] || {
-    label: `${category}关系`,
+    label: `Quan hệ ${category}`,
     colorPreset: 'textTertiary' as const,
     order: 999,
   };
@@ -213,7 +222,7 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
   // 增大节点间距，使用更合理的排版
   dagreGraph.setGraph({ rankdir: 'TB', nodesep: 160, ranksep: 180, edgesep: 80, marginx: 40, marginy: 40 });
 
-  // 1. 拆分职业节点和其他节点
+  // 1. 拆分Nút nghề nghiệp和其他节点
   const careerNodeIds = new Set(
     nodes.filter((n) => n.id.startsWith('career-') || n.id.startsWith('__career_group')).map((n) => n.id)
   );
@@ -333,7 +342,7 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
   const safeMinX = Number.isFinite(minX) ? minX : 0;
   const safeMinY = Number.isFinite(minY) ? minY : 0;
 
-  // 4. 在左侧独立排版职业节点
+  // 4. 在左侧独立排版Nút nghề nghiệp
   const careerStartX = safeMinX - 460; // 在主图左侧留出足够空间
   let currentY = safeMinY;
 
@@ -423,19 +432,19 @@ const getCategoryColor = (
 ) => {
   const inactiveColor = token.colorBorder;
 
-  if (relationshipName.startsWith('组织成员·')) {
+  if (hasAnyPrefix(relationshipName, ORG_MEMBER_PREFIXES)) {
     return isActive ? token.colorPrimary : inactiveColor;
   }
 
-  if (relationshipName.startsWith('主职业·')) {
+  if (hasAnyPrefix(relationshipName, MAIN_CAREER_PREFIXES)) {
     return isActive ? token.colorWarning : inactiveColor;
   }
 
-  if (relationshipName.startsWith('副职业·')) {
+  if (hasAnyPrefix(relationshipName, SUB_CAREER_PREFIXES)) {
     return isActive ? token.colorInfo : inactiveColor;
   }
 
-  if (relationshipName.startsWith('职业分类·')) {
+  if (hasAnyPrefix(relationshipName, CAREER_CLASS_PREFIXES)) {
     return isActive ? token.colorTextTertiary : inactiveColor;
   }
 
@@ -608,7 +617,7 @@ export default function RelationshipGraph() {
           order: meta.order,
         };
       })
-      .sort((a, b) => a.order - b.order || a.label.localeCompare(b.label, 'zh-CN'));
+      .sort((a, b) => a.order - b.order || a.label.localeCompare(b.label, 'vi-VN'));
   }, [edges, token]);
 
   useEffect(() => {
@@ -648,7 +657,7 @@ export default function RelationshipGraph() {
       const res = await axios.get('/api/relationships/types');
       setRelationshipTypes(res.data || []);
     } catch (error) {
-      console.error('加载关系类型失败', error);
+      console.error('Tải loại quan hệ thất bại', error);
     }
   };
 
@@ -675,10 +684,10 @@ export default function RelationshipGraph() {
         colorSuccess: token.colorSuccess,
         colorBorder: token.colorBorder,
       });
-      const isOrgMemberLink = relationship.startsWith('组织成员·');
-      const isCareerMainLink = relationship.startsWith('主职业·');
-      const isCareerSubLink = relationship.startsWith('副职业·');
-      const isCareerClassLink = relationship.startsWith('职业分类·');
+      const isOrgMemberLink = hasAnyPrefix(relationship, ORG_MEMBER_PREFIXES);
+      const isCareerMainLink = hasAnyPrefix(relationship, MAIN_CAREER_PREFIXES);
+      const isCareerSubLink = hasAnyPrefix(relationship, SUB_CAREER_PREFIXES);
+      const isCareerClassLink = hasAnyPrefix(relationship, CAREER_CLASS_PREFIXES);
 
       return {
         id: edgeId,
@@ -775,7 +784,7 @@ export default function RelationshipGraph() {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
             <ApartmentOutlined style={{ fontSize: 24, color: token.colorSuccess, marginBottom: 4 }} />
             <div style={{ fontWeight: 600, fontSize: 14, color: token.colorText, maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{node.name}</div>
-            <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>{detail?.organization_type || '组织'}</div>
+            <div style={{ fontSize: 11, color: token.colorTextSecondary, marginTop: 2 }}>{detail?.organization_type || 'Tổ chức'}</div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
@@ -788,7 +797,7 @@ export default function RelationshipGraph() {
             )}
             <div style={{ fontWeight: 600, fontSize: 13, color: token.colorText, maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{node.name}</div>
             <div style={{ fontSize: 11, color: baseColor, marginTop: 2, transform: 'scale(0.9)' }}>
-              {node.role_type === 'protagonist' ? '主角' : node.role_type === 'antagonist' ? '反派' : '配角'}
+              {node.role_type === 'protagonist' ? 'Nhân vật chính' : node.role_type === 'antagonist' ? 'Phản diện' : 'Nhân vật phụ'}
             </div>
           </div>
         );
@@ -813,7 +822,7 @@ export default function RelationshipGraph() {
         data: {
           label: (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ fontSize: 11, color: token.colorWarning, marginBottom: 2 }}>主职业</div>
+              <div style={{ fontSize: 11, color: token.colorWarning, marginBottom: 2 }}>Nghề chính</div>
               <div style={{ fontWeight: 600, fontSize: 13, color: token.colorText }}>{career.name}</div>
             </div>
           ),
@@ -829,7 +838,7 @@ export default function RelationshipGraph() {
         data: {
           label: (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ fontSize: 11, color: token.colorInfo, marginBottom: 2 }}>副职业</div>
+              <div style={{ fontSize: 11, color: token.colorInfo, marginBottom: 2 }}>Nghề phụ</div>
               <div style={{ fontWeight: 600, fontSize: 13, color: token.colorText }}>{career.name}</div>
             </div>
           ),
@@ -845,7 +854,7 @@ export default function RelationshipGraph() {
           type: 'default',
           position: { x: 0, y: 0 },
           data: {
-            label: '主职业分组',
+            label: 'Nhóm nghề chính',
             type: 'career_group',
           },
           style: getCareerGroupStyle('main'),
@@ -857,7 +866,7 @@ export default function RelationshipGraph() {
           type: 'default',
           position: { x: 0, y: 0 },
           data: {
-            label: '副职业分组',
+            label: 'Nhóm nghề phụ',
             type: 'career_group',
           },
           style: getCareerGroupStyle('sub'),
@@ -866,8 +875,8 @@ export default function RelationshipGraph() {
 
       const allNodes: Node[] = [...baseNodes, ...careerGroupNodes, ...mainCareerNodes, ...subCareerNodes];
 
-      const orgMemberLinks = data.links.filter((link) => link.relationship.startsWith('组织成员·'));
-      const memberRelationLinks = data.links.filter((link) => !link.relationship.startsWith('组织成员·'));
+      const orgMemberLinks = data.links.filter((link) => hasAnyPrefix(link.relationship, ORG_MEMBER_PREFIXES));
+      const memberRelationLinks = data.links.filter((link) => !hasAnyPrefix(link.relationship, ORG_MEMBER_PREFIXES));
 
       // 先建立组织-成员边（用于先稳定层级结构）
       const orgMemberEdges: Edge[] = orgMemberLinks.map((link) =>
@@ -889,7 +898,7 @@ export default function RelationshipGraph() {
             `${GROUP_MAIN_CAREER_NODE_ID}-${node.id}`,
             GROUP_MAIN_CAREER_NODE_ID,
             node.id,
-            '职业分类·主职业',
+            'Phân loại nghề·Nghề chính',
             'active',
             0,
             { dashed: true, layoutWeight: 4 },
@@ -900,7 +909,7 @@ export default function RelationshipGraph() {
             `${GROUP_SUB_CAREER_NODE_ID}-${node.id}`,
             GROUP_SUB_CAREER_NODE_ID,
             node.id,
-            '职业分类·副职业',
+            'Phân loại nghề·Nghề phụ',
             'active',
             0,
             { dashed: true, layoutWeight: 4 },
@@ -920,13 +929,13 @@ export default function RelationshipGraph() {
           if (character.main_career_id) {
             const careerNodeId = `career-main-${character.main_career_id}`;
             if (mainCareerNodes.some((node) => node.id === careerNodeId)) {
-              const careerName = localCareerNameMap[character.main_career_id] || '未知职业';
+              const careerName = localCareerNameMap[character.main_career_id] || 'Nghề không rõ';
               careerToCharacterEdges.push(
                 buildFlowEdge(
                   `${careerNodeId}-${character.id}-main`,
                   careerNodeId,
                   character.id,
-                  `主职业·${careerName}`,
+                  `Nghề chính·${careerName}`,
                   'active',
                   100,
                   { layoutWeight: 3 },
@@ -939,13 +948,13 @@ export default function RelationshipGraph() {
           subCareerData.forEach((sub) => {
             const careerNodeId = `career-sub-${sub.career_id}`;
             if (subCareerNodes.some((node) => node.id === careerNodeId)) {
-              const careerName = localCareerNameMap[sub.career_id] || '未知副职业';
+              const careerName = localCareerNameMap[sub.career_id] || 'Nghề phụ không rõ';
               careerToCharacterEdges.push(
                 buildFlowEdge(
                   `${careerNodeId}-${character.id}-sub-${sub.stage || 1}`,
                   careerNodeId,
                   character.id,
-                  `副职业·${careerName}`,
+                  `Nghề phụ·${careerName}`,
                   'active',
                   80,
                   { dashed: true, layoutWeight: 2 },
@@ -977,7 +986,7 @@ export default function RelationshipGraph() {
       setEdges([...orgMemberEdges, ...careerGroupEdges, ...careerToCharacterEdges, ...memberRelationEdges]);
       setGraphData(data);
     } catch (error) {
-      message.error('加载关系图谱失败');
+      message.error('Tải sơ đồ quan hệ thất bại');
       console.error(error);
     } finally {
       setLoading(false);
@@ -1013,7 +1022,7 @@ export default function RelationshipGraph() {
       return;
     }
 
-    // 职业节点不展示详情
+    // Nút nghề nghiệp不展示详情
     if (nodeId.startsWith('career-main-') || nodeId.startsWith('career-sub-')) {
       return;
     }
@@ -1029,7 +1038,7 @@ export default function RelationshipGraph() {
       const res = await axios.get(`/api/characters/${nodeId}`);
       setNodeDetail(res.data as CharacterDetail);
     } catch (error) {
-      message.error('加载详情失败');
+      message.error('Tải chi tiết thất bại');
       console.error(error);
     } finally {
       setDetailLoading(false);
@@ -1082,40 +1091,40 @@ export default function RelationshipGraph() {
         }}
       >
         <Text strong style={{ fontSize: 14, color: token.colorText }}>
-          职业体系
+          Hệ thống nghề nghiệp
         </Text>
         <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {nodeDetail.main_career_id ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Tag color="gold" style={{ margin: 0, borderRadius: 12, padding: '0 10px', fontWeight: 500 }}>主职业</Tag>
+              <Tag color="gold" style={{ margin: 0, borderRadius: 12, padding: '0 10px', fontWeight: 500 }}>Nghề chính</Tag>
               <span style={{ fontSize: 14, color: token.colorText }}>
                 {careerNameMap[nodeDetail.main_career_id]?.name || nodeDetail.main_career_id}
-                {nodeDetail.main_career_stage ? <span style={{ color: token.colorTextTertiary, marginLeft: 4 }}>第{nodeDetail.main_career_stage}阶</span> : ''}
+                {nodeDetail.main_career_stage ? <span style={{ color: token.colorTextTertiary, marginLeft: 4 }}>Bậc {nodeDetail.main_career_stage}</span> : ''}
               </span>
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Tag style={{ margin: 0, borderRadius: 12, padding: '0 10px' }}>主职业</Tag>
-              <span style={{ fontSize: 14, color: token.colorTextTertiary }}>未设置</span>
+              <Tag style={{ margin: 0, borderRadius: 12, padding: '0 10px' }}>Nghề chính</Tag>
+              <span style={{ fontSize: 14, color: token.colorTextTertiary }}>Chưa đặt</span>
             </div>
           )}
 
           {subCareerData.length > 0 ? (
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-               <Tag color="cyan" style={{ margin: 0, borderRadius: 12, padding: '0 10px', fontWeight: 500 }}>副职业</Tag>
+               <Tag color="cyan" style={{ margin: 0, borderRadius: 12, padding: '0 10px', fontWeight: 500 }}>Nghề phụ</Tag>
                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, flex: 1 }}>
                 {subCareerData.map((sub, index) => (
                   <span key={`${sub.career_id}-${index}`} style={{ fontSize: 14, color: token.colorText, background: token.colorBgContainer, border: `1px solid ${token.colorBorderSecondary}`, borderRadius: token.borderRadiusSM, padding: '0 6px' }}>
                     {careerNameMap[sub.career_id]?.name || sub.career_id}
-                    {sub.stage ? <span style={{ color: token.colorTextTertiary, marginLeft: 4 }}>阶{sub.stage}</span> : ''}
+                    {sub.stage ? <span style={{ color: token.colorTextTertiary, marginLeft: 4 }}>Bậc {sub.stage}</span> : ''}
                   </span>
                 ))}
                </div>
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Tag style={{ margin: 0, borderRadius: 12, padding: '0 10px' }}>副职业</Tag>
-              <span style={{ fontSize: 14, color: token.colorTextTertiary }}>未设置</span>
+              <Tag style={{ margin: 0, borderRadius: 12, padding: '0 10px' }}>Nghề phụ</Tag>
+              <span style={{ fontSize: 14, color: token.colorTextTertiary }}>Chưa đặt</span>
             </div>
           )}
         </div>
@@ -1156,11 +1165,11 @@ export default function RelationshipGraph() {
         title={
           <Space>
             <Button type="text" icon={<ArrowLeftOutlined />} onClick={goBack}>
-              返回
+              Quay lại
             </Button>
-            <span>关系图谱</span>
+            <span>Sơ đồ quan hệ</span>
             <Tag color="processing" style={{ marginInlineStart: 4 }}>
-              {graphData?.nodes?.length || 0} 节点 / {graphData?.links?.length || 0} 关系
+              {graphData?.nodes?.length || 0}  nút / {graphData?.links?.length || 0} quan hệ
             </Tag>
           </Space>
         }
@@ -1170,19 +1179,19 @@ export default function RelationshipGraph() {
               {/* 节点图例 */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <span style={{ color: token.colorInfo, fontWeight: 'bold' }}>●</span>
-                <span>角色（圆形）</span>
+                <span>Nhân vật (tròn)</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <span style={{ color: token.colorSuccess, fontWeight: 'bold' }}>■</span>
-                <span>组织（方形）</span>
+                <span>Tổ chức (vuông)</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <span style={{ color: token.colorWarning, fontWeight: 'bold' }}>▭</span>
-                <span>主职业</span>
+                <span>Nghề chính</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <span style={{ color: token.colorInfo, fontWeight: 'bold' }}>▭</span>
-                <span>副职业</span>
+                <span>Nghề phụ</span>
               </div>
 
               <span style={{ color: token.colorBorder }}>|</span>
@@ -1190,22 +1199,22 @@ export default function RelationshipGraph() {
               {/* 连线图例 */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <span style={{ color: token.colorPrimary, fontWeight: 'bold' }}>- -</span>
-                <span>组织成员</span>
+                <span>Thành viên tổ chức</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <span style={{ color: token.colorWarning, fontWeight: 'bold' }}>—</span>
-                <span>主职业关联</span>
+                <span>Liên kết nghề chính</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <span style={{ color: token.colorInfo, fontWeight: 'bold' }}>- -</span>
-                <span>副职业关联</span>
+                <span>Liên kết nghề phụ</span>
               </div>
             </div>
 
             {edgeCategoryOptions.length > 0 && (
               <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <Text type="secondary" style={{ fontSize: 12 }}>
-                  连线显示：
+                  Hiển thị liên kết:
                 </Text>
                 {edgeCategoryOptions.map((option) => {
                   const isVisible = edgeVisibilityMap[option.category] !== false;
@@ -1221,7 +1230,7 @@ export default function RelationshipGraph() {
                           : { color: token.colorTextSecondary }
                       }
                     >
-                      {option.label}（{option.count}）
+                      {option.label} ({option.count})
                     </Button>
                   );
                 })}
@@ -1344,7 +1353,7 @@ export default function RelationshipGraph() {
             title={
               <Space>
                 {nodeDetail.is_organization ? <ApartmentOutlined /> : <UserOutlined />}
-                <span>{nodeDetail.is_organization ? '组织详情' : '角色详情'}</span>
+                <span>{nodeDetail.is_organization ? 'Chi tiết tổ chức' : 'Chi tiết nhân vật'}</span>
               </Space>
             }
             extra={
@@ -1433,14 +1442,14 @@ export default function RelationshipGraph() {
                       style={{ borderRadius: 12, padding: '0 10px', fontWeight: 500 }}
                     >
                       {nodeDetail.role_type === 'protagonist'
-                        ? '主角'
+                        ? 'Nhân vật chính'
                         : nodeDetail.role_type === 'antagonist'
-                          ? '反派'
-                          : '配角'}
+                          ? 'Phản diện'
+                          : 'Nhân vật phụ'}
                     </Tag>
                   )}
-                  {nodeDetail.gender && !nodeDetail.is_organization && <Tag style={{ borderRadius: 12, padding: '0 10px' }}>{nodeDetail.gender}</Tag>}
-                  {nodeDetail.age && !nodeDetail.is_organization && <Tag style={{ borderRadius: 12, padding: '0 10px' }}>{nodeDetail.age}岁</Tag>}
+                  {nodeDetail.gender && !nodeDetail.is_organization && <Tag style={{ borderRadius: 12, padding: '0 10px' }}>{genderLabel(nodeDetail.gender)}</Tag>}
+                  {nodeDetail.age && !nodeDetail.is_organization && <Tag style={{ borderRadius: 12, padding: '0 10px' }}>{nodeDetail.age} tuổi</Tag>}
                 </Space>
               </div>
 
@@ -1448,9 +1457,9 @@ export default function RelationshipGraph() {
                 {!nodeDetail.is_organization ? (
                   <>
                     {renderCareerTags()}
-                    <InfoField label="外貌特征" value={nodeDetail.appearance} rows={2} />
-                    <InfoField label="性格特点" value={nodeDetail.personality} rows={3} />
-                    <InfoField label="背景故事" value={nodeDetail.background} rows={4} />
+                    <InfoField label="Đặc điểm ngoại hình" value={nodeDetail.appearance} rows={2} />
+                    <InfoField label="Đặc điểm tính cách" value={nodeDetail.personality} rows={3} />
+                    <InfoField label="Câu chuyện nền" value={nodeDetail.background} rows={4} />
 
                     {traitList.length > 0 && (
                       <div
@@ -1464,7 +1473,7 @@ export default function RelationshipGraph() {
                         }}
                       >
                         <Text strong style={{ fontSize: 14, color: token.colorText }}>
-                          特征标签
+                          Nhãn đặc điểm
                         </Text>
                         <Space size={[6, 8]} wrap style={{ marginTop: 10 }}>
                           {traitList.slice(0, 12).map((trait, index) => (
@@ -1478,10 +1487,10 @@ export default function RelationshipGraph() {
                   </>
                 ) : (
                   <>
-                    <InfoField label="组织类型" value={nodeDetail.organization_type} rows={2} />
-                    <InfoField label="组织目的" value={nodeDetail.organization_purpose} rows={3} />
-                    <InfoField label="所在地" value={nodeDetail.location} rows={2} />
-                    <InfoField label="组织格言" value={nodeDetail.motto} rows={2} />
+                    <InfoField label="Loại tổ chức" value={nodeDetail.organization_type} rows={2} />
+                    <InfoField label="Mục đích tổ chức" value={nodeDetail.organization_purpose} rows={3} />
+                    <InfoField label="Địa điểm" value={nodeDetail.location} rows={2} />
+                    <InfoField label="Châm ngôn tổ chức" value={nodeDetail.motto} rows={2} />
 
                     {nodeDetail.power_level !== undefined && nodeDetail.power_level !== null && (
                       <div
@@ -1495,7 +1504,7 @@ export default function RelationshipGraph() {
                         }}
                       >
                         <Text strong style={{ fontSize: 14, color: token.colorText }}>
-                          势力等级
+                          Cấp thế lực
                         </Text>
                         <div style={{ ...clampTextStyle(1), fontSize: 18, color: token.colorWarning, fontWeight: 'bold' }}>
                           {nodeDetail.power_level}<span style={{ fontSize: 14, color: token.colorTextTertiary, fontWeight: 'normal' }}>/100</span>
@@ -1515,7 +1524,7 @@ export default function RelationshipGraph() {
                         }}
                       >
                         <Text strong style={{ fontSize: 14, color: token.colorText }}>
-                          组织成员
+                          Thành viên tổ chức
                         </Text>
                         <Space size={[6, 8]} wrap style={{ marginTop: 10 }}>
                           {orgMembers.slice(0, 16).map((member, index) => (
@@ -1534,7 +1543,7 @@ export default function RelationshipGraph() {
         </div>
       )}
 
-      {/* 职业节点点击提示（不展示详情卡时） */}
+      {/* Nút nghề nghiệp点击提示（不展示详情卡时） */}
       {selectedNodeId && !nodeDetail && (selectedNodeId.startsWith('career-main-') || selectedNodeId.startsWith('career-sub-')) && (
         <div
           style={{
@@ -1548,9 +1557,9 @@ export default function RelationshipGraph() {
             <Space align="start">
               <TrophyOutlined style={{ color: token.colorWarning, marginTop: 4 }} />
               <div>
-                <Text strong>职业节点</Text>
+                <Text strong>Nút nghề nghiệp</Text>
                 <p style={{ ...clampTextStyle(2), marginTop: 2 }}>
-                  职业节点用于展示主/副职业分组及其与角色的关联关系，不显示角色详情卡。
+                  Nút nghề dùng để hiện nhóm nghề chính/phụ và liên kết với nhân vật, không hiện thẻ chi tiết nhân vật.
                 </p>
               </div>
             </Space>

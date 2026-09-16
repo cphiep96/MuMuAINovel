@@ -91,10 +91,10 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
           chapter_number: chapterData.chapter_number,
           content: chapterData.content || ''
         });
-        console.log('✅ 已刷新章节内容，字数:', chapterData.content?.length || 0);
+        console.log('✅ Đã làm mới nội dung chương, số chữ:', chapterData.content?.length || 0);
       }
     } catch (error) {
-      console.error('❌ 加载章节信息失败:', error);
+      console.error('❌ Tải thông tin chương thất bại:', error);
     }
   };
 
@@ -114,17 +114,17 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
 
       if (response.status === 404) {
         setTask(null);
-        setError('该章节还未进行分析');
+        setError('Chương này chưa được phân tích');
         return;
       }
 
       if (!response.ok) {
-        throw new Error('获取分析状态失败');
+        throw new Error('Lấy trạng thái phân tích thất bại');
       }
 
       const taskData: AnalysisTask = await response.json();
 
-      // 如果状态为 none（无任务），设置 task 为 null，让前端显示"开始分析"按钮
+      // 如果状态为 none（无任务），设置 task 为 null，让前端显示"Bắt đầu phân tích"按钮
       if (taskData.status === 'none' || !taskData.has_task) {
         setTask(null);
         setError(null); // 清除错误，这不是错误状态
@@ -156,7 +156,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
     try {
       const response = await fetch(`/api/chapters/${requestedChapterId}/analysis`);
       if (!response.ok) {
-        throw new Error('获取分析结果失败');
+        throw new Error('Lấy kết quả phân tích thất bại');
       }
       const data: ChapterAnalysisResponse = await response.json();
       if (requestGenerationRef.current !== generation) return;
@@ -174,14 +174,14 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
     const poll = async (): Promise<void> => {
       if (requestGenerationRef.current !== generation) return;
       if (Date.now() >= deadline) {
-        setError('查询分析状态超时，请关闭后重新打开');
+        setError('Hết thời gian truy vấn trạng thái phân tích, hãy đóng rồi mở lại');
         return;
       }
 
       try {
         const response = await fetch(`/api/chapters/${requestedChapterId}/analysis/status`);
         if (requestGenerationRef.current !== generation) return;
-        if (!response.ok) throw new Error('获取分析状态失败');
+        if (!response.ok) throw new Error('Lấy trạng thái phân tích thất bại');
 
         const taskData: AnalysisTask = await response.json();
         setTask(taskData);
@@ -191,11 +191,11 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
           await loadChapterInfo(requestedChapterId, generation);
           return;
         } else if (taskData.status === 'failed') {
-          setError(taskData.error_message || '分析失败');
+          setError(taskData.error_message || 'Phân tích thất bại');
           return;
         }
       } catch (err) {
-        console.error('轮询错误:', err);
+        console.error('Lỗi khi thăm dò trạng thái:', err);
       }
 
       if (requestGenerationRef.current === generation) {
@@ -224,7 +224,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || '触发分析失败');
+        throw new Error(errorData.detail || 'Kích hoạt phân tích thất bại');
       }
 
       // 触发成功后立即关闭Modal，让父组件的状态管理接管
@@ -278,9 +278,9 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
             marginTop: 16,
             color: task.status === 'failed' ? 'var(--color-error)' : 'var(--color-text-primary)'
           }}>
-            {task.status === 'pending' && '等待分析...'}
-            {task.status === 'running' && 'AI正在分析中...'}
-            {task.status === 'failed' && '分析失败'}
+            {task.status === 'pending' && 'Đang chờ phân tích...'}
+            {task.status === 'running' && 'AI đang phân tích...'}
+            {task.status === 'failed' && 'Phân tích thất bại'}
           </div>
         </div>
 
@@ -334,14 +334,14 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
           minHeight: 24,
           marginBottom: 16
         }}>
-          {task.status === 'pending' && '分析任务已创建，正在队列中...'}
-          {task.status === 'running' && '正在提取关键信息和记忆片段...'}
+          {task.status === 'pending' && 'Nhiệm vụ phân tích đã tạo, đang trong hàng đợi...'}
+          {task.status === 'running' && 'Đang trích thông tin then chốt và đoạn ghi nhớ...'}
         </div>
 
         {/* 错误信息 */}
         {task.status === 'failed' && task.error_message && (
           <Alert
-            message="分析失败"
+            message="Phân tích thất bại"
             description={task.error_message}
             type="error"
             showIcon
@@ -361,7 +361,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
             color: 'var(--color-text-tertiary)',
             marginTop: 16
           }}>
-            分析过程需要一定时间，请耐心等待
+            Quá trình phân tích cần một chút thời gian, vui lòng chờ
           </div>
         )}
       </div>
@@ -373,7 +373,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
     if (!analysis?.analysis?.suggestions) return [];
 
     return analysis.analysis.suggestions.map((suggestion, index) => ({
-      category: '改进建议',
+      category: 'Đề xuất cải thiện',
       content: suggestion,
       priority: index < 3 ? 'high' : 'medium'
     }));
@@ -398,24 +398,24 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
         items={[
           {
             key: 'overview',
-            label: '概览',
+            label: 'Tổng quan',
             icon: <TrophyOutlined />,
             children: (
               <div style={{ height: isMobile ? 'calc(80vh - 180px)' : 'calc(90vh - 220px)', overflowY: 'auto', paddingRight: '8px' }}>
-                {/* 根据建议重新生成按钮 */}
+                {/* Tạo lại theo đề xuất按钮 */}
                 {analysis_data.suggestions && analysis_data.suggestions.length > 0 && (
                   <Alert
-                    message="发现改进建议"
+                    message="Phát hiện đề xuất cải thiện"
                     description={
                       <div>
-                        <p style={{ marginBottom: 12 }}>AI已分析出 {analysis_data.suggestions.length} 条改进建议，您可以根据这些建议重新生成章节内容。</p>
+                        <p style={{ marginBottom: 12 }}>AI đã phân tích ra {analysis_data.suggestions.length} đề xuất cải thiện, bạn có thể tạo lại nội dung chương theo các đề xuất này.</p>
                         <Button
                           type="primary"
                           icon={<EditOutlined />}
                           onClick={() => setRegenerationModalVisible(true)}
                           size={isMobile ? 'small' : 'middle'}
                         >
-                          根据建议重新生成
+                          Tạo lại theo đề xuất
                         </Button>
                       </div>
                     }
@@ -425,11 +425,11 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                   />
                 )}
 
-                <Card title="整体评分" style={{ marginBottom: 16 }} size={isMobile ? 'small' : 'default'}>
+                <Card title="Điểm tổng thể" style={{ marginBottom: 16 }} size={isMobile ? 'small' : 'default'}>
                   <Row gutter={isMobile ? 8 : 16}>
                     <Col span={isMobile ? 12 : 6}>
                       <Statistic
-                        title="整体质量"
+                        title="Chất lượng tổng thể"
                         value={analysis_data.overall_quality_score || 0}
                         suffix="/ 10"
                         valueStyle={{ color: 'var(--color-success)' }}
@@ -437,21 +437,21 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                     </Col>
                     <Col span={isMobile ? 12 : 6}>
                       <Statistic
-                        title="节奏把控"
+                        title="Kiểm soát nhịp"
                         value={analysis_data.pacing_score || 0}
                         suffix="/ 10"
                       />
                     </Col>
                     <Col span={isMobile ? 12 : 6}>
                       <Statistic
-                        title="吸引力"
+                        title="Sức hút"
                         value={analysis_data.engagement_score || 0}
                         suffix="/ 10"
                       />
                     </Col>
                     <Col span={isMobile ? 12 : 6}>
                       <Statistic
-                        title="连贯性"
+                        title="Tính mạch lạc"
                         value={analysis_data.coherence_score || 0}
                         suffix="/ 10"
                       />
@@ -460,7 +460,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                 </Card>
 
                 {analysis_data.analysis_report && (
-                  <Card title="分析摘要" style={{ marginBottom: 16 }} size={isMobile ? 'small' : 'default'}>
+                  <Card title="Tóm tắt phân tích" style={{ marginBottom: 16 }} size={isMobile ? 'small' : 'default'}>
                     <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: isMobile ? 13 : 14 }}>
                       {analysis_data.analysis_report}
                     </pre>
@@ -468,17 +468,17 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                 )}
 
                 {hasEntityChanges && entity_changes && (
-                  <Card title="实体联动更新" style={{ marginBottom: 16 }} size={isMobile ? 'small' : 'default'}>
+                  <Card title="Cập nhật liên động thực thể" style={{ marginBottom: 16 }} size={isMobile ? 'small' : 'default'}>
                     <Row gutter={isMobile ? 8 : 16} style={{ marginBottom: 16 }}>
                       <Col span={isMobile ? 24 : 8}>
                         <Statistic
-                          title="职业更新"
+                          title="Cập nhật nghề nghiệp"
                           value={entity_changes.careers?.updated_count || 0}
                         />
                       </Col>
                       <Col span={isMobile ? 24 : 8}>
                         <Statistic
-                          title="角色状态/关系更新"
+                          title="Cập nhật trạng thái/quan hệ nhân vật"
                           value={
                             (entity_changes.character_states?.state_updated_count || 0) +
                             (entity_changes.character_states?.relationship_created_count || 0) +
@@ -489,7 +489,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                       </Col>
                       <Col span={isMobile ? 24 : 8}>
                         <Statistic
-                          title="组织状态更新"
+                          title="Cập nhật trạng thái tổ chức"
                           value={entity_changes.organization_states?.updated_count || 0}
                         />
                       </Col>
@@ -497,7 +497,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
 
                     {entity_changes.careers?.changes?.length ? (
                       <div style={{ marginBottom: 12 }}>
-                        <strong>职业变化：</strong>
+                        <strong>Thay đổi nghề: </strong>
                         <div style={{ marginTop: 8 }}>
                           {entity_changes.careers.changes.map((change, index) => (
                             <Tag key={`career-${index}`} color="blue" style={{ marginBottom: 8 }}>
@@ -510,7 +510,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
 
                     {entity_changes.character_states?.changes?.length ? (
                       <div style={{ marginBottom: 12 }}>
-                        <strong>角色/关系变化：</strong>
+                        <strong>Thay đổi nhân vật/quan hệ: </strong>
                         <List
                           size="small"
                           dataSource={entity_changes.character_states.changes}
@@ -521,7 +521,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
 
                     {entity_changes.organization_states?.changes?.length ? (
                       <div>
-                        <strong>组织状态变化：</strong>
+                        <strong>Thay đổi trạng thái tổ chức: </strong>
                         <List
                           size="small"
                           dataSource={entity_changes.organization_states.changes}
@@ -533,7 +533,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                 )}
 
                 {analysis_data.suggestions && analysis_data.suggestions.length > 0 && (
-                  <Card title={<><BulbOutlined /> 改进建议</>} size={isMobile ? 'small' : 'default'}>
+                  <Card title={<><BulbOutlined /> Đề xuất cải thiện</>} size={isMobile ? 'small' : 'default'}>
                     <List
                       dataSource={analysis_data.suggestions}
                       renderItem={(item, index) => (
@@ -549,7 +549,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
           },
           {
             key: 'hooks',
-            label: `钩子 (${analysis_data.hooks?.length || 0})`,
+            label: `Móc (${analysis_data.hooks?.length || 0})`,
             icon: <ThunderboltOutlined />,
             children: (
               <div style={{ height: isMobile ? 'calc(80vh - 180px)' : 'calc(90vh - 220px)', overflowY: 'auto', paddingRight: '8px' }}>
@@ -564,7 +564,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                               <div>
                                 <Tag color="blue">{hook.type}</Tag>
                                 <Tag color="orange">{hook.position}</Tag>
-                                <Tag color="red">强度: {hook.strength}/10</Tag>
+                                <Tag color="red">Cường độ: {hook.strength}/10</Tag>
                               </div>
                             }
                             description={hook.content}
@@ -573,7 +573,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                       )}
                     />
                   ) : (
-                    <Empty description="暂无钩子" />
+                    <Empty description="Chưa có móc" />
                   )}
                 </Card>
               </div>
@@ -581,7 +581,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
           },
           {
             key: 'foreshadows',
-            label: `伏笔 (${analysis_data.foreshadows?.length || 0})`,
+            label: `Phục bút (${analysis_data.foreshadows?.length || 0})`,
             icon: <FireOutlined />,
             children: (
               <div style={{ height: isMobile ? 'calc(80vh - 180px)' : 'calc(90vh - 220px)', overflowY: 'auto', paddingRight: '8px' }}>
@@ -595,12 +595,12 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                             title={
                               <div>
                                 <Tag color={foreshadow.type === 'planted' ? 'green' : 'purple'}>
-                                  {foreshadow.type === 'planted' ? '已埋下' : '已回收'}
+                                  {foreshadow.type === 'planted' ? 'Đã cài' : 'Đã thu hồi'}
                                 </Tag>
-                                <Tag>强度: {foreshadow.strength}/10</Tag>
-                                <Tag>隐藏度: {foreshadow.subtlety}/10</Tag>
+                                <Tag>Cường độ: {foreshadow.strength}/10</Tag>
+                                <Tag>Độ ẩn: {foreshadow.subtlety}/10</Tag>
                                 {foreshadow.reference_chapter && (
-                                  <Tag color="cyan">呼应第{foreshadow.reference_chapter}章</Tag>
+                                  <Tag color="cyan">Ứng với chương {foreshadow.reference_chapter}</Tag>
                                 )}
                               </div>
                             }
@@ -610,7 +610,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                       )}
                     />
                   ) : (
-                    <Empty description="暂无伏笔" />
+                    <Empty description="Chưa có phục bút" />
                   )}
                 </Card>
               </div>
@@ -618,7 +618,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
           },
           {
             key: 'emotion',
-            label: '情感曲线',
+            label: 'Đường cong cảm xúc',
             icon: <HeartOutlined />,
             children: (
               <div style={{ height: isMobile ? 'calc(80vh - 180px)' : 'calc(90vh - 220px)', overflowY: 'auto', paddingRight: '8px' }}>
@@ -628,24 +628,24 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                       <Row gutter={isMobile ? 8 : 16} style={{ marginBottom: isMobile ? 16 : 24 }}>
                         <Col span={isMobile ? 24 : 12}>
                           <Statistic
-                            title="主导情绪"
+                            title="Cảm xúc chủ đạo"
                             value={analysis_data.emotional_tone}
                           />
                         </Col>
                         <Col span={isMobile ? 24 : 12}>
                           <Statistic
-                            title="情感强度"
+                            title="Cường độ cảm xúc"
                             value={(analysis_data.emotional_intensity * 10).toFixed(1)}
                             suffix="/ 10"
                           />
                         </Col>
                       </Row>
-                      <Card type="inner" title="剧情阶段" size="small">
-                        <p><strong>阶段：</strong>{analysis_data.plot_stage}</p>
-                        <p><strong>冲突等级：</strong>{analysis_data.conflict_level} / 10</p>
+                      <Card type="inner" title="Giai đoạn cốt truyện" size="small">
+                        <p><strong>Giai đoạn: </strong>{analysis_data.plot_stage}</p>
+                        <p><strong>Cấp xung đột: </strong>{analysis_data.conflict_level} / 10</p>
                         {analysis_data.conflict_types && analysis_data.conflict_types.length > 0 && (
                           <div style={{ marginTop: 8 }}>
-                            <strong>冲突类型：</strong>
+                            <strong>Loại xung đột: </strong>
                             {analysis_data.conflict_types.map((type, idx) => (
                               <Tag key={idx} color="red" style={{ margin: 4 }}>
                                 {type}
@@ -656,7 +656,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                       </Card>
                     </div>
                   ) : (
-                    <Empty description="暂无情感分析" />
+                    <Empty description="Chưa có phân tích cảm xúc" />
                   )}
                 </Card>
               </div>
@@ -664,7 +664,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
           },
           {
             key: 'characters',
-            label: `角色 (${analysis_data.character_states?.length || 0})`,
+            label: `Nhân vật (${analysis_data.character_states?.length || 0})`,
             icon: <TeamOutlined />,
             children: (
               <div style={{ height: isMobile ? 'calc(80vh - 180px)' : 'calc(90vh - 220px)', overflowY: 'auto', paddingRight: '8px' }}>
@@ -680,15 +680,15 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                             size="small"
                             style={{ width: '100%' }}
                           >
-                            <p><strong>状态变化：</strong>{char.state_before} → {char.state_after}</p>
-                            <p><strong>心理变化：</strong>{char.psychological_change}</p>
-                            <p><strong>关键事件：</strong>{char.key_event}</p>
+                            <p><strong>Thay đổi trạng thái: </strong>{char.state_before} → {char.state_after}</p>
+                            <p><strong>Thay đổi tâm lý: </strong>{char.psychological_change}</p>
+                            <p><strong>Sự kiện then chốt: </strong>{char.key_event}</p>
                             {char.relationship_changes && Object.keys(char.relationship_changes).length > 0 && (
                               <div>
-                                <strong>关系变化：</strong>
+                                <strong>Thay đổi quan hệ: </strong>
                                 {Object.entries(char.relationship_changes).map(([name, change]) => (
                                   <Tag key={name} color="blue" style={{ margin: 4 }}>
-                                    与{name}: {change}
+                                    Với {name}: {change}
                                   </Tag>
                                 ))}
                               </div>
@@ -698,7 +698,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                       )}
                     />
                   ) : (
-                    <Empty description="暂无角色分析" />
+                    <Empty description="Chưa có phân tích nhân vật" />
                   )}
                 </Card>
               </div>
@@ -706,7 +706,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
           },
           {
             key: 'memories',
-            label: `记忆 (${memories?.length || 0})`,
+            label: `Ghi nhớ (${memories?.length || 0})`,
             icon: <FireOutlined />,
             children: (
               <div style={{ height: isMobile ? 'calc(80vh - 180px)' : 'calc(90vh - 220px)', overflowY: 'auto', paddingRight: '8px' }}>
@@ -720,9 +720,9 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                             title={
                               <div>
                                 <Tag color="blue">{memory.type}</Tag>
-                                <Tag color="orange">重要性: {memory.importance.toFixed(1)}</Tag>
-                                {memory.is_foreshadow === 1 && <Tag color="green">已埋下伏笔</Tag>}
-                                {memory.is_foreshadow === 2 && <Tag color="purple">已回收伏笔</Tag>}
+                                <Tag color="orange">Mức quan trọng: {memory.importance.toFixed(1)}</Tag>
+                                {memory.is_foreshadow === 1 && <Tag color="green">Đã cài phục bút</Tag>}
+                                {memory.is_foreshadow === 2 && <Tag color="purple">Đã thu hồi phục bút</Tag>}
                                 <span style={{ marginLeft: 8 }}>{memory.title}</span>
                               </div>
                             }
@@ -741,7 +741,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                       )}
                     />
                   ) : (
-                    <Empty description="暂无记忆片段" />
+                    <Empty description="Chưa có đoạn ghi nhớ" />
                   )}
                 </Card>
               </div>
@@ -754,7 +754,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
 
   return (
     <Modal
-      title="章节分析"
+      title="Phân tích chương"
       open={visible}
       onCancel={onClose}
       width={isMobile ? 'calc(100vw - 32px)' : '90%'}
@@ -774,7 +774,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
       }}
       footer={[
         <Button key="close" onClick={onClose} size={isMobile ? 'small' : 'middle'}>
-          关闭
+          Đóng
         </Button>,
         !task && !loading && (
           <Button
@@ -785,7 +785,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
             loading={loading}
             size={isMobile ? 'small' : 'middle'}
           >
-            开始分析
+            Bắt đầu phân tích
           </Button>
         ),
         task && (task.status === 'failed') && (
@@ -798,7 +798,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
             danger
             size={isMobile ? 'small' : 'middle'}
           >
-            重新分析
+            Phân tích lại
           </Button>
         ),
         task && task.status === 'completed' && (
@@ -810,7 +810,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
             loading={loading}
             size={isMobile ? 'small' : 'middle'}
           >
-            重新分析
+            Phân tích lại
           </Button>
         )
       ].filter(Boolean)}
@@ -818,13 +818,13 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
       {loading && !task && (
         <div style={{ textAlign: 'center', padding: '48px' }}>
           <Spin size="large" />
-          <p style={{ marginTop: 16 }}>加载中...</p>
+          <p style={{ marginTop: 16 }}>Đang tải...</p>
         </div>
       )}
 
       {error && (
         <Alert
-          message="错误"
+          message="Lỗi"
           description={error}
           type="error"
           showIcon
@@ -883,7 +883,7 @@ export default function ChapterAnalysis({ chapterId, visible, onClose }: Chapter
                 });
               }
             } catch (error) {
-              console.error('重新加载章节失败:', error);
+              console.error('Tải lại chương thất bại:', error);
             }
 
             // 刷新分析状态
