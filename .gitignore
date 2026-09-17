@@ -49,6 +49,11 @@ env/
 *.db-wal
 *.sqlite
 *.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+
+# 浏览器/自动化工具缓存（UI 验证时产生）
+.playwright-mcp/
 
 # Logs
 *.log
@@ -80,6 +85,8 @@ backend/data/*.db-wal
 backend/data/users.json
 backend/data/admins.json
 backend/storage/
+storage/generated_videos/
+backend/storage/generated_videos/
 
 # Temporary files
 *.bak
@@ -130,3 +137,7 @@ backend/tests/
 **/test_*.py
 **/*_test.py
 tool/
+
+# 视频导出 MVP 测试用例保留在版本库中，便于评审查看 diff
+!backend/tests/
+!backend/tests/*.py

@@ -235,6 +235,8 @@ export const FloatingTaskPanel: React.FC<FloatingTaskPanelProps> = ({
         return 'Tạo tổ chức';
       case 'career_generate':
         return 'Tạo nghề nghiệp';
+      case 'video_export':
+        return 'Xuất phim';
       default:
         return taskType;
     }

@@ -72,6 +72,10 @@ import type {
   AgentToolCall,
   AgentToolDecision,
   AgentExecutionStep,
+  VideoExportCapabilities,
+  VideoExportCreateRequest,
+  VideoExportJob,
+  VideoExportJobListResponse,
 } from '../types';
 
 interface MCPPluginSimpleCreate {
@@ -101,12 +105,32 @@ api.interceptors.response.use(
   (response) => {
     return response.data;
   },
-  (error) => {
+  async (error) => {
     let errorMessage = 'Yêu cầu thất bại';
+    let data = error.response?.data;
+
+    // 下载类请求（responseType: blob / arraybuffer）出错时响应体是二进制，
+    // 先尝试解析成 JSON 才能拿到后端 detail，避免弹出乱码或丢失 401 处理。
+    if (data && typeof Blob !== 'undefined' && data instanceof Blob) {
+      try {
+        const text = await data.text();
+        data = text ? JSON.parse(text) : undefined;
+        if (error.response) error.response.data = data;
+      } catch {
+        data = undefined;
+      }
+    } else if (data instanceof ArrayBuffer) {
+      try {
+        const text = new TextDecoder().decode(data);
+        data = text ? JSON.parse(text) : undefined;
+        if (error.response) error.response.data = data;
+      } catch {
+        data = undefined;
+      }
+    }
 
     if (error.response) {
       const status = error.response.status;
-      const data = error.response.data;
 
       switch (status) {
         case 400:
@@ -120,7 +144,10 @@ api.interceptors.response.use(
             'Chưa đăng nhập hoặc thiếu ID người dùng',
             'Chưa đăng nhập, không thể làm mới phiên',
           ];
-          const isUnauthenticated = unauthenticatedDetails.includes(backendDetail);
+          const isUnauthenticated =
+            unauthenticatedDetails.includes(backendDetail) ||
+            // 下载请求出错时可能拿不到 JSON detail，同样按会话失效处理
+            (!backendDetail && error.config?.responseType === 'blob');
 
           errorMessage = backendDetail || 'Phiên đăng nhập đã hết hiệu lực, vui lòng đăng nhập lại';
 
@@ -1365,6 +1392,58 @@ export const foreshadowApi = {
       `/foreshadows/projects/${projectId}/sync-from-analysis`,
       data
     ),
+};
+
+// 视频导出API（章节 → 分镜 → MP4/SRT）
+export const videoExportApi = {
+  // 查询实例能力：FFmpeg/TTS 是否可用、分辨率白名单与各项上限
+  getCapabilities: () =>
+    api.get<unknown, VideoExportCapabilities>('/video-export/capabilities'),
+
+  // 创建导出任务（立即生成分镜并排队渲染）
+  createJob: (data: VideoExportCreateRequest) =>
+    api.post<unknown, VideoExportJob>('/video-export/jobs', data),
+
+  // 项目的导出任务列表
+  listJobs: (projectId: string, limit = 20) =>
+    api.get<unknown, VideoExportJobListResponse>('/video-export/jobs', {
+      params: { project_id: projectId, limit },
+    }),
+
+  // 任务详情（含 storyboard）
+  getJob: (jobId: string) =>
+    api.get<unknown, VideoExportJob>(`/video-export/jobs/${jobId}`),
+
+  // 重试整个任务
+  retryJob: (jobId: string) =>
+    api.post<unknown, { message: string; job: VideoExportJob }>(`/video-export/jobs/${jobId}/retry`),
+
+  // 重试单个分镜
+  retryScene: (jobId: string, sceneId: string) =>
+    api.post<unknown, { message: string; job: VideoExportJob }>(
+      `/video-export/jobs/${jobId}/scenes/${sceneId}/retry`
+    ),
+
+  // 取消任务
+  cancelJob: (jobId: string) =>
+    api.post<unknown, { message: string; job: VideoExportJob }>(`/video-export/jobs/${jobId}/cancel`),
+
+  // 删除任务（含服务端产物）
+  deleteJob: (jobId: string) =>
+    api.delete<unknown, { message: string }>(`/video-export/jobs/${jobId}`),
+
+  // 下载成片与字幕：成片最大 512MB，必须绕过默认的 120 秒超时
+  downloadVideo: (jobId: string) =>
+    api.get<unknown, Blob>(`/video-export/jobs/${jobId}/download/video`, {
+      responseType: 'blob',
+      timeout: 0,
+    }),
+
+  downloadSubtitles: (jobId: string) =>
+    api.get<unknown, Blob>(`/video-export/jobs/${jobId}/download/subtitles`, {
+      responseType: 'blob',
+      timeout: 0,
+    }),
 };
 
 export interface ProjectAgentStreamCallbacks {

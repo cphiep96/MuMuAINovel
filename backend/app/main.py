@@ -71,6 +71,11 @@ async def lifespan(app: FastAPI):
             await conn.run_sync(
                 lambda sync_conn: BackgroundTask.__table__.create(sync_conn, checkfirst=True)
             )
+            # 视频导出表兜底创建：补建缺失的表与转场新增列，不修改既有列
+            # （Alembic 仍是结构唯一来源；新增的迁移脚本已做幂等处理，可与此兜底共存）
+            from app.services.video_export.schema import sync_video_export_schema
+
+            await conn.run_sync(sync_video_export_schema)
             interrupted_at = datetime.now()
             await conn.execute(
                 sql_update(BackgroundTask)
@@ -102,6 +107,12 @@ async def lifespan(app: FastAPI):
                     completed_at=interrupted_at,
                 )
             )
+            # 视频导出任务：标记失败并释放执行权（worker_token/claimed_at=None），
+            # 但刻意保留分镜的 motion_operation_id/motion_status，重试时可继续轮询已提交的远端操作。
+            # 实现放在 services/video_export/startup.py 便于单测覆盖。
+            from app.services.video_export.startup import fail_interrupted_jobs
+
+            await fail_interrupted_jobs(conn, interrupted_at=interrupted_at)
         logger.info("后台任务表检查完成")
     except Exception as e:
         logger.warning(f"后台任务表检查失败（不影响启动）: {e}")
@@ -209,7 +220,8 @@ from app.api import (
     auth, users, settings, writing_styles, memories,
     mcp_plugins, admin, inspiration, prompt_templates,
     changelog, careers, foreshadows, prompt_workshop, book_import,
-    project_covers, project_agent, tasks, skills, announcements
+    project_covers, project_agent, tasks, skills, announcements,
+    video_export
 )
 
 app.include_router(auth.router, prefix="/api")
@@ -239,6 +251,7 @@ app.include_router(skills.router)  # Skill API（已包含/api前缀）
 app.include_router(prompt_workshop.router, prefix="/api")  # API xưởng prompt
 app.include_router(book_import.router, prefix="/api")  # API nhập/đọc tách sách
 app.include_router(tasks.router, prefix="/api")  # API tác vụ nền
+app.include_router(video_export.router, prefix="/api")  # API xuất phim từ chương
 app.include_router(announcements.router, prefix="/api")  # API thông báo
 
 if getattr(sys, "frozen", False):

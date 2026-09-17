@@ -139,6 +139,88 @@ class Settings(BaseSettings):
     WORKSHOP_MODE: str = "client"  # client: instance triển khai local, server: máy chủ trung tâm đám mây
     WORKSHOP_CLOUD_URL: str = "https://mumuverse.space:1566"  # Địa chỉ dịch vụ đám mây
     WORKSHOP_API_TIMEOUT: int = 30  # 云端API请求超时时间（秒）
+
+    # 视频导出配置（章节 → 分镜 → MP4/SRT），MVP 默认本地静音成片
+    video_export_enabled: bool = True  # 总开关，可临时禁用整个导出能力
+    video_ffmpeg_binary: Optional[str] = None  # FFmpeg 可执行文件路径；为空时使用 PATH 中的 ffmpeg
+    video_export_storage_dir: Optional[str] = None  # 成片存储目录；为空时使用 backend/storage/generated_videos
+    video_render_timeout_seconds: int = 900  # 单个 FFmpeg 调用的超时时间
+    video_job_timeout_seconds: int = 1800  # 单个导出任务的墙钟总超时（秒）
+    video_claim_ttl_buffer_seconds: int = 300  # 执行权 lease 的额外缓冲：任务超时上限 + 该值后才允许其它 worker 接管
+    video_cancel_poll_seconds: float = 1.0  # FFmpeg 运行期间检查取消信号的间隔（秒）
+    video_max_active_jobs: int = 2  # 每个用户同时可存在的未完成导出任务数
+    video_max_chapters: int = 10  # 单次导出最多章节数
+    video_max_scenes: int = 40  # 单次导出最多分镜数
+    video_max_duration_seconds: int = 900  # 成片总时长上限（秒）
+    video_max_output_mb: int = 512  # 成片体积上限（MB）
+    video_scene_min_seconds: float = 3.0  # 单个分镜最短时长
+    video_scene_max_seconds: float = 12.0  # 单个分镜最长时长
+    video_allowed_resolutions: str = "1280x720,1920x1080,854x480"  # 允许的分辨率白名单
+    video_default_resolution: str = "1280x720"
+    video_default_fps: int = 24
+    video_allowed_fps: str = "12,15,24,25,30"
+    # TTS 为可选项：默认生成静音成片，配置完整后才会合成旁白音频
+    video_tts_enabled: bool = False
+    video_tts_provider: str = "openai_compatible"  # 目前支持 openai_compatible（/audio/speech）
+    video_tts_base_url: Optional[str] = None
+    video_tts_api_key: Optional[str] = None
+    video_tts_model: Optional[str] = None
+    video_tts_voice: str = "alloy"
+    video_tts_timeout_seconds: int = 120
+
+    # 视频转场 Provider（motion video）：local = FFmpeg 兜底，remote = 远端 image-to-video，hybrid = 优先远端并可按策略回落 local
+    video_motion_mode: str = "local"  # local/remote/hybrid（客户端可覆盖，受 capabilities 约束）
+    video_motion_provider: Optional[str] = None  # 服务端默认 provider（为空时自动选择已配置的远端 provider）
+    video_motion_model: Optional[str] = None  # 服务端默认模型
+    video_motion_resolution: Optional[str] = None  # 服务端默认分辨率 token（480p/720p/1080p/1024p）
+    video_motion_hybrid_fallback_on_error: bool = True  # hybrid 模式下远端失败时是否回落到本地 FFmpeg
+    video_motion_poll_interval_seconds: float = 5.0  # 轮询远端操作的初始间隔
+    video_motion_poll_max_interval_seconds: float = 20.0  # 轮询退避上限
+    video_motion_operation_timeout_seconds: int = 900  # 单个分镜等待远端完成的墙钟上限
+    video_motion_max_retries: int = 2  # 单次 HTTP 请求的重试次数（仅网络错误/408/429/5xx）
+    video_motion_request_timeout_seconds: int = 120  # 提交/轮询请求的超时
+    video_motion_download_timeout_seconds: int = 300  # 下载单个片段的超时
+    video_motion_max_clip_mb: int = 128  # 单个远端片段的大小上限
+    # 安全：默认只允许 HTTPS 下载；白名单为空时按“公网 HTTPS”校验（拒绝内网/回环/元数据地址）
+    video_motion_allow_insecure_localhost: bool = False
+    video_motion_download_allowed_hosts: str = ""  # 逗号分隔的下载主机白名单（如 CDN 域名）
+
+    # xAI Grok Imagine（POST /videos/generations → GET /videos/{request_id}）
+    video_motion_xai_api_key: Optional[str] = None
+    video_motion_xai_base_url: str = "https://api.x.ai/v1"
+    video_motion_xai_model: str = "grok-imagine-video-1.5"
+    video_motion_xai_generate_audio: bool = False  # Grok Imagine 支持原生音频，默认关闭以便与旁白时长一致
+
+    # Google Veo（Gemini API：models/{model}:predictLongRunning）
+    video_motion_gemini_api_key: Optional[str] = None
+    video_motion_gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+    video_motion_gemini_model: str = "veo-3.1-generate-preview"
+    video_motion_veo_person_generation: str = "allow_adult"
+
+    # OpenAI 兼容视频 API（POST /videos → GET /videos/{id} → /videos/{id}/content）
+    video_motion_openai_api_key: Optional[str] = None
+    video_motion_openai_base_url: Optional[str] = None
+    video_motion_openai_model: str = "sora-2"
+
+    # 场景图片生成（image provider）：为每个分镜生成画面，再交给 motion provider 作为参考图
+    video_image_enabled: bool = True  # 总开关：false 时 UI/API 都不允许开启 tạo ảnh
+    video_image_provider: Optional[str] = None  # 默认图片 provider（为空时取第一个已配置的）
+    video_image_model: Optional[str] = None
+    video_image_aspect_ratio: Optional[str] = None  # 16:9 / 9:16 / 1:1
+    video_image_reasoning_strength: Optional[str] = None  # 仅 provider 支持时发送
+    video_image_timeout_seconds: int = 120  # 单张图片生成超时
+    video_image_max_retries: int = 2  # 单次请求重试次数（仅网络/408/429/5xx）
+    video_image_retry_delay_seconds: float = 2.0  # 重试退避基数
+    video_image_max_mb: int = 16  # 单张图片大小上限（base64 解码后同样受限）
+    image_allow_insecure_localhost: bool = False  # 仅开发：允许 http://localhost 的图片 provider
+
+    # Meta Model API（Muse Image 1.0）：POST {base}/images/generations
+    meta_muse_api_key: Optional[str] = None  # 主变量；不写日志/DB/响应
+    model_api_key: Optional[str] = None  # 兼容别名（Meta 文档里的 MODEL_API_KEY）
+    meta_muse_base_url: str = "https://api.meta.ai/v1"
+    meta_muse_model: str = "muse-image-1.0"
+    meta_muse_output_format: str = "webp"  # webp/png/jpeg
+    meta_muse_reasoning_strengths: str = "low,high"  # theo docs Meta hiện hành chỉ low/high
     
     class Config:
         env_file = ".env"

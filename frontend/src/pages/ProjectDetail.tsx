@@ -21,6 +21,7 @@ import {
   MoonOutlined,
   ThunderboltOutlined,
   SettingOutlined,
+  VideoCameraOutlined,
 } from '@ant-design/icons';
 import { useStore } from '../store';
 import { useCharacterSync, useOutlineSync, useChapterSync } from '../store/hooks';
@@ -202,6 +203,11 @@ export default function ProjectDetail() {
           label: <Link to={`/project/${projectId}/chapter-analysis`}>Phân tích cốt truyện</Link>,
         },
         {
+          key: 'video-export',
+          icon: <VideoCameraOutlined />,
+          label: <Link to={`/project/${projectId}/video-export`}>Xuất phim từ chương</Link>,
+        },
+        {
           key: 'foreshadows',
           icon: <BulbOutlined />,
           label: <Link to={`/project/${projectId}/foreshadows`}>Quản lý phục bút</Link>,
@@ -283,6 +289,11 @@ export default function ProjectDetail() {
       label: <Link to={`/project/${projectId}/chapter-analysis`}>Phân tích cốt truyện</Link>,
     },
     {
+      key: 'video-export',
+      icon: <VideoCameraOutlined />,
+      label: <Link to={`/project/${projectId}/video-export`}>Xuất phim từ chương</Link>,
+    },
+    {
       key: 'foreshadows',
       icon: <BulbOutlined />,
       label: <Link to={`/project/${projectId}/foreshadows`}>Quản lý phục bút</Link>,
@@ -319,6 +330,7 @@ export default function ProjectDetail() {
     if (path.includes('/outline')) return 'outline';
     if (path.includes('/characters')) return 'characters';
     if (path.includes('/chapter-analysis')) return 'chapter-analysis';
+    if (path.includes('/video-export')) return 'video-export';
     if (path.includes('/foreshadows')) return 'foreshadows';
     if (path.includes('/chapters')) return 'chapters';
     if (path.includes('/writing-styles')) return 'writing-styles';

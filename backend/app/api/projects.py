@@ -330,9 +330,19 @@ async def delete_project(
         )
         logger.debug(f"删除伏笔数: {foreshadows_result.rowcount}")
         
+        # 13. 删除视频导出任务及其产物文件（SQLite 默认不启用外键级联）
+        # 数据库删除并入本次事务：清理失败时不删除项目，避免留下“项目已消失”的孤儿任务/文件；
+        # 文件删除放到提交成功之后再执行。
+        from app.services.video_export.service import video_export_service
+        export_result = await video_export_service.delete_project_artifacts(
+            db=db, user_id=user_id, project_id=project_id, commit=False
+        )
+        logger.debug(f"删除视频导出任务数: {export_result['jobs']}")
+
         # 最后删除项目本身
         await db.delete(project)
         await db.commit()
+        video_export_service.remove_artifact_dirs(export_result["targets"])
         
         logger.info(f"项目删除成功: {project_title}")
         return {"message": "Đã xóa thành công dự án và mọi dữ liệu liên quan (kể cả cơ sở dữ liệu vector)"}

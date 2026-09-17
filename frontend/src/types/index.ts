@@ -1344,6 +1344,194 @@ export interface AnnouncementStatusResponse {
   cloud_connected?: boolean;
 }
 
+// 视频导出（章节 → 分镜 → MP4/SRT）
+export type VideoExportJobStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+export type VideoExportSceneStatus = 'pending' | 'rendering' | 'ready' | 'failed';
+
+// 视频转场（motion video）：local = FFmpeg 本地；remote = provider AI；hybrid = AI 优先、可回落本地
+export type VideoMotionMode = 'local' | 'remote' | 'hybrid';
+export type VideoMotionSceneStatus =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'expired'
+  | 'cancelled'
+  | 'skipped';
+
+export interface VideoMotionFeatures {
+  image_to_video: boolean;
+  placeholder: boolean;
+  cancel: boolean;
+  idempotency: boolean;
+}
+
+export interface VideoMotionLimits {
+  min_duration_seconds: number;
+  max_duration_seconds: number;
+  duration_options: number[];
+  aspect_ratios: string[];
+  resolutions: string[];
+  default_resolution: string;
+}
+
+export interface VideoMotionProviderInfo {
+  id: string;
+  label: string;
+  kind: 'local' | 'remote' | string;
+  description: string;
+  configured: boolean;
+  missing_config: string[];
+  config_error?: string | null;
+  models: string[];
+  default_model: string;
+  features: VideoMotionFeatures;
+  limits: VideoMotionLimits;
+  model_limits?: Record<string, VideoMotionLimits>;
+  cost_note: string;
+}
+
+// 场景图生成（image provider，ví dụ Meta Muse Image）—— 与 motion video provider 分开
+export type VideoImageStatus = 'pending' | 'generating' | 'ready' | 'failed' | 'cancelled';
+
+export interface VideoImageProviderInfo {
+  id: string;
+  label: string;
+  kind: 'image' | string;
+  description: string;
+  configured: boolean;
+  missing_config: string[];
+  config_error?: string | null;
+  models: string[];
+  default_model: string;
+  aspect_ratios: string[];
+  sizes: string[];
+  default_size: string;
+  output_format: string;
+  supports_reasoning_strength: boolean;
+  reasoning_strengths: string[];
+  cost_note: string;
+}
+
+export interface VideoExportOptions {
+  resolution?: string | null;
+  fps?: number | null;
+  use_project_cover?: boolean | null;
+  tts_enabled?: boolean | null;
+  narration_chars_per_scene?: number | null;
+  chars_per_second?: number | null;
+  motion_mode?: VideoMotionMode | null;
+  motion_provider?: string | null;
+  motion_model?: string | null;
+  motion_resolution?: string | null;
+  motion_aspect_ratio?: string | null;
+  hybrid_fallback_on_error?: boolean | null;
+  generate_scene_images?: boolean | null;
+  image_provider?: string | null;
+  image_model?: string | null;
+  image_aspect_ratio?: string | null;
+  image_size?: string | null;
+  image_reasoning_strength?: string | null;
+}
+
+export interface VideoExportScene {
+  id: string;
+  job_id: string;
+  scene_index: number;
+  chapter_id?: string | null;
+  chapter_number?: number | null;
+  title?: string | null;
+  narration?: string | null;
+  duration_seconds: number;
+  visual_prompt?: string | null;
+  asset_kind?: string | null;
+  status: VideoExportSceneStatus;
+  error_message?: string | null;
+  clip_ready: boolean;
+  motion_provider?: string | null;
+  motion_model?: string | null;
+  motion_status?: VideoMotionSceneStatus | string | null;
+  motion_fallback_used?: boolean;
+  provider_error?: string | null;
+  clip_duration_seconds?: number | null;
+  image_provider?: string | null;
+  image_model?: string | null;
+  image_status?: VideoImageStatus | string | null;
+  image_error?: string | null;
+  image_size?: string | null;
+}
+
+export interface VideoExportJob {
+  id: string;
+  project_id: string;
+  status: VideoExportJobStatus;
+  progress: number;
+  status_message?: string | null;
+  error_message?: string | null;
+  chapter_ids: string[];
+  options: VideoExportOptions;
+  motion_mode?: VideoMotionMode | string | null;
+  motion_provider?: string | null;
+  motion_model?: string | null;
+  image_provider?: string | null;
+  image_model?: string | null;
+  scene_count: number;
+  duration_seconds: number;
+  video_size_bytes?: number | null;
+  has_video: boolean;
+  has_subtitles: boolean;
+  created_at?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  updated_at?: string | null;
+  scenes?: VideoExportScene[];
+}
+
+export interface VideoExportCapabilities {
+  enabled: boolean;
+  ffmpeg_available: boolean;
+  tts_available: boolean;
+  allowed_resolutions: string[];
+  default_resolution: string;
+  allowed_fps: number[];
+  default_fps: number;
+  max_chapters: number;
+  max_scenes: number;
+  max_duration_seconds: number;
+  max_output_mb: number;
+  max_active_jobs: number;
+  job_timeout_seconds: number;
+  scene_duration_range: number[];
+  narration_chars_range: number[];
+  default_narration_chars_per_scene: number;
+  motion_modes?: VideoMotionMode[];
+  default_motion_mode?: VideoMotionMode;
+  default_motion_provider?: string | null;
+  default_motion_model?: string | null;
+  default_motion_resolution?: string | null;
+  hybrid_fallback_on_error?: boolean;
+  remote_tts_supported?: boolean;
+  motion_providers?: VideoMotionProviderInfo[];
+  image_enabled?: boolean;
+  default_image_provider?: string | null;
+  default_image_model?: string | null;
+  default_image_aspect_ratio?: string | null;
+  default_image_size?: string | null;
+  image_max_mb?: number;
+  image_providers?: VideoImageProviderInfo[];
+}
+
+export interface VideoExportCreateRequest {
+  project_id: string;
+  chapter_ids: string[];
+  options?: VideoExportOptions;
+}
+
+export interface VideoExportJobListResponse {
+  items: VideoExportJob[];
+  total: number;
+}
+
 // 提示词工坊分类常量
 export const PROMPT_CATEGORIES: Record<string, string> = {
   general: 'Chung',

@@ -248,6 +248,25 @@ async def get_tasks(
     return {"items": items[:limit]}
 
 
+async def _sync_video_export_cancelled(db: AsyncSession, task_id: str, user_id: str) -> None:
+    """后台任务被取消时，同步视频导出任务的领域状态，避免两处状态不一致"""
+    from app.models.video_export import VideoExportJob
+
+    result = await db.execute(
+        select(VideoExportJob).where(
+            VideoExportJob.id == task_id,
+            VideoExportJob.user_id == user_id,
+        )
+    )
+    job = result.scalar_one_or_none()
+    if job and job.status in ("pending", "running"):
+        job.status = "cancelled"
+        job.status_message = "Tác vụ đã bị hủy"
+        job.error_message = None
+        job.completed_at = datetime.now()
+        await db.commit()
+
+
 @router.post("/{task_id}/cancel", summary="Hủy tác vụ")
 async def cancel_task(
     task_id: str,
@@ -261,6 +280,7 @@ async def cancel_task(
 
     success = await background_task_service.cancel_task(task_id, user_id, db)
     if success:
+        await _sync_video_export_cancelled(db, task_id, user_id)
         return {"message": "Tác vụ đã bị hủy", "task_id": task_id}
 
     result = await db.execute(
@@ -345,6 +365,22 @@ async def clear_project_tasks(
 
     from sqlalchemy import delete as sql_delete
 
+    # 视频导出任务：先删掉对应的导出任务（含产物文件），否则下面的批量删除会留下孤儿导出任务。
+    # 数据库删除并入本次事务，清理失败时直接报错返回，不做“只删一半”的清理。
+    from app.services.video_export.service import video_export_service
+    try:
+        export_result = await video_export_service.delete_project_artifacts(
+            db=db, user_id=user_id, project_id=project_id, only_finished=True, commit=False
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"视频导出任务清理失败，已中止清理: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail="Không thể dọn tác vụ xuất phim, vui lòng thử lại"
+        ) from e
+    export_cleared = export_result["jobs"]
+
     # 清理 BackgroundTask
     bg_result = await db.execute(
         sql_delete(BackgroundTask).where(
@@ -376,6 +412,13 @@ async def clear_project_tasks(
     )
 
     await db.commit()
+    # 数据库提交成功后再删除产物文件，避免回滚后出现“记录在、文件没了”的不一致
+    video_export_service.remove_artifact_dirs(export_result["targets"])
 
-    total = (bg_result.rowcount or 0) + (batch_result.rowcount or 0) + (analysis_result.rowcount or 0)
+    total = (
+        (bg_result.rowcount or 0)
+        + (batch_result.rowcount or 0)
+        + (analysis_result.rowcount or 0)
+        + export_cleared
+    )
     return {"message": f"Đã dọn {total} bản ghi tác vụ", "deleted_count": total}
