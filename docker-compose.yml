@@ -63,6 +63,7 @@ services:
       - ./logs:/app/logs
       - ./storage/generated_covers:/app/storage/generated_covers
       - ./storage/generated_videos:/app/storage/generated_videos
+      - ./storage/generated_pdfs:/app/storage/generated_pdfs
       - ./.env:/app/.env:ro
     environment:
       # 时区配置
@@ -181,6 +182,24 @@ services:
       - META_MUSE_MODEL=${META_MUSE_MODEL:-muse-image-1.0}
       - META_MUSE_OUTPUT_FORMAT=${META_MUSE_OUTPUT_FORMAT:-webp}
       - META_MUSE_REASONING_STRENGTHS=${META_MUSE_REASONING_STRENGTHS:-low,high}
+
+      # PDF 全本导出（ReportLab；字体已随镜像安装，可用 PDF_FONT_PATH 覆盖）
+      - PDF_EXPORT_ENABLED=${PDF_EXPORT_ENABLED:-true}
+      - PDF_EXPORT_STORAGE_DIR=${PDF_EXPORT_STORAGE_DIR:-}
+      - PDF_FONT_PATH=${PDF_FONT_PATH:-}
+      - PDF_MAX_CHAPTERS=${PDF_MAX_CHAPTERS:-300}
+      - PDF_MAX_TEXT_CHARS=${PDF_MAX_TEXT_CHARS:-2000000}
+      - PDF_MAX_IMAGES=${PDF_MAX_IMAGES:-60}
+      - PDF_MAX_OUTPUT_MB=${PDF_MAX_OUTPUT_MB:-128}
+      - PDF_MAX_ACTIVE_JOBS=${PDF_MAX_ACTIVE_JOBS:-2}
+      - PDF_JOB_TIMEOUT_SECONDS=${PDF_JOB_TIMEOUT_SECONDS:-1800}
+      - PDF_CLAIM_TTL_BUFFER_SECONDS=${PDF_CLAIM_TTL_BUFFER_SECONDS:-300}
+      - PDF_CLAIM_RENEW_SECONDS=${PDF_CLAIM_RENEW_SECONDS:-60}
+      - PDF_CANCEL_POLL_SECONDS=${PDF_CANCEL_POLL_SECONDS:-1.0}
+      - PDF_DEFAULT_PAGE_SIZE=${PDF_DEFAULT_PAGE_SIZE:-A4}
+      - PDF_INCLUDE_TOC=${PDF_INCLUDE_TOC:-true}
+      - PDF_IMAGE_WIDTH_RATIO=${PDF_IMAGE_WIDTH_RATIO:-0.85}
+      - IMAGE_DOWNLOAD_ALLOWED_HOSTS=${IMAGE_DOWNLOAD_ALLOWED_HOSTS:-}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]

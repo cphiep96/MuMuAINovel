@@ -87,6 +87,9 @@ backend/data/admins.json
 backend/storage/
 storage/generated_videos/
 backend/storage/generated_videos/
+# PDF 全本导出产物（PDF + 插图），不纳入版本控制
+storage/generated_pdfs/
+backend/storage/generated_pdfs/
 
 # Temporary files
 *.bak

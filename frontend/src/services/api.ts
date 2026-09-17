@@ -74,6 +74,10 @@ import type {
   AgentExecutionStep,
   VideoExportCapabilities,
   VideoExportCreateRequest,
+  PdfExportCapabilities,
+  PdfExportCreateRequest,
+  PdfExportJob,
+  PdfExportJobListResponse,
   VideoExportJob,
   VideoExportJobListResponse,
 } from '../types';
@@ -1442,6 +1446,45 @@ export const videoExportApi = {
   downloadSubtitles: (jobId: string) =>
     api.get<unknown, Blob>(`/video-export/jobs/${jobId}/download/subtitles`, {
       responseType: 'blob',
+      timeout: 0,
+    }),
+};
+
+// PDF 全本导出 API（项目 → 单个 PDF，含封面/目录/章节/插图）
+export const pdfExportApi = {
+  // 实例能力：ReportLab/字体是否就绪、上限、图片 provider 配置状态（不含密钥/路径）
+  getCapabilities: (projectId: string) =>
+    api.get<unknown, PdfExportCapabilities>(`/pdf-export/projects/${projectId}/capabilities`),
+
+  // 创建导出任务（章节范围固定为全项目）
+  createJob: (projectId: string, data: PdfExportCreateRequest) =>
+    api.post<unknown, PdfExportJob>(`/pdf-export/projects/${projectId}/jobs`, data),
+
+  // 项目的导出任务列表
+  listJobs: (projectId: string, limit = 20) =>
+    api.get<unknown, PdfExportJobListResponse>(`/pdf-export/projects/${projectId}/jobs`, {
+      params: { limit },
+    }),
+
+  // 任务详情（含插图状态）
+  getJob: (jobId: string) => api.get<unknown, PdfExportJob>(`/pdf-export/jobs/${jobId}`),
+
+  // 重试（保留已生成的插图）
+  retryJob: (jobId: string) =>
+    api.post<unknown, PdfExportJob>(`/pdf-export/jobs/${jobId}/retry`),
+
+  // 取消
+  cancelJob: (jobId: string) =>
+    api.post<unknown, PdfExportJob>(`/pdf-export/jobs/${jobId}/cancel`),
+
+  // 删除（含 PDF 与插图文件）
+  deleteJob: (jobId: string) => api.delete<unknown, { message: string }>(`/pdf-export/jobs/${jobId}`),
+
+  // 下载 PDF：返回完整 response 以便读取 Content-Disposition 取名；体积可能较大，绕过默认 120 秒超时
+  downloadPdf: (jobId: string) =>
+    axios.get<Blob>(`/api/pdf-export/jobs/${jobId}/download`, {
+      responseType: 'blob',
+      withCredentials: true,
       timeout: 0,
     }),
 };

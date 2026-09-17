@@ -22,6 +22,7 @@ import {
   ThunderboltOutlined,
   SettingOutlined,
   VideoCameraOutlined,
+  FilePdfOutlined,
 } from '@ant-design/icons';
 import { useStore } from '../store';
 import { useCharacterSync, useOutlineSync, useChapterSync } from '../store/hooks';
@@ -208,6 +209,11 @@ export default function ProjectDetail() {
           label: <Link to={`/project/${projectId}/video-export`}>Xuất phim từ chương</Link>,
         },
         {
+          key: 'pdf-export',
+          icon: <FilePdfOutlined />,
+          label: <Link to={`/project/${projectId}/pdf-export`}>Xuất PDF full truyện</Link>,
+        },
+        {
           key: 'foreshadows',
           icon: <BulbOutlined />,
           label: <Link to={`/project/${projectId}/foreshadows`}>Quản lý phục bút</Link>,
@@ -294,6 +300,11 @@ export default function ProjectDetail() {
       label: <Link to={`/project/${projectId}/video-export`}>Xuất phim từ chương</Link>,
     },
     {
+      key: 'pdf-export',
+      icon: <FilePdfOutlined />,
+      label: <Link to={`/project/${projectId}/pdf-export`}>Xuất PDF full truyện</Link>,
+    },
+    {
       key: 'foreshadows',
       icon: <BulbOutlined />,
       label: <Link to={`/project/${projectId}/foreshadows`}>Quản lý phục bút</Link>,
@@ -331,6 +342,7 @@ export default function ProjectDetail() {
     if (path.includes('/characters')) return 'characters';
     if (path.includes('/chapter-analysis')) return 'chapter-analysis';
     if (path.includes('/video-export')) return 'video-export';
+    if (path.includes('/pdf-export')) return 'pdf-export';
     if (path.includes('/foreshadows')) return 'foreshadows';
     if (path.includes('/chapters')) return 'chapters';
     if (path.includes('/writing-styles')) return 'writing-styles';
@@ -359,13 +371,14 @@ export default function ProjectDetail() {
     }}>
       <Menu
         mode="inline"
-        inlineCollapsed={collapsed}
+        // 移动端抽屉始终用完整菜单（分组 + 所有入口），避免因侧栏折叠状态丢掉条目
+        inlineCollapsed={collapsed && !mobile}
         selectedKeys={[selectedKey]}
         style={{
           borderRight: 0,
           paddingTop: '12px'
         }}
-        items={collapsed ? menuItemsCollapsed : menuItems}
+        items={collapsed && !mobile ? menuItemsCollapsed : menuItems}
         onClick={() => mobile && setDrawerVisible(false)}
       />
     </div>

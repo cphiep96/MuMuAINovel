@@ -339,10 +339,18 @@ async def delete_project(
         )
         logger.debug(f"删除视频导出任务数: {export_result['jobs']}")
 
+        # 13b. 删除 PDF 导出任务及其 PDF/插图文件（同样并入本次事务）
+        from app.services.pdf_export.service import pdf_export_service
+        pdf_result = await pdf_export_service.delete_project_artifacts(
+            db=db, user_id=user_id, project_id=project_id, commit=False
+        )
+        logger.debug(f"删除 PDF 导出任务数: {pdf_result['jobs']}")
+
         # 最后删除项目本身
         await db.delete(project)
         await db.commit()
         video_export_service.remove_artifact_dirs(export_result["targets"])
+        pdf_export_service.remove_artifact_dirs(pdf_result["targets"])
         
         logger.info(f"项目删除成功: {project_title}")
         return {"message": "Đã xóa thành công dự án và mọi dữ liệu liên quan (kể cả cơ sở dữ liệu vector)"}

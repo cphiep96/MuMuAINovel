@@ -301,6 +301,7 @@ async def download_to_path(
     timeout: Optional[float] = None,
     max_redirects: int = 3,
     content_validator: Optional[Callable[[str, bytes], bool]] = None,
+    allow_insecure_localhost: Optional[bool] = None,
     invalid_content_message: str = (
         "Nội dung tải về không phải video hợp lệ (kiểm tra bằng magic bytes, không dựa vào Content-Type)"
     ),
@@ -310,11 +311,16 @@ async def download_to_path(
     - 每一跳重定向都重新做 SSRF 校验
     - `content_validator` 默认按视频容器校验（`looks_like_video`），图片等其它类型可传入自己的校验器；
       内容类型永远不是“合法”的证据，必须通过 magic bytes 校验
+    - `allow_insecure_localhost` 可显式覆盖（图片 provider 用 `IMAGE_ALLOW_INSECURE_LOCALHOST`，
+      视频 provider 缺省沿用 `VIDEO_MOTION_ALLOW_INSECURE_LOCALHOST`）
     - 超出 `max_bytes`、内容不合法、写入失败都会清理临时文件
     """
     validator = content_validator or looks_like_video
     current = await validate_download_url(
-        url, allowed_hosts=allowed_hosts, provider_host=provider_host
+        url,
+        allowed_hosts=allowed_hosts,
+        allow_insecure_localhost=allow_insecure_localhost,
+        provider_host=provider_host,
     )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     temp_path = out_path.with_name(out_path.name + ".part")
@@ -337,6 +343,7 @@ async def download_to_path(
                     current = await validate_download_url(
                         httpx.URL(current).join(location).__str__(),
                         allowed_hosts=allowed_hosts,
+                        allow_insecure_localhost=allow_insecure_localhost,
                         provider_host=provider_host,
                     )
                     continue

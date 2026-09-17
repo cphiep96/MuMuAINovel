@@ -507,13 +507,136 @@ python -m pytest tests/ -q
   - `7d2f9b4c1e58` (revises `5c7d1e9a4b21`) — cột chuyển động cho `video_export_jobs`/`video_export_scenes`
   - `b3e6c8a1d457` (revises `7d2f9b4c1e58`) — `worker_token`/`claimed_at` cho execution claim đa worker
   - `c4f7d9b2e568` (revises `b3e6c8a1d457`) — cột ảnh phân cảnh (`image_provider/model/status/error/path/size`)
-- Khi khởi động, `app/services/video_export/schema.py` tự bổ sung bảng còn thiếu và tự thêm **các cột nullable mới**
-  (tương thích triển khai chưa chạy migration); các cột cũ thiếu vẫn chỉ cảnh báo để admin chạy `alembic upgrade head`.
+  - `e6b1f4a9c287` (revises `c4f7d9b2e568`) — bảng PDF export (`pdf_export_jobs`, `pdf_export_images`)
+  - `f7c2a5d8b913` (revises `e6b1f4a9c287`) — cột phiên bản PDF (`output_generation`, `output_created_at`, `run_attempt`) để phân biệt PDF cũ với lần chạy mới
+- Khi khởi động, `app/services/video_export/schema.py` và `app/services/pdf_export/schema.py` tự bổ sung bảng còn thiếu và
+  tự thêm **các cột nullable mới** (tương thích triển khai chưa chạy migration); các cột cũ thiếu vẫn chỉ cảnh báo để admin
+  chạy `alembic upgrade head`.
 - Khi dịch vụ khởi động lại, tác vụ `pending`/`running` được đánh dấu `failed` kèm thông báo, **giải phóng execution claim**
   nhưng **giữ nguyên** `motion_operation_id`/`motion_status` của từng phân cảnh — nhờ vậy "Dựng lại" sẽ tiếp tục theo dõi
   thao tác đã gửi thay vì tạo request mới (tránh tính phí lần hai).
 - Job cũ (không có `motion_mode`) được đọc như `local` — API trả `motion_mode: "local"`, các trường provider là `null`,
   pipeline vẫn dựng và tải được bình thường.
+
+
+## 📕 Xuất PDF full truyện (ReportLab, có thể kèm ảnh minh họa AI)
+
+Từ một dự án, hệ thống lấy **toàn bộ chương** (sắp xếp `chapter_number` → `sub_index` → `created_at` → `id`), dựng **một file
+PDF** gồm: trang bìa (tiêu đề, tác giả tuỳ chọn, thể loại, mô tả, ảnh bìa dự án nếu có), **mục lục** có số trang, từng
+chương với tiêu đề + nội dung (giữ xuống dòng), ảnh minh họa tuỳ chọn, header/footer và số trang. Việc dựng PDF chạy trong
+**tác vụ nền** (progress/cancel/retry/delete/download), không chặn request.
+
+### 1. Cài đặt ReportLab & font Unicode
+
+```bash
+cd backend
+pip install -r requirements.txt      # đã bao gồm reportlab
+# Debian/Ubuntu (image Docker đã cài sẵn font)
+sudo apt-get install -y fonts-dejavu-core fonts-noto-core
+```
+
+Font được dò tự động theo thứ tự: `PDF_FONT_PATH` → font đóng gói trong `backend/assets/fonts` → font hệ thống
+(Windows `Arial`, Linux `DejaVu Sans`/`Noto Sans`/`Liberation Sans`, macOS `Arial`). **Thiếu font ⇒ API trả 503 với hướng dẫn
+cài đặt** và tuyệt đối không tạo PDF chữ vỡ/ô vuông. Đặt `PDF_FONT_PATH` khi muốn dùng font riêng (ví dụ
+`PDF_FONT_PATH=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf`).
+
+### 2. Biến môi trường
+
+| Biến | Mặc định | Ý nghĩa |
+|------|----------|---------|
+| `PDF_EXPORT_ENABLED` | `true` | Tắt/bật toàn bộ chức năng xuất PDF |
+| `PDF_FONT_PATH` | — | Đường dẫn tệp `.ttf`/`.otf` Unicode (bỏ trống ⇒ tự dò font hệ thống) |
+| `PDF_EXPORT_STORAGE_DIR` | `backend/storage/generated_pdfs` | Nơi lưu PDF + ảnh minh họa |
+| `PDF_MAX_CHAPTERS` | `300` | Số chương tối đa mỗi lần xuất full truyện |
+| `PDF_MAX_TEXT_CHARS` | `2000000` | Tổng ký tự nội dung tối đa |
+| `PDF_MAX_IMAGES` | `60` | Số ảnh minh họa tối đa (mỗi ảnh có thể là một lần gọi API trả phí) |
+| `PDF_MAX_OUTPUT_MB` | `128` | Dung lượng PDF tối đa |
+| `PDF_MAX_ACTIVE_JOBS` | `2` | Số tác vụ PDF chưa hoàn tất tối đa mỗi người dùng |
+| `PDF_JOB_TIMEOUT_SECONDS` | `1800` | Trần thời gian mỗi tác vụ |
+| `PDF_DEFAULT_PAGE_SIZE` | `A4` | `A4` hoặc `LETTER` |
+| `PDF_INCLUDE_TOC` | `true` | Mặc định sinh mục lục |
+| `PDF_IMAGE_WIDTH_RATIO` | `0.85` | Tỉ lệ bề rộng ảnh minh họa (giữ đúng tỉ lệ, không phóng to) |
+| `PDF_CLAIM_TTL_BUFFER_SECONDS` / `PDF_CLAIM_RENEW_SECONDS` / `PDF_CANCEL_POLL_SECONDS` | `300` / `60` / `1.0` | Lease 接管缓冲, chu kỳ gia hạn lease khi đang chạy và chu kỳ kiểm tra tín hiệu hủy |
+| `IMAGE_DOWNLOAD_ALLOWED_HOSTS` | — | Whitelist host **tải ảnh** (CSV) khi provider trả URL thay vì base64 |
+
+Ảnh minh họa dùng lại toàn bộ cấu hình image provider của tính năng video: `META_MUSE_API_KEY` (alias `MODEL_API_KEY`),
+`META_MUSE_BASE_URL`, `META_MUSE_MODEL`, `META_MUSE_OUTPUT_FORMAT`, `VIDEO_IMAGE_ENABLED`, `VIDEO_IMAGE_MAX_MB`.
+
+> **Key là bí mật:** chỉ đặt trong `.env` cục bộ (đã gitignore) hoặc secret manager; ví dụ trong tài liệu luôn dùng
+> placeholder `META_MUSE_API_KEY=<your-meta-model-api-key>`. Key không bao giờ xuất hiện trong response, log, PDF hay database.
+
+### 3. Cách dùng
+
+1. Vào dự án → menu trái → **Xuất PDF full truyện** (hoặc `/project/{id}/pdf-export`).
+2. Chọn tuỳ chọn: dùng ảnh bìa, tạo mục lục, khổ giấy, tên tác giả.
+3. (Tuỳ chọn) bật **Tạo ảnh minh họa bằng Meta Muse (tính phí)** → chọn provider/model/kích thước/tỉ lệ/mức suy luận và
+   chính sách khi ảnh lỗi:
+   - `skip` (mặc định): ảnh lỗi bị bỏ qua, PDF vẫn xuất đầy đủ chữ kèm cảnh báo;
+   - `fail`: dừng tác vụ và báo lỗi rõ.
+4. Bấm **Xuất PDF full truyện** → theo dõi tiến độ (poll 2 giây), xem danh sách chương/ảnh, hủy, thử lại, tải PDF, xóa.
+
+**Chi phí & rate limit:** PDF chỉ có chữ **không phát sinh chi phí**. Khi bật ảnh minh họa, **mỗi chương tối đa một lần gọi
+Meta Model API** (tính phí theo ảnh, hạn mức theo tài khoản Meta). Ảnh tạo thành công được lưu trong thư mục tác vụ và
+**tái sử dụng khi thử lại** (`ready` không tạo lại); chỉ ảnh `failed`/`cancelled` mới được tạo lại ⇒ không tính phí hai lần.
+Hủy tác vụ dừng ngay vòng tạo ảnh (không gọi thêm API) và tác vụ chuyển `cancelled` (không phải `failed`).
+
+**Atomic output (giữ PDF cũ khi thử lại thất bại):** PDF được dựng vào **tệp tạm của lần chạy hiện tại**
+(`story.pdf.<run>.building`) rồi mới thay thế tệp chính khi thành công. Vì vậy **thử lại thất bại/bị hủy không làm mất PDF
+trước đó**: tệp cũ vẫn tải được, và API trả `artifact_stale = true` cùng `artifact_generation` / `run_attempt` để phân biệt
+«artifact cũ» với «lần chạy mới». `has_pdf` được kiểm tra theo **tệp thật tồn tại** (không chỉ dựa vào đường dẫn trong DB).
+Hủy giữa lúc dựng được builder phát hiện ở ranh giới mỗi chương/đoạn và trả về ngay (thread không bị treo vô hạn; quá
+wall-clock ⇒ `failed` với thông báo rõ).
+
+**Dữ liệu lưu trữ:** đặt `./storage/generated_pdfs` làm volume (`docker-compose.yml` đã cấu hình) để PDF/ảnh không mất khi
+container được tạo lại; thư mục này cũng nằm trong `.gitignore` nên không bao giờ bị commit. Thư mục được tạo sẵn trong image
+(`Dockerfile`) và có thể đổi bằng `PDF_EXPORT_STORAGE_DIR`.
+
+**Bảo mật:** ảnh chỉ lấy từ thư mục được quản lý (ảnh bìa dự án + ảnh trong thư mục tác vụ); client không thể truyền
+path/URL. Ảnh được kiểm tra tồn tại/dung lượng/**magic bytes** (PNG/WebP/JPEG) trước khi chèn; tải PDF dùng `FileResponse`
+với đường dẫn đã kiểm tra traversal/liên kết tượng trưng (symlink) và tên tệp an toàn. Nội dung chương là user content nên
+luôn được escape trước khi đưa vào ReportLab (không thể chèn markup).
+
+### 4. API
+
+| Phương thức | Đường dẫn | Mô tả |
+|-------------|-----------|-------|
+| `GET` | `/api/pdf-export/projects/{project_id}/capabilities` | ReportLab/font có sẵn sàng, các hạn mức, `image_providers` (kèm `missing_config`), chính sách ảnh lỗi |
+| `POST` | `/api/pdf-export/projects/{project_id}/jobs` | Tạo tác vụ (body `{options}`); chương luôn là **toàn bộ dự án**, sắp xếp ổn định |
+| `GET` | `/api/pdf-export/projects/{project_id}/jobs` | Danh sách tác vụ của dự án (`total` là tổng thật trước `limit`) |
+| `GET` | `/api/pdf-export/jobs/{job_id}` | Chi tiết tác vụ + trạng thái từng ảnh chương |
+| `POST` | `/api/pdf-export/jobs/{job_id}/retry` | Xuất lại (giữ ảnh `ready`, chỉ tạo lại ảnh lỗi) |
+| `POST` | `/api/pdf-export/jobs/{job_id}/cancel` | Hủy tác vụ |
+| `DELETE` | `/api/pdf-export/jobs/{job_id}` | Xóa tác vụ + PDF + ảnh |
+| `GET` | `/api/pdf-export/jobs/{job_id}/download` | Tải PDF (`application/pdf`) |
+
+Ví dụ tạo tác vụ:
+
+```bash
+curl -X POST http://localhost:8000/api/pdf-export/projects/<project-id>/jobs \
+  -H "Content-Type: application/json" \
+  -d '{"options": {"include_cover": true, "include_toc": true, "include_images": false,
+                   "page_size": "A4", "author": "Nguyễn Văn A"}}'
+```
+
+Xóa dự án / "Dọn bản ghi tác vụ" cũng dọn `pdf_export_jobs` + `pdf_export_images` và thư mục
+`storage/generated_pdfs/{user}/{job}` (PDF + ảnh).
+
+### 5. Kiểm thử PDF
+
+`backend/tests/test_pdf_export.py` bao phủ: font resolver (thiếu/hợp lệ/đuôi sai), unicode PDF nhúng font, thứ tự chương,
+escape markup người dùng, ảnh fit theo tỉ lệ + bỏ qua ảnh hỏng, page count/metadata, giới hạn tham số, ảnh minh họa qua
+Meta **mock HTTP** (không gọi API thật), chính sách `skip`/`fail`, hủy → `cancelled`, retry giữ ảnh `ready`, download
+chống traversal, dọn dẹp khi xóa tác vụ/dự án, cùng API/ownership. Ngoài ra có các regression test cho:
+**atomic output** (retry fail/cancel vẫn tải được PDF cũ + `artifact_stale`), **hoàn tác được** khi
+`delete_project_artifacts(commit=False)` (rollback không để lại trạng thái xóa một nửa), **hủy queue không bị worker ghi đè**,
+**timeout/hủy luồng dựng PDF**, `has_pdf` theo tệp thật, `total` trước `limit`, `Content-Disposition` khi tải, và
+`DELETE /api/tasks/{id}` xóa luôn PDF job + tệp. Chạy:
+
+```bash
+cd backend
+python -m pytest tests/test_pdf_export.py -q
+```
+
 
 
 ## 💻 硬件配置要求

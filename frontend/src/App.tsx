@@ -14,6 +14,7 @@ import Chapters from './pages/Chapters';
 import ChapterReader from './pages/ChapterReader';
 import ChapterAnalysis from './pages/ChapterAnalysis';
 import VideoExport from './pages/VideoExport';
+import PdfExport from './pages/PdfExport';
 import Foreshadows from './pages/Foreshadows';
 import WritingStyles from './pages/WritingStyles';
 import PromptWorkshop from './pages/PromptWorkshop';
@@ -68,6 +69,7 @@ function App() {
             <Route path="chapters" element={<Chapters />} />
             <Route path="chapter-analysis" element={<ChapterAnalysis />} />
             <Route path="video-export" element={<VideoExport />} />
+            <Route path="pdf-export" element={<PdfExport />} />
             <Route path="foreshadows" element={<Foreshadows />} />
             <Route path="writing-styles" element={<WritingStyles />} />
             <Route path="prompt-workshop" element={<PromptWorkshop />} />

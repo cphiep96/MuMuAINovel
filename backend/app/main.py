@@ -76,6 +76,11 @@ async def lifespan(app: FastAPI):
             from app.services.video_export.schema import sync_video_export_schema
 
             await conn.run_sync(sync_video_export_schema)
+
+            # PDF 导出表兜底创建（同样只补缺失的表/可空列）
+            from app.services.pdf_export.schema import sync_pdf_export_schema
+
+            await conn.run_sync(sync_pdf_export_schema)
             interrupted_at = datetime.now()
             await conn.execute(
                 sql_update(BackgroundTask)
@@ -113,6 +118,13 @@ async def lifespan(app: FastAPI):
             from app.services.video_export.startup import fail_interrupted_jobs
 
             await fail_interrupted_jobs(conn, interrupted_at=interrupted_at)
+
+            # PDF 导出任务：同样收敛为失败并释放执行权（已生成的插图会被保留，重试时复用）
+            from app.services.pdf_export.startup import (
+                fail_interrupted_jobs as fail_interrupted_pdf_jobs,
+            )
+
+            await fail_interrupted_pdf_jobs(conn, interrupted_at=interrupted_at)
         logger.info("后台任务表检查完成")
     except Exception as e:
         logger.warning(f"后台任务表检查失败（不影响启动）: {e}")
@@ -221,7 +233,7 @@ from app.api import (
     mcp_plugins, admin, inspiration, prompt_templates,
     changelog, careers, foreshadows, prompt_workshop, book_import,
     project_covers, project_agent, tasks, skills, announcements,
-    video_export
+    video_export, pdf_export
 )
 
 app.include_router(auth.router, prefix="/api")
@@ -252,6 +264,7 @@ app.include_router(prompt_workshop.router, prefix="/api")  # API xưởng prompt
 app.include_router(book_import.router, prefix="/api")  # API nhập/đọc tách sách
 app.include_router(tasks.router, prefix="/api")  # API tác vụ nền
 app.include_router(video_export.router, prefix="/api")  # API xuất phim từ chương
+app.include_router(pdf_export.router, prefix="/api")  # API xuất PDF full truyện
 app.include_router(announcements.router, prefix="/api")  # API thông báo
 
 if getattr(sys, "frozen", False):

@@ -334,6 +334,9 @@ class MetaMuseImageProvider(SceneImageProvider):
                     cancel_check=cancel_check,
                     timeout=self._timeout,
                     content_validator=looks_like_image,
+                    # 图片走自己的开发/白名单配置，避免误用视频 provider 的设置
+                    allow_insecure_localhost=bool(settings.image_allow_insecure_localhost),
+                    allowed_hosts=_image_allowed_hosts(),
                     invalid_content_message=(
                         "Nội dung tải về không phải ảnh hợp lệ (kiểm tra bằng magic bytes, "
                         "không dựa vào Content-Type)"
@@ -362,6 +365,15 @@ class MetaMuseImageProvider(SceneImageProvider):
             detail = extract_error_message(data) or "Meta Model API báo lỗi"
             raise ImageProviderError(self._safe(detail))
         return data
+
+
+def _image_allowed_hosts() -> tuple[str, ...]:
+    """图片下载主机白名单（`IMAGE_DOWNLOAD_ALLOWED_HOSTS`，留空表示按公网 HTTPS 校验）"""
+    return tuple(
+        part.strip().lower()
+        for part in str(settings.image_download_allowed_hosts or "").split(",")
+        if part.strip()
+    )
 
 
 def validate_provider_base_url(url: str, *, allow_insecure_localhost: bool) -> str:

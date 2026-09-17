@@ -22,6 +22,7 @@ from app.models.background_task import BackgroundTask
 from app.models.announcement import Announcement
 from app.models.project_agent import AgentConversation, AgentMessage, AgentToolCall, AgentExecutionStep
 from app.models.video_export import VideoExportJob, VideoExportScene
+from app.models.pdf_export import PdfExportImage, PdfExportJob
 
 __all__ = [
     "Project",
@@ -59,4 +60,6 @@ __all__ = [
     "AgentExecutionStep",
     "VideoExportJob",
     "VideoExportScene",
+    "PdfExportJob",
+    "PdfExportImage",
 ]

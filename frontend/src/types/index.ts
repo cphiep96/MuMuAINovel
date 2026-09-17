@@ -1532,6 +1532,95 @@ export interface VideoExportJobListResponse {
   total: number;
 }
 
+// PDF 全本导出（项目 → 单个 PDF：封面/目录/章节/插图）
+export type PdfExportJobStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+export type PdfImageStatus = 'pending' | 'generating' | 'ready' | 'failed' | 'cancelled' | 'skipped';
+export type PdfImageFailurePolicy = 'skip' | 'fail';
+
+export interface PdfExportOptions {
+  include_cover?: boolean | null;
+  include_images?: boolean | null;
+  include_toc?: boolean | null;
+  image_provider?: string | null;
+  image_model?: string | null;
+  image_aspect_ratio?: string | null;
+  image_size?: string | null;
+  image_reasoning_strength?: string | null;
+  image_failure_policy?: PdfImageFailurePolicy | null;
+  page_size?: string | null;
+  title?: string | null;
+  author?: string | null;
+}
+
+export interface PdfExportImage {
+  id: string;
+  chapter_id?: string | null;
+  chapter_number?: number | null;
+  sub_index?: number | null;
+  title?: string | null;
+  status: PdfImageStatus | string;
+  provider?: string | null;
+  model?: string | null;
+  size?: string | null;
+  error?: string | null;
+}
+
+export interface PdfExportJob {
+  id: string;
+  project_id: string;
+  status: PdfExportJobStatus;
+  progress: number;
+  status_message?: string | null;
+  error_message?: string | null;
+  warnings: string[];
+  options: PdfExportOptions;
+  chapter_count: number;
+  image_count: number;
+  text_chars: number;
+  page_count?: number | null;
+  file_size_bytes?: number | null;
+  has_pdf: boolean;
+  /** Lần chạy gần nhất thất bại/bị hủy nhưng vẫn còn PDF của lần chạy trước để tải */
+  artifact_stale?: boolean;
+  artifact_generation?: number;
+  artifact_created_at?: string | null;
+  run_attempt?: number;
+  created_at?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  updated_at?: string | null;
+  images?: PdfExportImage[];
+}
+
+export interface PdfExportCapabilities {
+  enabled: boolean;
+  reportlab_available: boolean;
+  font_available: boolean;
+  allowed_page_sizes: string[];
+  default_page_size: string;
+  max_chapters: number;
+  max_text_chars: number;
+  max_images: number;
+  max_output_mb: number;
+  max_active_jobs: number;
+  job_timeout_seconds: number;
+  image_failure_policies: PdfImageFailurePolicy[];
+  default_image_failure_policy: PdfImageFailurePolicy;
+  image_enabled: boolean;
+  default_image_provider?: string | null;
+  default_image_model?: string | null;
+  image_providers: VideoImageProviderInfo[];
+}
+
+export interface PdfExportCreateRequest {
+  options?: PdfExportOptions;
+}
+
+export interface PdfExportJobListResponse {
+  items: PdfExportJob[];
+  total: number;
+}
+
 // 提示词工坊分类常量
 export const PROMPT_CATEGORIES: Record<string, string> = {
   general: 'Chung',

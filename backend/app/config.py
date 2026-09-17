@@ -213,6 +213,7 @@ class Settings(BaseSettings):
     video_image_retry_delay_seconds: float = 2.0  # 重试退避基数
     video_image_max_mb: int = 16  # 单张图片大小上限（base64 解码后同样受限）
     image_allow_insecure_localhost: bool = False  # 仅开发：允许 http://localhost 的图片 provider
+    image_download_allowed_hosts: str = ""  # 图片下载主机白名单（CSV）；留空 = 任意公网 HTTPS
 
     # Meta Model API（Muse Image 1.0）：POST {base}/images/generations
     meta_muse_api_key: Optional[str] = None  # 主变量；不写日志/DB/响应
@@ -221,6 +222,23 @@ class Settings(BaseSettings):
     meta_muse_model: str = "muse-image-1.0"
     meta_muse_output_format: str = "webp"  # webp/png/jpeg
     meta_muse_reasoning_strengths: str = "low,high"  # theo docs Meta hiện hành chỉ low/high
+
+    # PDF 全本导出（ReportLab Platypus）
+    pdf_export_enabled: bool = True  # 总开关
+    pdf_export_storage_dir: Optional[str] = None  # 为空时使用 backend/storage/generated_pdfs
+    pdf_font_path: Optional[str] = None  # Unicode TTF 路径；为空时自动探测系统字体
+    pdf_max_chapters: int = 300  # 单次导出最多章节数（全本通常很多章）
+    pdf_max_text_chars: int = 2_000_000  # 正文总字符上限，避免内存/耗时失控
+    pdf_max_images: int = 60  # 单次导出最多插图数（每张都可能调用付费 API）
+    pdf_max_output_mb: int = 128  # PDF 体积上限
+    pdf_job_timeout_seconds: int = 1800  # 单个任务墙钟上限
+    pdf_max_active_jobs: int = 2  # 每个用户同时未完成的任务数
+    pdf_claim_ttl_buffer_seconds: int = 300  # 执行权 lease 缓冲（配合 pdf_job_timeout_seconds）
+    pdf_claim_renew_seconds: float = 60.0  # 运行期间续租执行权的最小间隔（避免长任务被误判为 stale）
+    pdf_cancel_poll_seconds: float = 1.0  # 检查取消信号的最小间隔（避免频繁查库）
+    pdf_default_page_size: str = "A4"  # A4/LETTER
+    pdf_include_toc: bool = True  # 是否生成目录
+    pdf_image_width_ratio: float = 0.85  # 插图占正文宽度比例（保持等比，不放大）
     
     class Config:
         env_file = ".env"

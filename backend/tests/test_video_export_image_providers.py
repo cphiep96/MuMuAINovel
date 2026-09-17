@@ -78,6 +78,7 @@ def image_settings(monkeypatch):
     monkeypatch.setattr(settings, "meta_muse_model", "muse-image-1.0")
     monkeypatch.setattr(settings, "meta_muse_output_format", "webp")
     monkeypatch.setattr(settings, "meta_muse_reasoning_strengths", "low,high")
+    monkeypatch.setattr(settings, "image_download_allowed_hosts", "")
     monkeypatch.setattr(settings, "video_image_enabled", True)
     monkeypatch.setattr(settings, "video_image_provider", None)
     monkeypatch.setattr(settings, "video_image_model", None)
@@ -614,6 +615,41 @@ async def test_url_fallback_never_sends_authorization_even_for_provider_host(tmp
     assert seen["host"] == "api.meta.ai"
     assert "authorization" not in seen["headers"], "URL fallback không bao giờ gửi Authorization"
     assert TEST_API_KEY not in json.dumps(seen["headers"])
+
+
+@pytest.mark.asyncio
+async def test_image_download_uses_image_specific_dev_and_whitelist_config(tmp_path, monkeypatch):
+    """URL fallback dùng cấu hình riêng cho ảnh: IMAGE_ALLOW_INSECURE_LOCALHOST + IMAGE_DOWNLOAD_ALLOWED_HOSTS"""
+    monkeypatch.setattr(settings, "meta_muse_api_key", TEST_API_KEY)
+    # video cho phép localhost nhưng image thì không → vẫn phải từ chối http
+    monkeypatch.setattr(settings, "video_motion_allow_insecure_localhost", True)
+    monkeypatch.setattr(settings, "image_allow_insecure_localhost", False)
+    requested: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/images/generations"):
+            return httpx.Response(200, json={"data": [{"url": "http://127.0.0.1:9/scene.webp"}]})
+        requested.append(str(request.url))
+        return httpx.Response(200, headers={"content-type": "image/webp"}, content=WEBP_BYTES)
+
+    provider = _provider(handler)
+    with pytest.raises(ImageProviderError):
+        await provider.generate_image(_request(tmp_path), tmp_path / "scene.webp")
+    assert requested == [], "ảnh không được dùng cờ localhost của video"
+
+    # 白名单：host ngoài danh sách bị từ chối
+    monkeypatch.setattr(settings, "image_download_allowed_hosts", "cdn.example.com")
+    monkeypatch.setattr(settings, "image_allow_insecure_localhost", True)
+
+    def handler_whitelist(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/images/generations"):
+            return httpx.Response(200, json={"data": [{"url": "https://evil.example.com/scene.webp"}]})
+        requested.append(str(request.url))
+        return httpx.Response(200, headers={"content-type": "image/webp"}, content=WEBP_BYTES)
+
+    provider = _provider(handler_whitelist)
+    with pytest.raises(ImageProviderError):
+        await provider.generate_image(_request(tmp_path), tmp_path / "scene2.webp")
 
 
 @pytest.mark.asyncio
