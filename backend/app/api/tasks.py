@@ -10,6 +10,8 @@ from app.models.background_task import BackgroundTask
 from app.models.batch_generation_task import BatchGenerationTask
 from app.models.analysis_task import AnalysisTask
 from app.models.chapter import Chapter
+from app.models.pdf_export import PdfExportJob
+from app.models.video_export import VideoExportJob
 from app.services.background_task_service import background_task_service
 from app.services.task_resources import affected_resources_for_task
 from app.logger import get_logger
@@ -248,6 +250,44 @@ async def get_tasks(
     return {"items": items[:limit]}
 
 
+async def _sync_video_export_cancelled(db: AsyncSession, task_id: str, user_id: str) -> None:
+    """后台任务被取消时，同步视频导出任务的领域状态，避免两处状态不一致"""
+    from app.models.video_export import VideoExportJob
+
+    result = await db.execute(
+        select(VideoExportJob).where(
+            VideoExportJob.id == task_id,
+            VideoExportJob.user_id == user_id,
+        )
+    )
+    job = result.scalar_one_or_none()
+    if job and job.status in ("pending", "running"):
+        job.status = "cancelled"
+        job.status_message = "Tác vụ đã bị hủy"
+        job.error_message = None
+        job.completed_at = datetime.now()
+        await db.commit()
+
+
+async def _sync_pdf_export_cancelled(db: AsyncSession, task_id: str, user_id: str) -> None:
+    """后台任务被取消时，同步 PDF 导出任务的领域状态（两处状态必须一致）"""
+    from app.models.pdf_export import PdfExportJob
+
+    result = await db.execute(
+        select(PdfExportJob).where(
+            PdfExportJob.id == task_id,
+            PdfExportJob.user_id == user_id,
+        )
+    )
+    job = result.scalar_one_or_none()
+    if job and job.status in ("pending", "running"):
+        job.status = "cancelled"
+        job.status_message = "Tác vụ đã bị hủy"
+        job.error_message = None
+        job.completed_at = datetime.now()
+        await db.commit()
+
+
 @router.post("/{task_id}/cancel", summary="Hủy tác vụ")
 async def cancel_task(
     task_id: str,
@@ -261,6 +301,8 @@ async def cancel_task(
 
     success = await background_task_service.cancel_task(task_id, user_id, db)
     if success:
+        await _sync_video_export_cancelled(db, task_id, user_id)
+        await _sync_pdf_export_cancelled(db, task_id, user_id)
         return {"message": "Tác vụ đã bị hủy", "task_id": task_id}
 
     result = await db.execute(
@@ -295,6 +337,43 @@ async def delete_task(
     if task:
         if task.status in ("pending", "running"):
             raise HTTPException(status_code=400, detail="Không thể xóa tác vụ đang chạy, vui lòng hủy trước")
+        # PDF 导出任务：连同领域记录 + PDF/插图文件一起删除，避免留下孤儿任务
+        if task.task_type == "pdf_export":
+            from app.services.pdf_export.service import pdf_export_service
+
+            pdf_job = (
+                await db.execute(
+                    select(PdfExportJob).where(
+                        PdfExportJob.id == task_id,
+                        PdfExportJob.user_id == user_id,
+                    )
+                )
+            ).scalar_one_or_none()
+            if pdf_job is not None:
+                pdf_export_service.ensure_deletable(pdf_job)
+                await pdf_export_service._delete_job_rows(db=db, job=pdf_job)
+                await db.commit()
+                pdf_export_service._remove_job_files(user_id=user_id, job_id=pdf_job.id)
+                return {"message": "Đã xóa tác vụ xuất PDF cùng tệp PDF và ảnh minh họa"}
+        # Video export jobs own their scenes and generated MP4/SRT directory;
+        # deleting only BackgroundTask would leave orphaned rows and files.
+        if task.task_type == "video_export":
+            from app.services.video_export.service import video_export_service
+
+            video_job = (
+                await db.execute(
+                    select(VideoExportJob).where(
+                        VideoExportJob.id == task_id,
+                        VideoExportJob.user_id == user_id,
+                    )
+                )
+            ).scalar_one_or_none()
+            if video_job is not None:
+                video_export_service.ensure_deletable(video_job)
+                await video_export_service._delete_job_rows(db=db, job=video_job)
+                await db.commit()
+                video_export_service._remove_job_files(user_id=user_id, job_id=video_job.id)
+                return {"message": "Video export task and MP4/SRT files deleted"}
         await db.delete(task)
         await db.commit()
         return {"message": "Bản ghi tác vụ đã bị xóa"}
@@ -345,6 +424,37 @@ async def clear_project_tasks(
 
     from sqlalchemy import delete as sql_delete
 
+    # 视频导出任务：先删掉对应的导出任务（含产物文件），否则下面的批量删除会留下孤儿导出任务。
+    # 数据库删除并入本次事务，清理失败时直接报错返回，不做“只删一半”的清理。
+    from app.services.video_export.service import video_export_service
+    try:
+        export_result = await video_export_service.delete_project_artifacts(
+            db=db, user_id=user_id, project_id=project_id, only_finished=True, commit=False
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"视频导出任务清理失败，已中止清理: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail="Không thể dọn tác vụ xuất phim, vui lòng thử lại"
+        ) from e
+    export_cleared = export_result["jobs"]
+
+    # PDF 导出任务：同样先删领域记录（含 PDF/插图文件），避免留下孤儿任务
+    from app.services.pdf_export.service import pdf_export_service
+    try:
+        pdf_result = await pdf_export_service.delete_project_artifacts(
+            db=db, user_id=user_id, project_id=project_id, only_finished=True, commit=False
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"PDF 导出任务清理失败，已中止清理: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail="Không thể dọn tác vụ xuất PDF, vui lòng thử lại"
+        ) from e
+    pdf_cleared = pdf_result["jobs"]
+
     # 清理 BackgroundTask
     bg_result = await db.execute(
         sql_delete(BackgroundTask).where(
@@ -376,6 +486,15 @@ async def clear_project_tasks(
     )
 
     await db.commit()
+    # 数据库提交成功后再删除产物文件，避免回滚后出现“记录在、文件没了”的不一致
+    video_export_service.remove_artifact_dirs(export_result["targets"])
+    pdf_export_service.remove_artifact_dirs(pdf_result["targets"])
 
-    total = (bg_result.rowcount or 0) + (batch_result.rowcount or 0) + (analysis_result.rowcount or 0)
+    total = (
+        (bg_result.rowcount or 0)
+        + (batch_result.rowcount or 0)
+        + (analysis_result.rowcount or 0)
+        + export_cleared
+        + pdf_cleared
+    )
     return {"message": f"Đã dọn {total} bản ghi tác vụ", "deleted_count": total}

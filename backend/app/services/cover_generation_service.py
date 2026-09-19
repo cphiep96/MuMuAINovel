@@ -30,6 +30,32 @@ GENERATED_COVER_STORAGE_DIR = PROJECT_ROOT / "storage" / "generated_covers"
 GENERATED_COVER_PUBLIC_PREFIX = "/generated-assets/covers"
 
 
+def resolve_cover_file_path(cover_image_url: Optional[str]) -> Path:
+    """把封面访问地址解析为本地文件路径
+
+    仅接受受管存储目录下的地址，其他来源一律拒绝，
+    供封面下载以外的内部流程（如视频导出复用封面图）调用。
+    """
+    if not cover_image_url:
+        raise HTTPException(status_code=404, detail="Dự án hiện chưa có ảnh bìa có thể tải xuống")
+
+    if cover_image_url.startswith(f"{GENERATED_COVER_PUBLIC_PREFIX}/"):
+        relative_path = cover_image_url.replace(f"{GENERATED_COVER_PUBLIC_PREFIX}/", "", 1)
+        candidate = (GENERATED_COVER_STORAGE_DIR / relative_path).resolve()
+    elif cover_image_url.startswith("/assets/generated_covers/"):
+        relative_path = cover_image_url.replace("/assets/generated_covers/", "", 1)
+        candidate = (GENERATED_COVER_STORAGE_DIR / relative_path).resolve()
+    else:
+        raise HTTPException(status_code=404, detail="Đường dẫn tệp ảnh bìa không hợp lệ, vui lòng tạo lại")
+
+    storage_root = GENERATED_COVER_STORAGE_DIR.resolve()
+    try:
+        candidate.relative_to(storage_root)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Đường dẫn tệp ảnh bìa không hợp lệ, vui lòng tạo lại") from exc
+    return candidate
+
+
 @dataclass
 class CoverTestResult:
     success: bool
@@ -250,18 +276,7 @@ class CoverGenerationService:
         return f"{GENERATED_COVER_PUBLIC_PREFIX}/{quote(user_id)}/{quote(filename)}"
 
     def _resolve_cover_path(self, cover_image_url: Optional[str]) -> Path:
-        if not cover_image_url:
-            raise HTTPException(status_code=404, detail="Dự án hiện chưa có ảnh bìa có thể tải xuống")
-
-        if cover_image_url.startswith(f"{GENERATED_COVER_PUBLIC_PREFIX}/"):
-            relative_path = cover_image_url.replace(f"{GENERATED_COVER_PUBLIC_PREFIX}/", "", 1)
-            return GENERATED_COVER_STORAGE_DIR / relative_path
-
-        if cover_image_url.startswith("/assets/generated_covers/"):
-            relative_path = cover_image_url.replace("/assets/generated_covers/", "", 1)
-            return GENERATED_COVER_STORAGE_DIR / relative_path
-
-        raise HTTPException(status_code=404, detail="Đường dẫn tệp ảnh bìa không hợp lệ, vui lòng tạo lại")
+        return resolve_cover_file_path(cover_image_url)
 
     @staticmethod
     def _extract_upstream_error_detail(exc: httpx.HTTPStatusError) -> str:

@@ -55,10 +55,13 @@ RUN if [ "$USE_CN_MIRROR" = "true" ]; then \
         sed -i 's/security.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources; \
     fi
 
-# 安装系统依赖（添加数据库工具）
+# 安装系统依赖（数据库工具 + 视频导出所需 FFmpeg + PDF 导出所需的 Unicode 字体）
 RUN apt-get update && apt-get install -y \
     gcc \
     curl \
+    ffmpeg \
+    fonts-dejavu-core \
+    fonts-noto-core \
     postgresql-client \
     netcat-traditional \
     && rm -rf /var/lib/apt/lists/*
@@ -100,8 +103,8 @@ COPY backend/scripts/migrate.py ./scripts/migrate.py
 # 赋予执行权限
 RUN chmod +x /app/entrypoint.sh
 
-# 创建必要的目录
-RUN mkdir -p /app/data /app/logs
+# 创建必要的目录（含 PDF 导出目录，便于挂载 volume 持久化）
+RUN mkdir -p /app/data /app/logs /app/storage/generated_videos /app/storage/generated_covers /app/storage/generated_pdfs
 
 # 暴露端口
 EXPOSE 8000

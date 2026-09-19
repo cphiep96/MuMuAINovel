@@ -49,6 +49,11 @@ env/
 *.db-wal
 *.sqlite
 *.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+
+# 浏览器/自动化工具缓存（UI 验证时产生）
+.playwright-mcp/
 
 # Logs
 *.log
@@ -80,6 +85,11 @@ backend/data/*.db-wal
 backend/data/users.json
 backend/data/admins.json
 backend/storage/
+storage/generated_videos/
+backend/storage/generated_videos/
+# PDF 全本导出产物（PDF + 插图），不纳入版本控制
+storage/generated_pdfs/
+backend/storage/generated_pdfs/
 
 # Temporary files
 *.bak
@@ -114,7 +124,12 @@ embed_build.py
 
 .roo/
 data/
-docs/
+# Keep MCP agent docs in git; ignore other local docs under this folder.
+docs/*
+!docs/mcp-agent-guide.md
+!docs/mcp-server-implementation.md
+!docs/mcp-configs/
+!docs/mcp-configs/**
 data_old/
 backend/migrate_all_databases.py
 test_api.py
@@ -130,3 +145,7 @@ backend/tests/
 **/test_*.py
 **/*_test.py
 tool/
+
+# 视频导出 MVP 测试用例保留在版本库中，便于评审查看 diff
+!backend/tests/
+!backend/tests/*.py

@@ -14,6 +14,8 @@ TASK_TYPE_RESOURCES: dict[str, tuple[str, ...]] = {
     "organization_generate": ("characters", "organizations"),
     "career_generate": ("careers",),
     "wizard": ("projects", "outlines", "chapters", "characters"),
+    "video_export": ("videos",),
+    "pdf_export": ("pdfs",),
 }
 
 AGENT_TASK_ACTION_TYPES: dict[str, str] = {

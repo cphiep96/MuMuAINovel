@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "mumuainovel": {
+      "command": "python",
+      "args": ["-m", "app.mcp_server"],
+      "cwd": "D:\\project\\tool\\story-tool\\MuMuAINovel\\backend",
+      "env": {
+        "PYTHONPATH": "D:\\project\\tool\\story-tool\\MuMuAINovel\\backend",
+        "MUMU_API_BASE": "http://127.0.0.1:8000",
+        "MUMU_MCP_TOKEN": "<session_token>"
+      }
+    }
+  }
+}
