@@ -42,11 +42,11 @@ SCENE_COLUMNS: tuple[sa.Column, ...] = (
 TABLES = (("video_export_jobs", JOB_COLUMNS), ("video_export_scenes", SCENE_COLUMNS))
 
 
-def _existing_columns(table: str) -> set[str]:
-    """已存在的列名；离线模式（--sql）或表不存在时返回空集合"""
+def _existing_columns(table: str) -> set[str] | None:
+    """Return columns, or ``None`` when offline introspection is unavailable."""
     bind = op.get_bind()
     if bind is None or type(bind).__name__ == "MockConnection":
-        return set()
+        return None
     inspector = sa.inspect(bind)
     if not inspector.has_table(table):
         return set()
@@ -56,8 +56,13 @@ def _existing_columns(table: str) -> set[str]:
 def upgrade() -> None:
     for table, columns in TABLES:
         existing = _existing_columns(table)
+        if existing is None:
+            # Offline --sql cannot inspect the table, so emit the complete DDL.
+            for column in columns:
+                op.add_column(table, column)
+            continue
         if not existing:
-            # 表由上一个迁移创建；此时无需补列
+            # The table is genuinely absent; a later table-creation migration owns it.
             continue
         for column in columns:
             if column.name not in existing:
@@ -67,6 +72,10 @@ def upgrade() -> None:
 def downgrade() -> None:
     for table, columns in TABLES:
         existing = _existing_columns(table)
+        if existing is None:
+            for column in columns:
+                op.drop_column(table, column.name)
+            continue
         for column in columns:
             if column.name in existing:
                 op.drop_column(table, column.name)

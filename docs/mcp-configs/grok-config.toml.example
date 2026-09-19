@@ -1,0 +1,13 @@
+# Grok Build — cấu hình MCP gốc (TOML).
+# Đường dẫn thật thường là ~/.grok/config.toml (Windows: %USERPROFILE%\.grok\config.toml).
+# Nếu bản Grok của bạn dùng khoá khác (ví dụ mcpServers), xem docs/mcp-agent-guide.md mục 5.3.
+
+[mcp_servers.mumuainovel]
+command = "python"
+args = ["-m", "app.mcp_server"]
+cwd = "D:\\project\\tool\\story-tool\\MuMuAINovel\\backend"
+
+[mcp_servers.mumuainovel.env]
+PYTHONPATH = "D:\\project\\tool\\story-tool\\MuMuAINovel\\backend"
+MUMU_API_BASE = "http://127.0.0.1:8000"
+MUMU_MCP_TOKEN = "<session_token>"

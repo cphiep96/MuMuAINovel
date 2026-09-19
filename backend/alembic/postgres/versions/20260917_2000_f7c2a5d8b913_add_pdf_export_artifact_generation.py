@@ -30,11 +30,11 @@ ARTIFACT_COLUMNS: tuple[sa.Column, ...] = (
 )
 
 
-def _existing_columns(table: str) -> set[str]:
-    """已存在的列名；离线模式（--sql）或表不存在时返回空集合"""
+def _existing_columns(table: str) -> set[str] | None:
+    """Return columns, or ``None`` when offline introspection is unavailable."""
     bind = op.get_bind()
     if bind is None or type(bind).__name__ == "MockConnection":
-        return set()
+        return None
     inspector = sa.inspect(bind)
     if not inspector.has_table(table):
         return set()
@@ -43,8 +43,12 @@ def _existing_columns(table: str) -> set[str]:
 
 def upgrade() -> None:
     existing = _existing_columns("pdf_export_jobs")
+    if existing is None:
+        for column in ARTIFACT_COLUMNS:
+            op.add_column("pdf_export_jobs", column)
+        return
     if not existing:
-        # 表由更早的迁移创建；此处无需补列
+        # The table is genuinely absent; its table migration owns creation.
         return
     for column in ARTIFACT_COLUMNS:
         if column.name not in existing:
@@ -53,6 +57,10 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     existing = _existing_columns("pdf_export_jobs")
+    if existing is None:
+        for column in ARTIFACT_COLUMNS:
+            op.drop_column("pdf_export_jobs", column.name)
+        return
     for column in ARTIFACT_COLUMNS:
         if column.name in existing:
             op.drop_column("pdf_export_jobs", column.name)

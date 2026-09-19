@@ -11,6 +11,7 @@ from app.models.batch_generation_task import BatchGenerationTask
 from app.models.analysis_task import AnalysisTask
 from app.models.chapter import Chapter
 from app.models.pdf_export import PdfExportJob
+from app.models.video_export import VideoExportJob
 from app.services.background_task_service import background_task_service
 from app.services.task_resources import affected_resources_for_task
 from app.logger import get_logger
@@ -354,6 +355,25 @@ async def delete_task(
                 await db.commit()
                 pdf_export_service._remove_job_files(user_id=user_id, job_id=pdf_job.id)
                 return {"message": "Đã xóa tác vụ xuất PDF cùng tệp PDF và ảnh minh họa"}
+        # Video export jobs own their scenes and generated MP4/SRT directory;
+        # deleting only BackgroundTask would leave orphaned rows and files.
+        if task.task_type == "video_export":
+            from app.services.video_export.service import video_export_service
+
+            video_job = (
+                await db.execute(
+                    select(VideoExportJob).where(
+                        VideoExportJob.id == task_id,
+                        VideoExportJob.user_id == user_id,
+                    )
+                )
+            ).scalar_one_or_none()
+            if video_job is not None:
+                video_export_service.ensure_deletable(video_job)
+                await video_export_service._delete_job_rows(db=db, job=video_job)
+                await db.commit()
+                video_export_service._remove_job_files(user_id=user_id, job_id=video_job.id)
+                return {"message": "Video export task and MP4/SRT files deleted"}
         await db.delete(task)
         await db.commit()
         return {"message": "Bản ghi tác vụ đã bị xóa"}

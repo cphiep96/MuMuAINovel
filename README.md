@@ -1172,3 +1172,37 @@ Made with ❤️
 ## History
 
 ![Alt](https://repobeats.axiom.co/api/embed/ee7141a5f269c64759302e067abe23b46796bafe.svg "Repobeats analytics image")
+
+---
+
+## MCP cho agent (không cần UI)
+
+MuMuAINovel có thể được điều khiển hoàn toàn bằng công cụ MCP **mà không cần thao tác trên web UI**: tạo truyện, tạo danh mục,
+chạy wizard (bối cảnh → nghề nghiệp → nhân vật → dàn ý), sinh chương và xuất video (storyboard → MP4/SRT).
+
+Coding agent (Cursor, Claude Desktop, Grok, Paseo…) kết nối tới MCP server ở `backend/app/mcp_server/` — **26 tool** gồm
+`mumu_health`, `create_project`, `create_category`, `wizard_*` (kể cả `wizard_world_regenerate`), `generate_chapter`,
+`video_*`… Server dùng lại tầng DB/service và REST API sẵn có, nên logic nghiệp vụ không bị nhân bản.
+
+```powershell
+cd D:\project\tool\story-tool\MuMuAINovel\backend
+$env:PYTHONPATH = "D:\project\tool\story-tool\MuMuAINovel\backend"
+$env:MUMU_API_BASE = "http://127.0.0.1:8000"
+$env:MUMU_MCP_TOKEN = "<session_token>"   # lấy bằng: python backend\scripts\issue_mcp_token.py --username admin
+python -m app.mcp_server
+```
+
+📖 **Hướng dẫn đầy đủ (tiếng Việt): [docs/mcp-agent-guide.md](docs/mcp-agent-guide.md)** — gồm xác thực token, playbook
+end-to-end, đăng ký MCP HTTP vào plugin manager trong app, và xử lý sự cố.
+
+| Tài nguyên | Đường dẫn |
+|---|---|
+| Hướng dẫn MCP cho agent | [docs/mcp-agent-guide.md](docs/mcp-agent-guide.md) |
+| Mẫu cấu hình Cursor | [docs/mcp-configs/cursor-mcp.json.example](docs/mcp-configs/cursor-mcp.json.example) |
+| Mẫu cấu hình Claude Desktop | [docs/mcp-configs/claude-desktop.json.example](docs/mcp-configs/claude-desktop.json.example) |
+| Mẫu cấu hình Grok (JSON / TOML) | [docs/mcp-configs/grok-mcp.json.example](docs/mcp-configs/grok-mcp.json.example) · [docs/mcp-configs/grok-config.toml.example](docs/mcp-configs/grok-config.toml.example) |
+| Script lấy token | [backend/scripts/issue_mcp_token.py](backend/scripts/issue_mcp_token.py) |
+
+> ⚠️ `MUMU_MCP_TOKEN` là **giá trị cookie `session_token`** (lấy bằng script bên trên). Token hết hạn theo
+> `SESSION_EXPIRE_MINUTES` (mặc định 120 phút). Có thể dùng shared token thay thế, nhưng khi đó **cả tiến trình backend**
+> cũng phải có cùng `MUMU_MCP_TOKEN` và thêm `MUMU_MCP_USER_ID`. Không commit token.

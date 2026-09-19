@@ -216,10 +216,25 @@ async def request_with_retries(
     max_retries: Optional[int] = None,
     base_delay: Optional[float] = None,
     cancel_check: Optional[CancelCheck] = None,
+    allow_non_idempotent_retry: bool = False,
     **kwargs,
 ) -> httpx.Response:
-    """带指数退避的请求；网络错误与 408/429/5xx 视为可重试"""
+    """带指数退避的请求。
+
+    Non-idempotent requests are retried only when the caller supplies an
+    ``Idempotency-Key`` header or explicitly opts in with
+    ``allow_non_idempotent_retry``.  This prevents a timeout/5xx during a paid
+    provider submission from creating a second remote job that nobody polls.
+    """
     attempts = max(int(settings.video_motion_max_retries if max_retries is None else max_retries), 0) + 1
+    if method.upper() in {"POST", "PUT", "PATCH"} and not allow_non_idempotent_retry:
+        headers = kwargs.get("headers") or {}
+        has_idempotency_key = any(
+            str(key).lower() == "idempotency-key" and str(value).strip()
+            for key, value in headers.items()
+        )
+        if not has_idempotency_key:
+            attempts = 1
     delay = float(settings.video_motion_poll_interval_seconds if base_delay is None else base_delay)
     last_error: Optional[Exception] = None
 

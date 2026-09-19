@@ -39,7 +39,7 @@ VIDEO_STORAGE_DIR = video_storage_dir()
 
 def _ensure_safe_id(value: str, label: str) -> str:
     text = str(value or "")
-    if not _SAFE_ID_PATTERN.match(text):
+    if text in {".", ".."} or not _SAFE_ID_PATTERN.fullmatch(text):
         raise HTTPException(status_code=400, detail=f"{label} không hợp lệ")
     return text
 

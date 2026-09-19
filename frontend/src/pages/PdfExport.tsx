@@ -386,7 +386,7 @@ const PdfExport: React.FC = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch {
       message.error('Không tải được PDF, vui lòng thử lại');
     }
   };

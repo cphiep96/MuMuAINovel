@@ -256,6 +256,7 @@ class MetaMuseImageProvider(SceneImageProvider):
                     max_retries=int(settings.video_image_max_retries),
                     base_delay=float(settings.video_image_retry_delay_seconds),
                     cancel_check=cancel_check,
+                    allow_non_idempotent_retry=True,
                 )
             # 非 2xx 统一转换为图片 provider 错误（消息已 sanitize，不含 key）
             raise_for_status(response, provider=self.name)

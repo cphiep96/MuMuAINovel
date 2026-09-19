@@ -1168,6 +1168,13 @@ class VideoExportService:
                 (workdir / name).unlink(missing_ok=True)
             except OSError as exc:  # 文件可能正被其它进程占用（Windows）
                 logger.warning("删除半成品文件失败: %s (%s)", name, exc)
+        # The files above are the paths exposed by the job record.  Clear the
+        # metadata together with the files so a cancelled/expired retry cannot
+        # advertise a download that now returns 404.
+        job.video_path = None
+        job.subtitle_path = None
+        job.video_size_bytes = None
+        job.duration_seconds = 0.0
         assets_dir = workdir / ASSETS_DIRNAME
         if assets_dir.is_dir():
             for leftover in list(assets_dir.glob("*.part")) + list(assets_dir.glob("*/*.part")):
@@ -1762,6 +1769,14 @@ class VideoExportService:
         才生成新的幂等键并重新下单。
         """
         workdir = job_directory(user_id, job_id)
+        # A retry rebuilds the final artefacts.  Remove the previous generation
+        # up front and clear its metadata; otherwise a failed retry leaves a
+        # completed job pointing at files that no longer exist.
+        for name in (FINAL_VIDEO_NAME, SUBTITLED_VIDEO_NAME, SUBTITLE_NAME, "clips.txt"):
+            try:
+                (workdir / name).unlink(missing_ok=True)
+            except OSError as exc:
+                logger.warning("删除重试旧成品失败: %s (%s)", name, exc)
         resumed = 0
         for scene in scenes:
             resume_remote = bool(
@@ -1798,6 +1813,19 @@ class VideoExportService:
             f"{resumed} phân cảnh sẽ tiếp tục theo dõi thao tác AI đã gửi trước đó "
             "(không tạo yêu cầu mới, tránh tính phí hai lần)"
         )
+
+    async def _validate_rerun_preconditions(
+        self, *, db: AsyncSession, user_id: str, job: VideoExportJob
+    ) -> None:
+        """Validate retry guards before mutating scene rows or deleting clips."""
+        self.ensure_enabled()
+        self.ensure_ffmpeg()
+        if job.status == "running" or job.id in RUNNING_JOB_IDS:
+            raise HTTPException(
+                status_code=409,
+                detail="Tác vụ đang dựng hoặc đang dừng, vui lòng chờ hoàn tất trước khi thử lại",
+            )
+        await self._ensure_active_quota(db=db, user_id=user_id, exclude_job_id=job.id)
 
     async def _schedule_rerun(
         self,
@@ -1863,12 +1891,19 @@ class VideoExportService:
         """
         job = await self._get_job(db=db, user_id=user_id, job_id=job_id)
         scenes = await self._get_scenes(db=db, job_id=job.id)
+        # Do all expected 409/503 checks before resetting scenes or unlinking
+        # FFmpeg output.  An unsuccessful retry request must be side-effect free.
+        await self._validate_rerun_preconditions(db=db, user_id=user_id, job=job)
         unfinished = [scene for scene in scenes if scene.status != "ready"]
         resume_message = ""
         if unfinished:
             resume_message = await self._reset_scene_clips(
                 user_id=user_id, job_id=job.id, scenes=unfinished
             )
+            job.video_path = None
+            job.subtitle_path = None
+            job.video_size_bytes = None
+            job.duration_seconds = 0.0
             await db.commit()
         await self._schedule_rerun(db=db, user_id=user_id, job=job, resume_message=resume_message)
         return job
@@ -1882,9 +1917,14 @@ class VideoExportService:
         target = next((scene for scene in scenes if scene.id == scene_id), None)
         if target is None:
             raise HTTPException(status_code=404, detail="Phân cảnh không tồn tại trong tác vụ này")
+        await self._validate_rerun_preconditions(db=db, user_id=user_id, job=job)
         resume_message = await self._reset_scene_clips(
             user_id=user_id, job_id=job.id, scenes=[target]
         )
+        job.video_path = None
+        job.subtitle_path = None
+        job.video_size_bytes = None
+        job.duration_seconds = 0.0
         await db.commit()
         await self._schedule_rerun(db=db, user_id=user_id, job=job, resume_message=resume_message)
         return job
@@ -2006,7 +2046,12 @@ class VideoExportService:
             task = await db.get(BackgroundTask, job.id)
             if task is not None:
                 task.cancel_requested = True
-        await db.commit()
+        if commit:
+            # Publish the cancellation signal before removing rows so a worker
+            # in another session can stop promptly.  For commit=False callers
+            # (project deletion/transactional cleanup), keep everything in the
+            # caller's transaction so a later failure can roll it all back.
+            await db.commit()
 
         # 2) 显式删除关联记录（commit=False 时不提交，交由调用方与自身写入一起提交）
         targets = [(job.user_id, job.id) for job in removable]

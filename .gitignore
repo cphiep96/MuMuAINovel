@@ -124,7 +124,12 @@ embed_build.py
 
 .roo/
 data/
-docs/
+# Keep MCP agent docs in git; ignore other local docs under this folder.
+docs/*
+!docs/mcp-agent-guide.md
+!docs/mcp-server-implementation.md
+!docs/mcp-configs/
+!docs/mcp-configs/**
 data_old/
 backend/migrate_all_databases.py
 test_api.py
