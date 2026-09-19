@@ -1,5 +1,5 @@
 """
-用户管理模块 - 使用数据库存储
+Module quản lý người dùng - lưu trữ bằng database
 """
 import asyncio
 from datetime import datetime
@@ -54,17 +54,17 @@ class UserManager:
         trust_level: int
     ) -> User:
         """
-        从 LinuxDO 用户信息创建或更新用户
+        Tạo hoặc cập nhật người dùng từ thông tin LinuxDO
         
         Args:
-            linuxdo_id: LinuxDO 用户 ID（本地用户时为 local_xxx 格式）
-            username: 用户名
-            display_name: 显示名称
-            avatar_url: 头像 URL
-            trust_level: 信任等级
+            linuxdo_id: ID người dùng LinuxDO (người dùng local có dạng local_xxx)
+            username: Tên người dùng
+            display_name: Tên hiển thị
+            avatar_url: URL ảnh đại diện
+            trust_level: Cấp độ tin cậy
             
         Returns:
-            用户对象
+            Đối tượng người dùng
         """
         from app.models.user import User as UserModel
         
@@ -144,14 +144,14 @@ class UserManager:
     
     async def set_admin(self, user_id: str, is_admin: bool) -> bool:
         """
-        设置用户的管理员权限
+        Thiết lập quyền quản trị viên cho người dùng
         
         Args:
-            user_id: 用户 ID
-            is_admin: 是否为管理员
+            user_id: ID người dùng
+            is_admin: Có phải quản trị viên hay không
             
         Returns:
-            是否成功
+            Thành công hay không
         """
         from app.models.user import User as UserModel
         
@@ -181,13 +181,13 @@ class UserManager:
     
     async def delete_user(self, user_id: str) -> bool:
         """
-        删除用户
+        Xóa người dùng
         
         Args:
-            user_id: 用户 ID
+            user_id: ID người dùng
             
         Returns:
-            是否成功
+            Thành công hay không
         """
         from app.models.user import User as UserModel
         

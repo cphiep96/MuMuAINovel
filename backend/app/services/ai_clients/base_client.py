@@ -49,10 +49,10 @@ def _classify_json_decode_failure(response: httpx.Response) -> str:
     stripped_body = body.strip()
 
     if not stripped_body:
-        return "响应体为空或仅包含空白字符"
+        return "Nội dung phản hồi trống hoặc chỉ chứa khoảng trắng"
     if "json" not in content_type.lower():
-        return f"响应 Content-Type 非 JSON: {content_type or '未提供'}"
-    return "响应体不是合法 JSON"
+        return f"Content-Type phản hồi không phải JSON: {content_type or 'không cung cấp'}"
+    return "Nội dung phản hồi không phải JSON hợp lệ"
 
 
 def _log_raw_response_body(response: httpx.Response, reason: str) -> None:

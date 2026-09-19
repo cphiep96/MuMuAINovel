@@ -50,10 +50,9 @@ services:
       - max_wal_size=${POSTGRES_MAX_WAL_SIZE:-4GB}
 
   mumuainovel:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: mumujie/mumuainovel:latest
+    # Dùng image build sẵn từ Docker Hub (đã bao gồm embedding model ~400MB)
+    # Muốn build từ source: bỏ comment block dưới và tải model vào backend/embedding/ trước
+    image: mumujie/mumuainovel:vi
     container_name: mumuainovel
     depends_on:
       postgres:

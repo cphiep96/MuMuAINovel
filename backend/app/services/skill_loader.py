@@ -79,13 +79,13 @@ def _display_name_from_description(description: str, fallback: str) -> str:
 
 def _infer_category(name: str) -> str:
     if "long" in name:
-        return "Skill·长篇"
+        return "Skill·Dài"
     if "short" in name:
-        return "Skill·短篇"
+        return "Skill·Ngắn"
     if "deslop" in name:
-        return "Skill·润色"
+        return "Skill·Chỉnh sửa"
     if "browser" in name:
-        return "Skill·工具"
+        return "Skill·Công cụ"
     return "Skill"
 
 
@@ -208,10 +208,10 @@ def load_skills() -> List[Dict]:
             
             # 拼接参考知识库到内容（作为按需加载的附录）
             if references:
-                ref_section = "\n\n---\n\n## 附录：参考资料知识库\n"
-                ref_section += "（以下内容根据用户需求按需引用，不需要全部使用）\n"
+                ref_section = "\n\n---\n\n## Phụ lục: Kho tài liệu tham khảo\n"
+                ref_section += "(Nội dung dưới đây được trích dẫn theo nhu cầu người dùng, không cần dùng hết)\n"
                 for ref_name, ref_content in references.items():
-                    ref_section += f"\n### 参考资料：{ref_name}\n\n{ref_content}\n"
+                    ref_section += f"\n### Tài liệu tham khảo: {ref_name}\n\n{ref_content}\n"
                 full_content = body + ref_section
             else:
                 full_content = body
@@ -265,28 +265,28 @@ def get_skill_by_trigger(user_input: str) -> Optional[Dict]:
     
     # 自然语言模糊匹配
     keyword_map = {
-        "长篇写作": ["SKILL_STORY_LONG_WRITE"],
-        "写长篇": ["SKILL_STORY_LONG_WRITE"],
-        "帮我开书": ["SKILL_STORY_LONG_WRITE"],
-        "写大纲": ["SKILL_STORY_LONG_WRITE"],
-        "短篇写作": ["SKILL_STORY_SHORT_WRITE"],
-        "写短篇": ["SKILL_STORY_SHORT_WRITE"],
-        "写个盐言": ["SKILL_STORY_SHORT_WRITE"],
-        "长篇拆文": ["SKILL_STORY_LONG_ANALYZE"],
-        "拆书": ["SKILL_STORY_LONG_ANALYZE"],
-        "分析黄金三章": ["SKILL_STORY_LONG_ANALYZE"],
-        "短篇拆文": ["SKILL_STORY_SHORT_ANALYZE"],
-        "分析短篇": ["SKILL_STORY_SHORT_ANALYZE"],
-        "长篇扫榜": ["SKILL_STORY_LONG_SCAN"],
-        "长篇什么火": ["SKILL_STORY_LONG_SCAN"],
-        "起点排行": ["SKILL_STORY_LONG_SCAN"],
-        "短篇扫榜": ["SKILL_STORY_SHORT_SCAN"],
-        "短篇什么火": ["SKILL_STORY_SHORT_SCAN"],
-        "去ai味": ["SKILL_STORY_DESLOP"],
-        "去味": ["SKILL_STORY_DESLOP"],
-        "太ai了": ["SKILL_STORY_DESLOP"],
-        "润色": ["SKILL_STORY_DESLOP"],
-        "浏览器": ["SKILL_BROWSER_CDP"],
+        "viết truyện dài": ["SKILL_STORY_LONG_WRITE"],
+        "viết dài": ["SKILL_STORY_LONG_WRITE"],
+        "giúp tôi mở sách": ["SKILL_STORY_LONG_WRITE"],
+        "viết dàn ý": ["SKILL_STORY_LONG_WRITE"],
+        "viết truyện ngắn": ["SKILL_STORY_SHORT_WRITE"],
+        "viết ngắn": ["SKILL_STORY_SHORT_WRITE"],
+        "viết yanyan": ["SKILL_STORY_SHORT_WRITE"],
+        "đọc tách truyện dài": ["SKILL_STORY_LONG_ANALYZE"],
+        "đọc tách sách": ["SKILL_STORY_LONG_ANALYZE"],
+        "phân tích ba chương vàng": ["SKILL_STORY_LONG_ANALYZE"],
+        "đọc tách truyện ngắn": ["SKILL_STORY_SHORT_ANALYZE"],
+        "phân tích truyện ngắn": ["SKILL_STORY_SHORT_ANALYZE"],
+        "quét bảng dài": ["SKILL_STORY_LONG_SCAN"],
+        "truyện dài đang hot": ["SKILL_STORY_LONG_SCAN"],
+        "bảng xếp hạng qidian": ["SKILL_STORY_LONG_SCAN"],
+        "quét bảng ngắn": ["SKILL_STORY_SHORT_SCAN"],
+        "truyện ngắn đang hot": ["SKILL_STORY_SHORT_SCAN"],
+        "bỏ vị ai": ["SKILL_STORY_DESLOP"],
+        "bỏ vị": ["SKILL_STORY_DESLOP"],
+        "quá ai": ["SKILL_STORY_DESLOP"],
+        "chỉnh sửa": ["SKILL_STORY_DESLOP"],
+        "trình duyệt": ["SKILL_BROWSER_CDP"],
     }
     
     for keyword, skill_keys in keyword_map.items():
@@ -370,19 +370,19 @@ def get_skill_detail(skill_key: str) -> Optional[Dict]:
 
 def _validate_skill_metadata(name: str, display_name: str, category: str, description: str, triggers: List[str], body: str):
     if not name.strip():
-        raise ValueError("Skill 内部标识不能为空")
+        raise ValueError("Định danh nội bộ Skill không được để trống")
     if not re.fullmatch(r'[a-z0-9][a-z0-9\-]*', name.strip()):
-        raise ValueError("Skill 内部标识只能包含小写字母、数字和短横线，且必须以字母或数字开头")
+        raise ValueError("Định danh nội bộ Skill chỉ gồm chữ thường, số và gạch ngang, phải bắt đầu bằng chữ hoặc số")
     if not display_name.strip():
-        raise ValueError("显示名称不能为空")
+        raise ValueError("Tên hiển thị không được để trống")
     if not category.strip():
-        raise ValueError("分类不能为空")
+        raise ValueError("Phân loại không được để trống")
     if not description.strip():
-        raise ValueError("描述不能为空")
+        raise ValueError("Mô tả không được để trống")
     if not body.strip():
-        raise ValueError("工作流指令不能为空")
+        raise ValueError("Hướng dẫn quy trình không được để trống")
     if not triggers:
-        raise ValueError("至少需要一个触发词")
+        raise ValueError("Cần ít nhất một từ kích hoạt")
 
 
 def create_skill_files(
@@ -410,7 +410,7 @@ def create_skill_files(
     
     skill_dir = os.path.join(SKILLS_DIR, dir_name)
     if os.path.exists(skill_dir):
-        raise ValueError(f"Skill 目录已存在: {dir_name}")
+        raise ValueError(f"Thư mục Skill đã tồn tại: {dir_name}")
     
     os.makedirs(skill_dir, exist_ok=True)
     
@@ -459,11 +459,11 @@ def update_skill_files(
     """更新已有 Skill 文件"""
     detail = get_skill_detail(skill_key)
     if not detail:
-        raise ValueError(f"未找到 Skill: {skill_key}")
+        raise ValueError(f"Không tìm thấy Skill: {skill_key}")
     
     skill_dir = detail.get("skill_dir", "")
     if not skill_dir or not os.path.isdir(skill_dir):
-        raise ValueError(f"Skill 目录不存在: {skill_dir}")
+        raise ValueError(f"Thư mục Skill không tồn tại: {skill_dir}")
     
     skill_md_path = os.path.join(skill_dir, "SKILL.md")
     
@@ -525,11 +525,11 @@ def delete_skill_files(skill_key: str) -> bool:
     import shutil
     detail = get_skill_detail(skill_key)
     if not detail:
-        raise ValueError(f"未找到 Skill: {skill_key}")
+        raise ValueError(f"Không tìm thấy Skill: {skill_key}")
     
     skill_dir = detail.get("skill_dir", "")
     if not skill_dir or not os.path.isdir(skill_dir):
-        raise ValueError(f"Skill 目录不存在")
+        raise ValueError(f"Thư mục Skill không tồn tại")
     
     shutil.rmtree(skill_dir)
     refresh_skills_cache()

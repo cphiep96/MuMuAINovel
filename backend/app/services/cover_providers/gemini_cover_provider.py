@@ -56,7 +56,7 @@ class GeminiCoverProvider(BaseCoverProvider):
             data = response.json()
         except httpx.HTTPStatusError as exc:
             logger.error(
-                "Gemini 封面生成 HTTP 错误: status=%s response=%s",
+                "Gemini tạo ảnh bìa lỗi HTTP: status=%s response=%s",
                 exc.response.status_code if exc.response else None,
                 safe_preview(exc.response.text, 500) if exc.response is not None else None,
             )
@@ -67,7 +67,7 @@ class GeminiCoverProvider(BaseCoverProvider):
 
         candidates = data.get("candidates") or []
         if not candidates:
-            raise ValueError("Gemini 未返回候选结果")
+            raise ValueError("Gemini không trả về kết quả ứng viên")
 
         parts = candidates[0].get("content", {}).get("parts", [])
         for part in parts:
@@ -91,4 +91,4 @@ class GeminiCoverProvider(BaseCoverProvider):
             }
 
         logger.error("Gemini 返回内容中未找到 inlineData 图像数据")
-        raise ValueError("Gemini 未返回图片数据")
+        raise ValueError("Gemini không trả về dữ liệu ảnh")

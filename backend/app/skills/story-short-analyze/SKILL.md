@@ -1,9 +1,19 @@
 ---
 name: story-short-analyze
+display_name: Phân rã truyện ngắn
+category: Skill·Ngắn
 description: |
-  短篇网文拆文。拆解爆款短篇小说的叙事结构、情绪曲线、反转技巧、钩子设计。
-  触发方式：/story-short-analyze、/短篇拆文、「帮我拆这个短篇」「分析这篇故事」
+  Phân rã tiểu thuyết mạng ngắn. Bóc tách cấu trúc trần thuật, đường cong cảm xúc, kỹ thuật đảo ngược và cách gài móc câu của truyện ngắn ăn khách.
+  Kích hoạt: /story-short-analyze, «phân rã truyện ngắn», «giúp tôi phân rã truyện ngắn này», «phân tích câu chuyện này».
+triggers:
+  - /story-short-analyze
+  - phân rã truyện ngắn
+  - giúp tôi phân rã truyện ngắn này
+  - phân tích câu chuyện này
 ---
+
+> **Yêu cầu ngôn ngữ**: nội dung tạo cho người dùng phải viết bằng tiếng Việt tự nhiên.
+
 
 # story-short-analyze：短篇网文拆文
 
@@ -78,7 +88,7 @@ description: |
 
 ---
 
-## 语言
-
-- 用户用中文就用中文回复，用英文就用英文回复
-- 中文回复遵循《中文文案排版指北》
+## Ngôn ngữ đầu ra
+- Ưu tiên trả lời và viết nội dung bằng **tiếng Việt** tự nhiên.
+- Nếu người dùng dùng tiếng Anh thì có thể trả lời bằng tiếng Anh; mặc định dùng tiếng Việt.
+- Không đổi tên kỹ thuật, đường dẫn lệnh slash (`/story-...`) hay tên file tham chiếu.

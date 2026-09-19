@@ -13,7 +13,7 @@ export const getStoredThemeMode = (): ThemeMode => {
       return value;
     }
   } catch (error) {
-    console.warn('读取主题模式失败:', error);
+    console.warn('Đọc chế độ giao diện thất bại:', error);
   }
 
   return 'system';
@@ -23,7 +23,7 @@ export const setStoredThemeMode = (mode: ThemeMode): void => {
   try {
     localStorage.setItem(THEME_MODE_STORAGE_KEY, mode);
   } catch (error) {
-    console.warn('保存主题模式失败:', error);
+    console.warn('Lưu chế độ giao diện thất bại:', error);
   }
 };
 

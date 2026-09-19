@@ -16,7 +16,7 @@ const loadReadIds = (): string[] => {
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
   } catch (error) {
-    console.warn('读取公告已读缓存失败:', error);
+    console.warn('Đọc cache trạng thái đã đọc thông báo thất bại:', error);
     return [];
   }
 };
@@ -25,7 +25,7 @@ const saveReadIds = (ids: string[]) => {
   try {
     localStorage.setItem(READ_IDS_KEY, JSON.stringify(Array.from(new Set(ids))));
   } catch (error) {
-    console.warn('保存公告已读缓存失败:', error);
+    console.warn('Lưu cache trạng thái đã đọc thông báo thất bại:', error);
   }
 };
 
@@ -33,7 +33,7 @@ const loadLastSyncAt = (): string | undefined => {
   try {
     return localStorage.getItem(LAST_SYNC_KEY) || undefined;
   } catch (error) {
-    console.warn('读取公告同步缓存失败:', error);
+    console.warn('Đọc cache đồng bộ thông báo thất bại:', error);
     return undefined;
   }
 };
@@ -43,7 +43,7 @@ const saveLastSyncAt = (value?: string | null) => {
   try {
     localStorage.setItem(LAST_SYNC_KEY, value);
   } catch (error) {
-    console.warn('保存公告同步缓存失败:', error);
+    console.warn('Lưu cache đồng bộ thông báo thất bại:', error);
   }
 };
 
@@ -52,7 +52,7 @@ const loadLastFullSyncAt = (): number => {
     const raw = localStorage.getItem(LAST_FULL_SYNC_KEY);
     return raw ? Number(raw) || 0 : 0;
   } catch (error) {
-    console.warn('读取公告全量同步缓存失败:', error);
+    console.warn('Đọc cache đồng bộ toàn bộ thông báo thất bại:', error);
     return 0;
   }
 };
@@ -61,7 +61,7 @@ const saveLastFullSyncAt = (value: number) => {
   try {
     localStorage.setItem(LAST_FULL_SYNC_KEY, String(value));
   } catch (error) {
-    console.warn('保存公告全量同步缓存失败:', error);
+    console.warn('Lưu cache đồng bộ toàn bộ thông báo thất bại:', error);
   }
 };
 
@@ -73,7 +73,7 @@ const loadCachedAnnouncements = (): Announcement[] => {
     if (!Array.isArray(parsed)) return [];
     return parsed.filter((item): item is Announcement => Boolean(item?.id && item?.title && item?.content));
   } catch (error) {
-    console.warn('读取公告列表缓存失败:', error);
+    console.warn('Đọc cache danh sách thông báo thất bại:', error);
     return [];
   }
 };
@@ -82,7 +82,7 @@ const saveCachedAnnouncements = (items: Announcement[]) => {
   try {
     localStorage.setItem(CACHE_ITEMS_KEY, JSON.stringify(items.slice(0, 100)));
   } catch (error) {
-    console.warn('保存公告列表缓存失败:', error);
+    console.warn('Lưu cache danh sách thông báo thất bại:', error);
   }
 };
 
@@ -168,7 +168,7 @@ export function useAnnouncements(syncInterval: number = DEFAULT_SYNC_INTERVAL) {
         saveLastFullSyncAt(now);
       }
     } catch (error) {
-      console.warn('同步公告失败:', error);
+      console.warn('Đồng bộ thông báo thất bại:', error);
     } finally {
       syncingRef.current = false;
       setLoading(false);

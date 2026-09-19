@@ -43,7 +43,7 @@ export const SSEProgressBar: React.FC<SSEProgressBarProps> = ({
         fontSize: 14
       }}>
         <span style={{ color: token.colorTextSecondary }}>
-          {message || '准备生成...'}
+          {message || 'Chuẩn bị tạo...'}
         </span>
         <span style={{ 
           fontWeight: 'bold',

@@ -20,11 +20,11 @@ logger = get_logger(__name__)
 
 
 STATUS_LABELS = {
-    "active": "活跃",
-    "deceased": "死亡",
-    "missing": "失踪",
-    "retired": "退场",
-    "destroyed": "覆灭",
+    "active": "Đang hoạt động",
+    "deceased": "Đã chết",
+    "missing": "Mất tích",
+    "retired": "Rời sân khấu",
+    "destroyed": "Bị hủy diệt",
 }
 
 
@@ -32,16 +32,16 @@ def _append_current_state_lines(info_lines: List[str], character: Character) -> 
     """向角色上下文注入分析系统维护的最新状态。"""
     status = character.status or "active"
     status_label = STATUS_LABELS.get(status, status)
-    status_line = f"  当前状态: {status_label}"
+    status_line = f"  Trạng thái hiện tại: {status_label}"
     if character.status_changed_chapter:
-        status_line += f"（第{character.status_changed_chapter}章变更）"
+        status_line += f" (thay đổi ở chương {character.status_changed_chapter})"
     info_lines.append(status_line)
 
     if character.current_state:
         current_state = character.current_state[:150] if len(character.current_state) > 150 else character.current_state
-        state_line = f"  当前心理/处境: {current_state}"
+        state_line = f"  Tâm lý/cảnh ngộ hiện tại: {current_state}"
         if character.state_updated_chapter:
-            state_line += f"（第{character.state_updated_chapter}章更新）"
+            state_line += f" (cập nhật ở chương {character.state_updated_chapter})"
         info_lines.append(state_line)
 
 
@@ -67,7 +67,7 @@ def _format_memory_query_section(label: str, values: List[str]) -> Optional[str]
     values = [value.strip() for value in values if value and value.strip()]
     if not values:
         return None
-    return f"{label}：{'；'.join(values)}"
+    return f"{label}: {'; '.join(values)}"
 
 
 def _select_memories_with_fallback(
@@ -85,7 +85,7 @@ def _select_memories_with_fallback(
             f"  🔎 {log_prefix}候选记忆#{index}: "
             f"similarity={mem.get('similarity', 0):.4f}, "
             f"distance={mem.get('distance', 0):.4f}, "
-            f"chapter={mem.get('metadata', {}).get('chapter_number', '未知')}, "
+            f"chapter={mem.get('metadata', {}).get('chapter_number', 'không rõ')}, "
             f"content={str(mem.get('content', ''))[:60]}"
         )
 
@@ -96,7 +96,7 @@ def _select_memories_with_fallback(
     fallback = memories[:fallback_count]
     logger.info(
         f"  ℹ️ {log_prefix}无记忆超过相似度阈值{threshold:.2f}，"
-        f"降级保留top {len(fallback)}条"
+        f"giảm cấp, giữ lại top {len(fallback)}"
     )
     return fallback
 
@@ -376,21 +376,21 @@ class OneToManyContextBuilder:
             try:
                 plan = json.loads(chapter.expansion_plan)
                 # expansion_plan没有plot_summary这个键，
-                outline_content = f"""剧情摘要：{plan.get('plot_summary') or chapter.summary or '无'}
+                outline_content = f"""Tóm tắt cốt truyện: {plan.get('plot_summary') or chapter.summary or 'Không có'}
 
-关键事件：
+Sự kiện chính:
 {chr(10).join(f'- {event}' for event in plan.get('key_events', []))}
 
-角色焦点：{', '.join(plan.get('character_focus', []))}
-情感基调：{plan.get('emotional_tone', '未设定')}
-叙事目标：{plan.get('narrative_goal', '未设定')}
-冲突类型：{plan.get('conflict_type', '未设定')}"""
+Trọng điểm nhân vật: {', '.join(plan.get('character_focus', []))}
+Gam cảm xúc: {plan.get('emotional_tone', 'Chưa thiết lập')}
+Mục tiêu kể chuyện: {plan.get('narrative_goal', 'Chưa thiết lập')}
+Loại xung đột: {plan.get('conflict_type', 'Chưa thiết lập')}"""
                 return outline_content
             except json.JSONDecodeError:
                 pass
         
         # 回退到大纲内容
-        return outline.content if outline else chapter.summary or '暂无大纲'
+        return outline.content if outline else chapter.summary or 'Chưa có dàn ý'
     
     async def _build_chapter_characters_1n(
         self,
@@ -409,7 +409,7 @@ class OneToManyContextBuilder:
         all_characters = characters_result.scalars().all()
         
         if not all_characters:
-            return "暂无角色信息", None
+            return "Chưa có thông tin nhân vật", None
         
         # 构建全局角色名称映射（用于关系查询）
         all_char_map = {c.id: c.name for c in all_characters}
@@ -429,7 +429,7 @@ class OneToManyContextBuilder:
             characters = [c for c in all_characters if c.name in filter_character_names]
         
         if not characters:
-            return "暂无相关角色", None
+            return "Chưa có nhân vật liên quan", None
         
         # 限制最多10个角色
         characters = characters[:10]
@@ -533,30 +533,30 @@ class OneToManyContextBuilder:
         # === 构建完整版角色信息 ===
         characters_info_parts = []
         for c in characters:
-            entity_type = '组织' if c.is_organization else '角色'
+            entity_type = 'Tổ chức' if c.is_organization else 'Nhân vật'
             role_type_map = {
-                'protagonist': '主角',
-                'antagonist': '反派',
-                'supporting': '配角'
+                'protagonist': 'Nhân vật chính',
+                'antagonist': 'Phản diện',
+                'supporting': 'Nhân vật phụ'
             }
-            role_type = role_type_map.get(c.role_type, c.role_type or '配角')
+            role_type = role_type_map.get(c.role_type, c.role_type or 'Nhân vật phụ')
             
             info_lines = [f"【{c.name}】({entity_type}, {role_type})"]
             
             # 详细属性
             if c.age:
-                info_lines.append(f"  年龄: {c.age}")
+                info_lines.append(f"  Tuổi: {c.age}")
             if c.gender:
-                info_lines.append(f"  性别: {c.gender}")
+                info_lines.append(f"  Giới tính: {c.gender}")
             if c.appearance:
                 appearance_preview = c.appearance[:100] if len(c.appearance) > 100 else c.appearance
-                info_lines.append(f"  外貌: {appearance_preview}")
+                info_lines.append(f"  Ngoại hình: {appearance_preview}")
             if c.personality:
                 personality_preview = c.personality[:100] if len(c.personality) > 100 else c.personality
-                info_lines.append(f"  性格: {personality_preview}")
+                info_lines.append(f"  Tính cách: {personality_preview}")
             if c.background:
                 background_preview = c.background[:150] if len(c.background) > 150 else c.background
-                info_lines.append(f"  背景: {background_preview}")
+                info_lines.append(f"  Bối cảnh: {background_preview}")
             _append_current_state_lines(info_lines, c)
             
             # 职业信息
@@ -568,33 +568,33 @@ class OneToManyContextBuilder:
                         if career:
                             try:
                                 stages = json.loads(career.stages) if isinstance(career.stages, str) else career.stages
-                                stage_name = f'第{cc.current_stage}阶'
+                                stage_name = f'Bậc {cc.current_stage}'
                                 for stage in (stages or []):
                                     if stage.get('level') == cc.current_stage:
                                         stage_name = stage.get('name', stage_name)
                                         break
                             except (json.JSONDecodeError, AttributeError, TypeError):
-                                stage_name = f'第{cc.current_stage}阶'
-                            info_lines.append(f"  主职业: {career.name} ({cc.current_stage}/{career.max_stage}阶 - {stage_name})")
+                                stage_name = f'Bậc {cc.current_stage}'
+                            info_lines.append(f"  Nghề chính: {career.name} ({cc.current_stage}/{career.max_stage} bậc - {stage_name})")
                 if career_rel['sub']:
                     for cc in career_rel['sub']:
                         career = careers_map.get(cc.career_id)
                         if career:
                             try:
                                 stages = json.loads(career.stages) if isinstance(career.stages, str) else career.stages
-                                stage_name = f'第{cc.current_stage}阶'
+                                stage_name = f'Bậc {cc.current_stage}'
                                 for stage in (stages or []):
                                     if stage.get('level') == cc.current_stage:
                                         stage_name = stage.get('name', stage_name)
                                         break
                             except (json.JSONDecodeError, AttributeError, TypeError):
-                                stage_name = f'第{cc.current_stage}阶'
-                            info_lines.append(f"  副职业: {career.name} ({cc.current_stage}/{career.max_stage}阶 - {stage_name})")
+                                stage_name = f'Bậc {cc.current_stage}'
+                            info_lines.append(f"  Nghề phụ: {career.name} ({cc.current_stage}/{career.max_stage} bậc - {stage_name})")
             elif not c.is_organization and c.main_career_id:
                 career = careers_map.get(c.main_career_id)
                 if career:
                     stage = c.main_career_stage or 1
-                    info_lines.append(f"  主职业: {career.name}（第{stage}阶段）")
+                    info_lines.append(f"  Nghề chính: {career.name} (giai đoạn {stage})")
             
             # 角色关系
             if not c.is_organization and c.id in char_rels_map:
@@ -603,31 +603,31 @@ class OneToManyContextBuilder:
                     rel_parts = []
                     for r in rels:
                         if r.character_from_id == c.id:
-                            target_name = all_char_map.get(r.character_to_id, "未知")
+                            target_name = all_char_map.get(r.character_to_id, "Không rõ")
                         else:
-                            target_name = all_char_map.get(r.character_from_id, "未知")
-                        rel_name = r.relationship_name or "相关"
-                        rel_parts.append(f"与{target_name}：{rel_name}")
-                    info_lines.append(f"  关系网络: {'；'.join(rel_parts)}")
+                            target_name = all_char_map.get(r.character_from_id, "Không rõ")
+                        rel_name = r.relationship_name or "Liên quan"
+                        rel_parts.append(f"với {target_name}: {rel_name}")
+                    info_lines.append(f"  Mạng quan hệ: {'; '.join(rel_parts)}")
             
             # 组织归属
             if not c.is_organization and c.id in org_memberships_map:
                 memberships = org_memberships_map[c.id]
                 if memberships:
-                    org_parts = [f"{org_name}（{m.position}）" for m, org_name in memberships[:2]]
-                    info_lines.append(f"  组织归属: {'、'.join(org_parts)}")
+                    org_parts = [f"{org_name} ({m.position})" for m, org_name in memberships[:2]]
+                    info_lines.append(f"  Thuộc tổ chức: {', '.join(org_parts)}")
             
             # 组织特有信息
             if c.is_organization:
                 if c.organization_type:
-                    info_lines.append(f"  组织类型: {c.organization_type}")
+                    info_lines.append(f"  Loại tổ chức: {c.organization_type}")
                 if c.organization_purpose:
-                    info_lines.append(f"  组织目的: {c.organization_purpose[:100]}")
+                    info_lines.append(f"  Mục đích tổ chức: {c.organization_purpose[:100]}")
                 if c.id in org_members_map:
                     members = org_members_map[c.id]
                     if members:
-                        member_parts = [f"{name}（{m.position}）" for m, name in members[:5]]
-                        info_lines.append(f"  组织成员: {'、'.join(member_parts)}")
+                        member_parts = [f"{name} ({m.position})" for m, name in members[:5]]
+                        info_lines.append(f"  Thành viên tổ chức: {', '.join(member_parts)}")
             
             characters_info_parts.append("\n".join(info_lines))
         
@@ -638,24 +638,24 @@ class OneToManyContextBuilder:
         careers_info_parts = []
         if careers_map:
             for career_id, career in careers_map.items():
-                career_lines = [f"{career.name} ({career.type}职业)"]
+                career_lines = [f"{career.name} (Nghề {career.type})"]
                 if career.description:
-                    career_lines.append(f"  描述: {career.description}")
+                    career_lines.append(f"  Mô tả: {career.description}")
                 if career.category:
-                    career_lines.append(f"  分类: {career.category}")
+                    career_lines.append(f"  Phân loại: {career.category}")
                 try:
                     stages = json.loads(career.stages) if isinstance(career.stages, str) else career.stages
                     if stages:
-                        career_lines.append(f"  阶段体系: (共{career.max_stage}阶)")
+                        career_lines.append(f"  Hệ thống giai đoạn: (tổng cộng {career.max_stage} bậc)")
                         for stage in stages:
                             level = stage.get('level', '?')
-                            name = stage.get('name', '未命名')
+                            name = stage.get('name', 'Chưa đặt tên')
                             desc = stage.get('description', '')
-                            career_lines.append(f"    {level}阶-{name}: {desc}")
+                            career_lines.append(f"    Bậc {level} - {name}: {desc}")
                 except (json.JSONDecodeError, AttributeError, TypeError):
-                    career_lines.append(f"  阶段体系: 共{career.max_stage}阶")
+                    career_lines.append(f"  Hệ thống giai đoạn: tổng cộng {career.max_stage} bậc")
                 if career.special_abilities:
-                    career_lines.append(f"  特殊能力: {career.special_abilities}")
+                    career_lines.append(f"  Năng lực đặc biệt: {career.special_abilities}")
                 careers_info_parts.append("\n".join(career_lines))
         
         careers_result_str = None
@@ -708,12 +708,12 @@ class OneToManyContextBuilder:
                     for chapter_id, plot_points, character_states in analysis_result.all()
                 }
             
-            lines = ["【最近章节规划】"]
+            lines = ["【Kế hoạch các chương gần đây】"]
             for ch_id, ch_num, ch_title, expansion_plan, summary in recent_chapters:
                 real_summary = summary_map.get(ch_id)
                 analysis = analysis_map.get(ch_id)
                 if real_summary:
-                    line = f"第{ch_num}章《{ch_title}》：{real_summary[:180]}"
+                    line = f"Chương {ch_num}«{ch_title}»: {real_summary[:180]}"
                     if analysis and analysis.get("plot_points"):
                         points = []
                         for point in analysis["plot_points"][:3]:
@@ -723,23 +723,23 @@ class OneToManyContextBuilder:
                                 points.append(str(point))
                         points = [p for p in points if p]
                         if points:
-                            line += f"（真实情节点：{'；'.join(points)}）"
+                            line += f" (Tình tiết thực tế: {'; '.join(points)})"
                     lines.append(line)
                 elif expansion_plan:
                     try:
                         plan = json.loads(expansion_plan)
                         plot_summary = plan.get('plot_summary', '')
                         key_events = plan.get('key_events', [])
-                        events_str = '；'.join(key_events[:3]) if key_events else ''
-                        line = f"第{ch_num}章《{ch_title}》：{plot_summary}"
+                        events_str = '; '.join(key_events[:3]) if key_events else ''
+                        line = f"Chương {ch_num}«{ch_title}»: {plot_summary}"
                         if events_str:
-                            line += f"（关键事件：{events_str}）"
+                            line += f" (Sự kiện chính: {events_str})"
                         lines.append(line)
                     except json.JSONDecodeError:
                         if summary:
-                            lines.append(f"第{ch_num}章《{ch_title}》：{summary[:100]}")
+                            lines.append(f"Chương {ch_num}«{ch_title}»: {summary[:100]}")
                 elif summary:
-                    lines.append(f"第{ch_num}章《{ch_title}》：{summary[:100]}")
+                    lines.append(f"Chương {ch_num}«{ch_title}»: {summary[:100]}")
             
             if len(lines) <= 1:
                 return None
@@ -785,11 +785,11 @@ class OneToManyContextBuilder:
             if not filtered_memories:
                 return None
             
-            memory_lines = ["【相关记忆】"]
+            memory_lines = ["【Ghi nhớ liên quan】"]
             for mem in filtered_memories[:self.MEMORY_CONTEXT_LIMIT]:
                 similarity = mem.get('similarity', 0)
                 content = mem.get('content', '')[:100]
-                memory_lines.append(f"- (相关度:{similarity:.2f}) {content}")
+                memory_lines.append(f"- (Độ liên quan: {similarity:.2f}) {content}")
             
             return "\n".join(memory_lines) if len(memory_lines) > 1 else None
             
@@ -808,11 +808,11 @@ class OneToManyContextBuilder:
             try:
                 plan = json.loads(chapter.expansion_plan)
                 sections.extend(filter(None, [
-                    _format_memory_query_section("人物", _stringify_list_items(plan.get("character_focus"), limit=8)),
-                    _format_memory_query_section("关键事件", _stringify_list_items(plan.get("key_events"), limit=6)),
-                    _format_memory_query_section("叙事目标", _stringify_list_items(plan.get("narrative_goal"), limit=1)),
-                    _format_memory_query_section("冲突", _stringify_list_items(plan.get("conflict_type"), limit=1)),
-                    _format_memory_query_section("情绪", _stringify_list_items(plan.get("emotional_tone"), limit=1)),
+                    _format_memory_query_section("Nhân vật", _stringify_list_items(plan.get("character_focus"), limit=8)),
+                    _format_memory_query_section("Sự kiện chính", _stringify_list_items(plan.get("key_events"), limit=6)),
+                    _format_memory_query_section("Mục tiêu kể chuyện", _stringify_list_items(plan.get("narrative_goal"), limit=1)),
+                    _format_memory_query_section("Xung đột", _stringify_list_items(plan.get("conflict_type"), limit=1)),
+                    _format_memory_query_section("Cảm xúc", _stringify_list_items(plan.get("emotional_tone"), limit=1)),
                 ]))
             except json.JSONDecodeError:
                 logger.warning(f"  ⚠️ [1-N] expansion_plan解析失败，使用章节大纲兜底: chapter={chapter.id}")
@@ -916,7 +916,7 @@ class OneToManyContextBuilder:
             except json.JSONDecodeError:
                 pass
         
-        return "未设定"
+        return "Chưa thiết lập"
     
     def _summarize_style(self, style_content: str) -> str:
         """将风格描述压缩为关键要点"""
@@ -969,7 +969,7 @@ class OneToManyContextBuilder:
         if not relevant:
             return None
         
-        lines = ["【相关记忆】"]
+        lines = ["【Ghi nhớ liên quan】"]
         current_length = 0
         
         for mem in relevant:
@@ -1010,13 +1010,13 @@ class OneToManyContextBuilder:
             )
             
             if must_resolve:
-                lines.append("【🎯 本章必须回收的伏笔】")
+                lines.append("【🎯 Phục bút bắt buộc thu hồi trong chương này】")
                 for f in must_resolve:
                     lines.append(f"- {f.title}")
-                    lines.append(f"  埋入章节：第{f.plant_chapter_number}章")
-                    lines.append(f"  伏笔内容：{f.content[:100]}{'...' if len(f.content) > 100 else ''}")
+                    lines.append(f"  Chương gài: chương {f.plant_chapter_number}")
+                    lines.append(f"  Nội dung phục bút: {f.content[:100]}{'...' if len(f.content) > 100 else ''}")
                     if f.resolution_notes:
-                        lines.append(f"  回收提示：{f.resolution_notes}")
+                        lines.append(f"  Gợi ý thu hồi: {f.resolution_notes}")
                     lines.append("")
             
             # 2. 超期未回收的伏笔
@@ -1027,12 +1027,12 @@ class OneToManyContextBuilder:
             )
             
             if overdue:
-                lines.append("【⚠️ 超期待回收伏笔】")
+                lines.append("【⚠️ Phục bút quá hạn chưa thu hồi】")
                 for f in overdue[:3]:  # 最多显示3个
                     overdue_chapters = chapter_number - (f.target_resolve_chapter_number or 0)
-                    lines.append(f"- {f.title} [已超期{overdue_chapters}章]")
-                    lines.append(f"  埋入章节：第{f.plant_chapter_number}章，原计划第{f.target_resolve_chapter_number}章回收")
-                    lines.append(f"  伏笔内容：{f.content[:80]}...")
+                    lines.append(f"- {f.title} [quá hạn {overdue_chapters} chương]")
+                    lines.append(f"  Chương gài: chương {f.plant_chapter_number}, dự kiến thu hồi ở chương {f.target_resolve_chapter_number}")
+                    lines.append(f"  Nội dung phục bút: {f.content[:80]}...")
                     lines.append("")
             
             # 3. 即将到期的伏笔（未来3章内）
@@ -1048,10 +1048,10 @@ class OneToManyContextBuilder:
                                if (f.target_resolve_chapter_number or 0) > chapter_number]
             
             if upcoming_filtered:
-                lines.append("【📋 即将到期的伏笔（仅供参考）】")
+                lines.append("【📋 Phục bút sắp đến hạn (chỉ tham khảo)】")
                 for f in upcoming_filtered[:3]:  # 最多显示3个
                     remaining = (f.target_resolve_chapter_number or 0) - chapter_number
-                    lines.append(f"- {f.title}（计划第{f.target_resolve_chapter_number}章回收，还有{remaining}章）")
+                    lines.append(f"- {f.title} (dự kiến thu hồi ở chương {f.target_resolve_chapter_number}, còn {remaining} chương)")
                 lines.append("")
             
             return "\n".join(lines) if lines else None
@@ -1081,7 +1081,7 @@ class OneToManyContextBuilder:
             if not chapters:
                 return None
             
-            skeleton_lines = ["【故事骨架】"]
+            skeleton_lines = ["【Khung cốt truyện】"]
             for i, (ch_id, ch_num, ch_title) in enumerate(chapters):
                 if i % self.SKELETON_SAMPLE_INTERVAL == 0:
                     summary_result = await db.execute(
@@ -1094,9 +1094,9 @@ class OneToManyContextBuilder:
                     summary = summary_result.scalar_one_or_none()
                     
                     if summary:
-                        skeleton_lines.append(f"第{ch_num}章《{ch_title}》：{summary[:100]}")
+                        skeleton_lines.append(f"Chương {ch_num}«{ch_title}»: {summary[:100]}")
                     else:
-                        skeleton_lines.append(f"第{ch_num}章《{ch_title}》")
+                        skeleton_lines.append(f"Chương {ch_num}«{ch_title}»")
             
             if len(skeleton_lines) <= 1:
                 return None
@@ -1278,11 +1278,11 @@ class OneToOneContextBuilder:
                 logger.info(f"  ✅ P1-角色信息: {len(context.chapter_characters)}字符")
                 logger.info(f"  ✅ P1-职业信息: {len(context.chapter_careers or '')}字符")
             else:
-                context.chapter_characters = "暂无角色信息"
+                context.chapter_characters = "Chưa có thông tin nhân vật"
                 context.chapter_careers = None
                 logger.info(f"  ⚠️ P1-角色信息: 筛选后无匹配角色")
         else:
-            context.chapter_characters = "暂无角色信息"
+            context.chapter_characters = "Chưa có thông tin nhân vật"
             context.chapter_careers = None
             logger.info(f"  ⚠️ P1-角色信息: 无")
         
@@ -1320,11 +1320,11 @@ class OneToOneContextBuilder:
                 )
                 
                 if filtered_memories:
-                    memory_lines = ["【相关记忆】"]
+                    memory_lines = ["【Ghi nhớ liên quan】"]
                     for mem in filtered_memories[:self.MEMORY_CONTEXT_LIMIT]:
                         similarity = mem.get('similarity', 0)
                         content = mem.get('content', '')[:100]
-                        memory_lines.append(f"- (相关度:{similarity:.2f}) {content}")
+                        memory_lines.append(f"- (Độ liên quan: {similarity:.2f}) {content}")
                     
                     context.relevant_memories = "\n".join(memory_lines)
                     logger.info(f"  ✅ P2-相关记忆: {len(filtered_memories)}条 (相关度>0.6, 共搜索{len(relevant_memories)}条)")
@@ -1401,13 +1401,13 @@ class OneToOneContextBuilder:
                     for chapter_id, plot_points in analysis_result.all()
                 }
 
-            lines = [f"【最近{len(recent_chapters)}章剧情摘要】"]
+            lines = [f"【Tóm tắt cốt truyện của {len(recent_chapters)} chương gần đây】"]
             for ch_id, ch_num, ch_title, summary in recent_chapters:
                 real_summary = summary_map.get(ch_id) or summary
                 if real_summary:
-                    line = f"第{ch_num}章《{ch_title}》：{real_summary[:180]}"
+                    line = f"Chương {ch_num}«{ch_title}»: {real_summary[:180]}"
                 else:
-                    line = f"第{ch_num}章《{ch_title}》"
+                    line = f"Chương {ch_num}«{ch_title}»"
 
                 plot_points = analysis_map.get(ch_id) or []
                 points = []
@@ -1418,7 +1418,7 @@ class OneToOneContextBuilder:
                         points.append(str(point))
                 points = [p for p in points if p]
                 if points:
-                    line += f"（关键情节点：{'；'.join(points)}）"
+                    line += f" (Tình tiết chính: {'; '.join(points)})"
                 lines.append(line)
 
             return "\n".join(lines) if len(lines) > 1 else None
@@ -1452,16 +1452,16 @@ class OneToOneContextBuilder:
                         character_names.append(item.strip())
 
                 sections.extend(filter(None, [
-                    _format_memory_query_section("人物", character_names[:8]),
-                    _format_memory_query_section("组织", organization_names[:5]),
-                    _format_memory_query_section("关键事件", _stringify_list_items(structure.get("key_points"), limit=6)),
-                    _format_memory_query_section("叙事目标", _stringify_list_items(structure.get("goal"), limit=1)),
-                    _format_memory_query_section("场景", _stringify_list_items(structure.get("scenes"), limit=2)),
-                    _format_memory_query_section("情绪", _stringify_list_items(structure.get("emotion"), limit=1)),
+                    _format_memory_query_section("Nhân vật", character_names[:8]),
+                    _format_memory_query_section("Tổ chức", organization_names[:5]),
+                    _format_memory_query_section("Sự kiện chính", _stringify_list_items(structure.get("key_points"), limit=6)),
+                    _format_memory_query_section("Mục tiêu kể chuyện", _stringify_list_items(structure.get("goal"), limit=1)),
+                    _format_memory_query_section("Bối cảnh", _stringify_list_items(structure.get("scenes"), limit=2)),
+                    _format_memory_query_section("Cảm xúc", _stringify_list_items(structure.get("emotion"), limit=1)),
                 ]))
 
                 if not sections and structure.get("summary"):
-                    sections.append(f"概要：{str(structure['summary'])[:200]}")
+                    sections.append(f"Tóm tắt: {str(structure['summary'])[:200]}")
             except json.JSONDecodeError:
                 logger.warning(f"  ⚠️ [1-1] outline.structure解析失败，使用章节大纲兜底: outline={outline.id}")
 
@@ -1483,29 +1483,29 @@ class OneToOneContextBuilder:
                 outline_parts = []
                 
                 if structure.get('summary'):
-                    outline_parts.append(f"【章节概要】\n{structure['summary']}")
+                    outline_parts.append(f"【Tóm tắt chương】\n{structure['summary']}")
                 
                 if structure.get('scenes'):
                     scenes_text = "\n".join([f"- {scene}" for scene in structure['scenes']])
-                    outline_parts.append(f"【场景设定】\n{scenes_text}")
+                    outline_parts.append(f"【Thiết lập bối cảnh】\n{scenes_text}")
                 
                 if structure.get('key_points'):
                     points_text = "\n".join([f"- {point}" for point in structure['key_points']])
-                    outline_parts.append(f"【情节要点】\n{points_text}")
+                    outline_parts.append(f"【Điểm cốt truyện】\n{points_text}")
                 
                 if structure.get('emotion'):
-                    outline_parts.append(f"【情感基调】\n{structure['emotion']}")
+                    outline_parts.append(f"【Sắc thái cảm xúc】\n{structure['emotion']}")
                 
                 if structure.get('goal'):
-                    outline_parts.append(f"【叙事目标】\n{structure['goal']}")
+                    outline_parts.append(f"【Mục tiêu kể chuyện】\n{structure['goal']}")
                 
                 return "\n\n".join(outline_parts)
                 
             except json.JSONDecodeError as e:
                 logger.error(f"  ❌ 解析outline.structure失败: {e}")
-                return outline.content if outline else "暂无大纲"
+                return outline.content if outline else "Chưa có dàn ý"
         else:
-            return outline.content if outline else "暂无大纲"
+            return outline.content if outline else "Chưa có dàn ý"
     
     async def _build_characters_and_careers(
         self,
@@ -1529,7 +1529,7 @@ class OneToOneContextBuilder:
             tuple: (角色信息字符串, 职业信息字符串)
         """
         if not characters:
-            return '暂无角色信息', None
+            return 'Chưa có thông tin nhân vật', None
         
         # 如果提供了筛选名单，只保留匹配的角色
         if filter_character_names:
@@ -1544,7 +1544,7 @@ class OneToOneContextBuilder:
         # 获取角色ID列表
         character_ids = [c.id for c in characters]
         if not character_ids:
-            return '暂无角色信息', None
+            return 'Chưa có thông tin nhân vật', None
         
         # 重新查询角色的完整数据（确保获取所有字段）
         full_characters_result = await db.execute(
@@ -1592,31 +1592,31 @@ class OneToOneContextBuilder:
                 continue
             
             # === 角色基本信息 ===
-            entity_type = '组织' if c.is_organization else '角色'
+            entity_type = 'Tổ chức' if c.is_organization else 'Nhân vật'
             role_type_map = {
-                'protagonist': '主角',
-                'antagonist': '反派',
-                'supporting': '配角'
+                'protagonist': 'Nhân vật chính',
+                'antagonist': 'Phản diện',
+                'supporting': 'Nhân vật phụ'
             }
-            role_type = role_type_map.get(c.role_type, c.role_type or '配角')
+            role_type = role_type_map.get(c.role_type, c.role_type or 'Nhân vật phụ')
             
             # 构建基本信息行
             info_lines = [f"【{c.name}】({entity_type}, {role_type})"]
             
             # === 角色详细属性 ===
             if c.age:
-                info_lines.append(f"  年龄: {c.age}")
+                info_lines.append(f"  Tuổi: {c.age}")
             if c.gender:
-                info_lines.append(f"  性别: {c.gender}")
+                info_lines.append(f"  Giới tính: {c.gender}")
             if c.appearance:
                 appearance_preview = c.appearance[:100] if len(c.appearance) > 100 else c.appearance
-                info_lines.append(f"  外貌: {appearance_preview}")
+                info_lines.append(f"  Ngoại hình: {appearance_preview}")
             if c.personality:
                 personality_preview = c.personality[:100] if len(c.personality) > 100 else c.personality
-                info_lines.append(f"  性格: {personality_preview}")
+                info_lines.append(f"  Tính cách: {personality_preview}")
             if c.background:
                 background_preview = c.background[:150] if len(c.background) > 150 else c.background
-                info_lines.append(f"  背景: {background_preview}")
+                info_lines.append(f"  Bối cảnh: {background_preview}")
             
             # === 职业信息（完整数据）===
             if char_id in char_career_relations:
@@ -1636,18 +1636,18 @@ class OneToOneContextBuilder:
                                         current_stage_info = stage
                                         break
                                 
-                                stage_name = current_stage_info.get('name', f'第{cc.current_stage}阶') if current_stage_info else f'第{cc.current_stage}阶'
+                                stage_name = current_stage_info.get('name', f'Bậc {cc.current_stage}') if current_stage_info else f'Bậc {cc.current_stage}'
                             except (json.JSONDecodeError, AttributeError, TypeError) as e:
                                 logger.warning(f"解析职业阶段信息失败: {e}")
-                                stage_name = f'第{cc.current_stage}阶'
+                                stage_name = f'Bậc {cc.current_stage}'
                                 stage_desc = ''
                             
                             # 构建主职业信息（只显示引用，详细信息在下面的"本章职业"部分）
-                            info_lines.append(f"  主职业: {career.name} ({cc.current_stage}/{career.max_stage}阶 - {stage_name})")
+                            info_lines.append(f"  Nghề chính: {career.name} ({cc.current_stage}/{career.max_stage} bậc - {stage_name})")
                 
                 # 副职业
                 if career_relations['sub']:
-                    info_lines.append(f"  副职业:")
+                    info_lines.append(f"  Nghề phụ:")
                     for cc in career_relations['sub']:
                         career = careers_map.get(cc.career_id)
                         if career:
@@ -1659,12 +1659,12 @@ class OneToOneContextBuilder:
                                     if stage.get('level') == cc.current_stage:
                                         current_stage_info = stage
                                         break
-                                stage_name = current_stage_info.get('name', f'第{cc.current_stage}阶') if current_stage_info else f'第{cc.current_stage}阶'
+                                stage_name = current_stage_info.get('name', f'Bậc {cc.current_stage}') if current_stage_info else f'Bậc {cc.current_stage}'
                             except (json.JSONDecodeError, AttributeError, TypeError):
-                                stage_name = f'第{cc.current_stage}阶'
+                                stage_name = f'Bậc {cc.current_stage}'
                             
                             # 副职业也只显示引用
-                            info_lines.append(f"    - {career.name} ({cc.current_stage}/{career.max_stage}阶 - {stage_name})")
+                            info_lines.append(f"    - {career.name} ({cc.current_stage}/{career.max_stage} bậc - {stage_name})")
             
             # === 角色关系信息 ===
             if not c.is_organization:
@@ -1693,19 +1693,19 @@ class OneToOneContextBuilder:
                         rel_parts = []
                         for r in rels:
                             if r.character_from_id == c.id:
-                                target_name = name_map.get(r.character_to_id, "未知")
+                                target_name = name_map.get(r.character_to_id, "Không rõ")
                             else:
-                                target_name = name_map.get(r.character_from_id, "未知")
-                            rel_name = r.relationship_name or "相关"
-                            rel_parts.append(f"与{target_name}：{rel_name}")
-                        info_lines.append(f"  关系网络: {'；'.join(rel_parts)}")
+                                target_name = name_map.get(r.character_from_id, "Không rõ")
+                            rel_name = r.relationship_name or "Liên quan"
+                            rel_parts.append(f"với {target_name}: {rel_name}")
+                        info_lines.append(f"  Mạng quan hệ: {'; '.join(rel_parts)}")
             
             # === 组织特有信息 ===
             if c.is_organization:
                 if c.organization_type:
-                    info_lines.append(f"  组织类型: {c.organization_type}")
+                    info_lines.append(f"  Loại tổ chức: {c.organization_type}")
                 if c.organization_purpose:
-                    info_lines.append(f"  组织目的: {c.organization_purpose[:100]}")
+                    info_lines.append(f"  Mục đích tổ chức: {c.organization_purpose[:100]}")
                 # 从 OrganizationMember 表动态查询组织成员
                 org_result = await db.execute(
                     select(Organization).where(Organization.character_id == c.id)
@@ -1719,8 +1719,8 @@ class OneToOneContextBuilder:
                     )
                     members = members_result.all()
                     if members:
-                        member_parts = [f"{name}（{m.position}）" for m, name in members]
-                        info_lines.append(f"  组织成员: {'、'.join(member_parts)[:100]}")
+                        member_parts = [f"{name} ({m.position})" for m, name in members]
+                        info_lines.append(f"  Thành viên tổ chức: {', '.join(member_parts)[:100]}")
             
             # 组合完整信息
             full_info = "\n".join(info_lines)
@@ -1733,41 +1733,41 @@ class OneToOneContextBuilder:
         careers_info_parts = []
         if careers_map:
             for career_id, career in careers_map.items():
-                career_lines = [f"{career.name} ({career.type}职业)"]
+                career_lines = [f"{career.name} (Nghề {career.type})"]
                 
                 # 职业描述
                 if career.description:
-                    career_lines.append(f"  描述: {career.description}")
+                    career_lines.append(f"  Mô tả: {career.description}")
                 
                 # 职业分类
                 if career.category:
-                    career_lines.append(f"  分类: {career.category}")
+                    career_lines.append(f"  Phân loại: {career.category}")
                 
                 # 阶段体系
                 try:
                     stages = json.loads(career.stages) if isinstance(career.stages, str) else career.stages
                     if stages:
-                        career_lines.append(f"  阶段体系: (共{career.max_stage}阶)")
+                        career_lines.append(f"  Hệ thống giai đoạn: (tổng cộng {career.max_stage} bậc)")
                         for stage in stages:  # 显示所有阶段
                             level = stage.get('level', '?')
-                            name = stage.get('name', '未命名')
+                            name = stage.get('name', 'Chưa đặt tên')
                             desc = stage.get('description', '')
-                            career_lines.append(f"    {level}阶-{name}: {desc}")
+                            career_lines.append(f"    Bậc {level} - {name}: {desc}")
                 except (json.JSONDecodeError, AttributeError, TypeError) as e:
                     logger.warning(f"解析职业阶段失败: {e}")
-                    career_lines.append(f"  阶段体系: 共{career.max_stage}阶")
+                    career_lines.append(f"  Hệ thống giai đoạn: tổng cộng {career.max_stage} bậc")
                 
                 # 职业要求
                 if career.requirements:
-                    career_lines.append(f"  职业要求: {career.requirements}")
+                    career_lines.append(f"  Yêu cầu nghề nghiệp: {career.requirements}")
                 
                 # 特殊能力
                 if career.special_abilities:
-                    career_lines.append(f"  特殊能力: {career.special_abilities}")
+                    career_lines.append(f"  Năng lực đặc biệt: {career.special_abilities}")
                 
                 # 世界观规则
                 if career.worldview_rules:
-                    career_lines.append(f"  世界观规则: {career.worldview_rules}")
+                    career_lines.append(f"  Quy tắc bối cảnh thế giới: {career.worldview_rules}")
                 
                 # 属性加成
                 if career.attribute_bonuses:
@@ -1775,7 +1775,7 @@ class OneToOneContextBuilder:
                         bonuses = json.loads(career.attribute_bonuses) if isinstance(career.attribute_bonuses, str) else career.attribute_bonuses
                         if bonuses:
                             bonus_str = ", ".join([f"{k}:{v}" for k, v in bonuses.items()])
-                            career_lines.append(f"  属性加成: {bonus_str}")
+                            career_lines.append(f"  Thưởng thuộc tính: {bonus_str}")
                     except (json.JSONDecodeError, AttributeError, TypeError):
                         pass
                 
@@ -1818,13 +1818,13 @@ class OneToOneContextBuilder:
             )
             
             if must_resolve:
-                lines.append("【🎯 本章必须回收的伏笔】")
+                lines.append("【🎯 Phục bút bắt buộc thu hồi trong chương này】")
                 for f in must_resolve:
                     lines.append(f"- {f.title}")
-                    lines.append(f"  埋入章节：第{f.plant_chapter_number}章")
-                    lines.append(f"  伏笔内容：{f.content[:100]}{'...' if len(f.content) > 100 else ''}")
+                    lines.append(f"  Chương gài: chương {f.plant_chapter_number}")
+                    lines.append(f"  Nội dung phục bút: {f.content[:100]}{'...' if len(f.content) > 100 else ''}")
                     if f.resolution_notes:
-                        lines.append(f"  回收提示：{f.resolution_notes}")
+                        lines.append(f"  Gợi ý thu hồi: {f.resolution_notes}")
                     lines.append("")
             
             # 2. 超期未回收的伏笔
@@ -1835,12 +1835,12 @@ class OneToOneContextBuilder:
             )
             
             if overdue:
-                lines.append("【⚠️ 超期待回收伏笔】")
+                lines.append("【⚠️ Phục bút quá hạn chưa thu hồi】")
                 for f in overdue[:3]:  # 最多显示3个
                     overdue_chapters = chapter_number - (f.target_resolve_chapter_number or 0)
-                    lines.append(f"- {f.title} [已超期{overdue_chapters}章]")
-                    lines.append(f"  埋入章节：第{f.plant_chapter_number}章，原计划第{f.target_resolve_chapter_number}章回收")
-                    lines.append(f"  伏笔内容：{f.content[:80]}...")
+                    lines.append(f"- {f.title} [quá hạn {overdue_chapters} chương]")
+                    lines.append(f"  Chương gài: chương {f.plant_chapter_number}, dự kiến thu hồi ở chương {f.target_resolve_chapter_number}")
+                    lines.append(f"  Nội dung phục bút: {f.content[:80]}...")
                     lines.append("")
             
             # 3. 即将到期的伏笔（未来3章内）
@@ -1856,10 +1856,10 @@ class OneToOneContextBuilder:
                                if (f.target_resolve_chapter_number or 0) > chapter_number]
             
             if upcoming_filtered:
-                lines.append("【📋 即将到期的伏笔（仅供参考）】")
+                lines.append("【📋 Phục bút sắp đến hạn (chỉ tham khảo)】")
                 for f in upcoming_filtered[:3]:  # 最多显示3个
                     remaining = (f.target_resolve_chapter_number or 0) - chapter_number
-                    lines.append(f"- {f.title}（计划第{f.target_resolve_chapter_number}章回收，还有{remaining}章）")
+                    lines.append(f"- {f.title} (dự kiến thu hồi ở chương {f.target_resolve_chapter_number}, còn {remaining} chương)")
                 lines.append("")
             
             return "\n".join(lines) if lines else None

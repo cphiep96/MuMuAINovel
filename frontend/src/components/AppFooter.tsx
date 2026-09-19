@@ -92,7 +92,7 @@ export default function AppFooter({ sidebarWidth = 0 }: AppFooterProps) {
                   color: token.colorPrimary,
                   cursor: hasUpdate ? 'pointer' : 'default',
                 }}
-                title={hasUpdate ? `发现新版本 v${latestVersion}，点击查看` : '当前版本'}
+                title={hasUpdate ? `Phát hiện phiên bản mới v${latestVersion}, nhấn để xem` : 'Phiên bản hiện tại'}
               >
                 <strong style={{ color: token.colorText }}>{VERSION_INFO.projectName}</strong>
                 <span>{getVersionString()}</span>
@@ -114,7 +114,7 @@ export default function AppFooter({ sidebarWidth = 0 }: AppFooterProps) {
                 gap: 4,
               }}
             >
-              赞助
+              Ủng hộ
             </Button>
             <Divider type="vertical" style={{ margin: '0 4px', borderColor: token.colorBorder }} />
             <Link
@@ -177,7 +177,7 @@ export default function AppFooter({ sidebarWidth = 0 }: AppFooterProps) {
                     e.currentTarget.style.transform = 'scale(1)';
                   }
                 }}
-                title={hasUpdate ? `发现新版本 v${latestVersion}，点击查看` : '当前版本'}
+                title={hasUpdate ? `Phát hiện phiên bản mới v${latestVersion}, nhấn để xem` : 'Phiên bản hiện tại'}
               >
                 <strong style={{ color: token.colorText }}>{VERSION_INFO.projectName}</strong>
                 <span>{getVersionString()}</span>
@@ -211,7 +211,7 @@ export default function AppFooter({ sidebarWidth = 0 }: AppFooterProps) {
                 color: token.colorTextSecondary,
               }}
             >
-              LinuxDO 社区
+              Cộng đồng LinuxDO
             </Link>
 
             {/* 赞助按钮 */}
@@ -241,7 +241,7 @@ export default function AppFooter({ sidebarWidth = 0 }: AppFooterProps) {
                 e.currentTarget.style.boxShadow = `0 4px 12px ${alphaColor(token.colorPrimary, 0.35)}`;
               }}
             >
-              赞助支持
+              Ủng hộ
             </Button>
 
             {/* 许可证 */}

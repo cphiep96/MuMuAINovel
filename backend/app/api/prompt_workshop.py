@@ -28,7 +28,7 @@ def get_current_user_id(request: Request) -> str:
     """获取当前登录用户ID"""
     user_id = getattr(request.state, 'user_id', None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
     return user_id
 
 
@@ -46,7 +46,7 @@ def get_user_identifier_from_request(request: Request) -> str:
     """
     user_id = getattr(request.state, 'user_id', None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录或用户ID缺失")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập hoặc thiếu ID người dùng")
     
     # 检查是否为代理请求（user_id 已经是完整格式）
     is_proxy = getattr(request.state, 'is_proxy_request', False)
@@ -115,14 +115,14 @@ def _submission_to_dict(submission: PromptSubmission) -> dict:
 async def check_workshop_admin(request: Request):
     """检查是否为工坊管理员（必须是云端实例的管理员）"""
     if not is_workshop_server():
-        raise HTTPException(status_code=403, detail="此功能仅在云端服务可用")
+        raise HTTPException(status_code=403, detail="Chức năng này chỉ khả dụng trên dịch vụ đám mây")
     
     user = getattr(request.state, "user", None)
     if not user:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
     
     if not user.is_admin:
-        raise HTTPException(status_code=403, detail="需要管理员权限")
+        raise HTTPException(status_code=403, detail="Cần quyền quản trị viên")
     
     return user
 
@@ -272,7 +272,7 @@ async def get_item(item_id: str, request: Request, db: AsyncSession = Depends(ge
         )
         item = result.scalar_one_or_none()
         if not item:
-            raise HTTPException(status_code=404, detail="提示词不存在")
+            raise HTTPException(status_code=404, detail="Prompt không tồn tại")
         return {"success": True, "data": _item_to_dict(item)}
     else:
         try:
@@ -299,7 +299,7 @@ async def import_item(
         )
         item = result.scalar_one_or_none()
         if not item:
-            raise HTTPException(status_code=404, detail="提示词不存在")
+            raise HTTPException(status_code=404, detail="Prompt không tồn tại")
         item_data = _item_to_dict(item)
         
         # 增加下载计数
@@ -329,7 +329,7 @@ async def import_item(
         user_id=user_id,
         name=data.custom_name or item_data["name"],
         style_type="custom",
-        description=f"从提示词工坊导入: {item_data.get('description', '') or ''}",
+        description=f"Nhập từ xưởng prompt: {item_data.get('description', '') or ''}",
         prompt_content=item_data["prompt_content"],
         order_index=max_order + 1
     )
@@ -339,7 +339,7 @@ async def import_item(
     
     return {
         "success": True,
-        "message": "导入成功",
+        "message": "Nhập thành công",
         "writing_style": {
             "id": new_style.id,
             "name": new_style.name,
@@ -374,7 +374,7 @@ async def toggle_like(
         )
         item = item_result.scalar_one_or_none()
         if not item:
-            raise HTTPException(status_code=404, detail="提示词不存在")
+            raise HTTPException(status_code=404, detail="Prompt không tồn tại")
         
         if existing_like:
             # 取消点赞
@@ -409,14 +409,14 @@ async def record_download(
 ):
     """记录下载（仅云端实例使用）"""
     if not is_workshop_server():
-        raise HTTPException(status_code=403, detail="此接口仅供云端实例使用")
+        raise HTTPException(status_code=403, detail="API này chỉ dùng cho instance đám mây")
     
     result = await db.execute(
         select(PromptWorkshopItem).where(PromptWorkshopItem.id == item_id)
     )
     item = result.scalar_one_or_none()
     if not item:
-        raise HTTPException(status_code=404, detail="提示词不存在")
+        raise HTTPException(status_code=404, detail="Prompt không tồn tại")
     
     item.download_count += 1
     await db.commit()
@@ -442,7 +442,7 @@ async def submit_prompt(
         is_proxy = getattr(request.state, 'is_proxy_request', False)
         
         if is_proxy:
-            submitter_name = "未知用户"
+            submitter_name = "Người dùng chưa rõ"
         else:
             user = getattr(request.state, 'user', None)
             if user:
@@ -452,9 +452,9 @@ async def submit_prompt(
                 if user_id:
                     from app.user_manager import user_manager
                     user = await user_manager.get_user(user_id)
-                    submitter_name = user.display_name if user else "未知用户"
+                    submitter_name = user.display_name if user else "Người dùng chưa rõ"
                 else:
-                    submitter_name = "未知用户"
+                    submitter_name = "Người dùng chưa rõ"
     
     if is_workshop_server():
         # 直接创建提交记录
@@ -481,7 +481,7 @@ async def submit_prompt(
         
         return {
             "success": True,
-            "message": "提交成功，等待管理员审核",
+            "message": "Gửi thành công, đang chờ quản trị viên duyệt",
             "submission": {
                 "id": submission.id,
                 "status": submission.status,
@@ -557,19 +557,19 @@ async def withdraw_submission(
         submission = result.scalar_one_or_none()
         
         if not submission:
-            raise HTTPException(status_code=404, detail="提交记录不存在")
+            raise HTTPException(status_code=404, detail="Bản ghi gửi không tồn tại")
         
         # 待审核的可以直接撤回，已审核的需要 force 参数
         if submission.status != "pending" and not force:
-            raise HTTPException(status_code=400, detail="只能撤回待审核的提交，删除已审核记录请使用 force 参数")
+            raise HTTPException(status_code=400, detail="Chỉ có thể thu hồi bản gửi đang chờ duyệt; để xóa bản ghi đã duyệt hãy dùng tham số force")
         
         await db.delete(submission)
         await db.commit()
         
         if submission.status == "pending":
-            return {"success": True, "message": "撤回成功"}
+            return {"success": True, "message": "Thu hồi thành công"}
         else:
-            return {"success": True, "message": "删除成功"}
+            return {"success": True, "message": "Xóa thành công"}
     else:
         try:
             return await workshop_client.withdraw_submission(submission_id, user_identifier, force)
@@ -645,9 +645,9 @@ async def admin_review_submission(
     submission = result.scalar_one_or_none()
     
     if not submission:
-        raise HTTPException(status_code=404, detail="提交记录不存在")
+        raise HTTPException(status_code=404, detail="Bản ghi gửi không tồn tại")
     if submission.status != "pending":
-        raise HTTPException(status_code=400, detail="该提交已被审核")
+        raise HTTPException(status_code=400, detail="Bản gửi này đã được duyệt")
     
     admin_user_id = getattr(admin, 'user_id', str(admin))
     
@@ -679,7 +679,7 @@ async def admin_review_submission(
         
         return {
             "success": True,
-            "message": "已通过审核并发布",
+            "message": "Đã duyệt và phát hành",
             "workshop_item": _item_to_dict(new_item)
         }
     else:
@@ -693,7 +693,7 @@ async def admin_review_submission(
         
         return {
             "success": True,
-            "message": "已拒绝",
+            "message": "Đã từ chối",
             "submission": _submission_to_dict(submission)
         }
 
@@ -714,7 +714,7 @@ async def admin_create_item(
         prompt_content=data.prompt_content,
         category=data.category,
         tags=data.tags,
-        author_name="官方",
+        author_name="Chính thức",
         is_official=True,
         status="active"
     )
@@ -740,7 +740,7 @@ async def admin_update_item(
     )
     item = result.scalar_one_or_none()
     if not item:
-        raise HTTPException(status_code=404, detail="提示词不存在")
+        raise HTTPException(status_code=404, detail="Prompt không tồn tại")
     
     update_data = data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
@@ -766,12 +766,12 @@ async def admin_delete_item(
     )
     item = result.scalar_one_or_none()
     if not item:
-        raise HTTPException(status_code=404, detail="提示词不存在")
+        raise HTTPException(status_code=404, detail="Prompt không tồn tại")
     
     await db.delete(item)
     await db.commit()
     
-    return {"success": True, "message": "删除成功"}
+    return {"success": True, "message": "Xóa thành công"}
 
 
 @router.get("/admin/stats")

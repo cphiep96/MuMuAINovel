@@ -14,7 +14,7 @@ export const VERSION_INFO = {
   
   // 项目信息
   projectName: 'MuMuAINovel',
-  projectFullName: 'MuMu AI 小说创作助手',
+  projectFullName: 'Trợ lý sáng tác tiểu thuyết MuMu AI',
   
   // 链接信息
   githubUrl: 'https://github.com/xiamuceer-j/MuMuAINovel',

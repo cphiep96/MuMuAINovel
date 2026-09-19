@@ -60,7 +60,7 @@ class GrokCoverProvider(BaseCoverProvider):
         }
 
         logger.debug(
-            "Grok 封面生成请求开始: url=%s model=%s width=%s height=%s prompt_len=%s",
+            "Grok bắt đầu yêu cầu tạo ảnh bìa: url=%s model=%s width=%s height=%s prompt_len=%s",
             url,
             model,
             width,
@@ -73,7 +73,7 @@ class GrokCoverProvider(BaseCoverProvider):
                 response = await client.post(url, headers=headers, json=payload)
 
             logger.debug(
-                "Grok 封面生成响应: status=%s content_type=%s headers=%s body_preview=%s",
+                "Grok phản hồi tạo ảnh bìa: status=%s content_type=%s headers=%s body_preview=%s",
                 response.status_code,
                 response.headers.get("content-type"),
                 {
@@ -88,7 +88,7 @@ class GrokCoverProvider(BaseCoverProvider):
             data = response.json()
         except httpx.HTTPStatusError as exc:
             logger.error(
-                "Grok 封面生成 HTTP 错误: status=%s response=%s",
+                "Grok tạo ảnh bìa lỗi HTTP: status=%s response=%s",
                 exc.response.status_code if exc.response else None,
                 safe_preview(exc.response.text, 500) if exc.response is not None else None,
             )
@@ -99,7 +99,7 @@ class GrokCoverProvider(BaseCoverProvider):
 
         images = data.get("data") or []
         logger.debug(
-            "Grok 封面生成解析结果: has_data=%s image_count=%s keys=%s",
+            "Grok kết quả phân tích tạo ảnh bìa: has_data=%s image_count=%s keys=%s",
             bool(data),
             len(images),
             list(data.keys()) if isinstance(data, dict) else type(data).__name__,
@@ -107,12 +107,12 @@ class GrokCoverProvider(BaseCoverProvider):
 
         if not images:
             logger.error("Grok 未返回图片结果: data=%s", summarize_log_value(data))
-            raise ValueError("Grok 未返回图片结果")
+            raise ValueError("Grok không trả về kết quả ảnh")
 
         image_item = images[0]
         revised_prompt = image_item.get("revised_prompt")
         logger.debug(
-            "Grok 首张图片结果: keys=%s has_b64=%s has_url=%s revised_prompt_length=%s",
+            "Grok kết quả ảnh đầu tiên: keys=%s has_b64=%s has_url=%s revised_prompt_length=%s",
             list(image_item.keys()),
             bool(image_item.get("b64_json")),
             bool(image_item.get("url")),
@@ -124,7 +124,7 @@ class GrokCoverProvider(BaseCoverProvider):
             decoded_content = self._decode_base64_image(b64_json)
             image_width, image_height = self._detect_image_size(decoded_content)
             logger.debug(
-                "Grok 返回 base64 图片: bytes=%s mime=image/jpeg size=%sx%s",
+                "Grok trả về ảnh base64: bytes=%s mime=image/jpeg size=%sx%s",
                 len(decoded_content),
                 image_width,
                 image_height,
@@ -148,7 +148,7 @@ class GrokCoverProvider(BaseCoverProvider):
                     image_response = await client.get(image_url)
 
                 logger.debug(
-                    "Grok 图片下载响应: status=%s content_type=%s content_length=%s",
+                    "Grok phản hồi tải ảnh: status=%s content_type=%s content_length=%s",
                     image_response.status_code,
                     image_response.headers.get("content-type"),
                     image_response.headers.get("content-length"),
@@ -156,7 +156,7 @@ class GrokCoverProvider(BaseCoverProvider):
                 image_response.raise_for_status()
             except httpx.HTTPStatusError as exc:
                 logger.error(
-                    "Grok 图片下载 HTTP 错误: status=%s response=%s",
+                    "Grok tải ảnh lỗi HTTP: status=%s response=%s",
                     exc.response.status_code if exc.response else None,
                     safe_preview(exc.response.text, 500) if exc.response is not None else None,
                 )
@@ -169,7 +169,7 @@ class GrokCoverProvider(BaseCoverProvider):
             file_extension = self._guess_extension(content_type=content_type, image_url=image_url)
             image_width, image_height = self._detect_image_size(image_response.content)
             logger.debug(
-                "Grok 图片下载完成: bytes=%s extension=%s size=%sx%s",
+                "Grok tải ảnh hoàn tất: bytes=%s extension=%s size=%sx%s",
                 len(image_response.content),
                 file_extension,
                 image_width,
@@ -187,7 +187,7 @@ class GrokCoverProvider(BaseCoverProvider):
             }
 
         logger.error("Grok 返回内容中既没有 b64_json，也没有 url: %s", data)
-        raise ValueError("Grok 未返回可用的图片数据")
+        raise ValueError("Grok không trả về dữ liệu ảnh khả dụng")
 
     @staticmethod
     def _to_public_result(result: dict[str, Any]) -> CoverGenerationResult:

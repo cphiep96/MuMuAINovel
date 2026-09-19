@@ -87,7 +87,7 @@ class PlotAnalyzer:
             word_count=word_count,
             content=analysis_content,
             existing_foreshadows=foreshadows_text,
-            characters_info=characters_info if characters_info else "（暂无角色信息）"
+            characters_info=characters_info if characters_info else "(Chưa có thông tin nhân vật)"
         )
         
         last_error = None
@@ -111,7 +111,7 @@ class PlotAnalyzer:
                     logger.warning(f"⚠️ 流式响应被中断(GeneratorExit)，已累积 {len(accumulated_text)} 字符")
                     # 如果已经累积了足够内容，继续尝试解析
                     if len(accumulated_text) < 100:
-                        raise Exception("流式响应中断，内容不足")
+                        raise Exception("Luồng phản hồi bị ngắt, nội dung không đủ")
                 except Exception as stream_error:
                     logger.error(f"❌ 流式生成出错: {str(stream_error)}")
                     raise
@@ -119,7 +119,7 @@ class PlotAnalyzer:
                 # 检查响应是否为空
                 if not accumulated_text or len(accumulated_text.strip()) < 10:
                     logger.warning(f"⚠️ AI响应为空或过短(长度: {len(accumulated_text)}), 尝试 {attempt}/{max_retries}")
-                    last_error = "AI响应为空或过短"
+                    last_error = "Phản hồi AI rỗng hoặc quá ngắn"
                     if attempt < max_retries:
                         wait_time = min(2 ** attempt, 10)
                         logger.info(f"  ⏳ 等待 {wait_time} 秒后重试...")
@@ -152,7 +152,7 @@ class PlotAnalyzer:
                 else:
                     # JSON解析失败，重试
                     logger.warning(f"⚠️ JSON解析失败, 尝试 {attempt}/{max_retries}")
-                    last_error = "JSON解析失败"
+                    last_error = "Phân tích JSON thất bại"
                     if attempt < max_retries:
                         wait_time = min(2 ** attempt, 10)
                         logger.info(f"  ⏳ 等待 {wait_time} 秒后重试...")
@@ -210,7 +210,7 @@ class PlotAnalyzer:
             格式化的文本
         """
         if not foreshadows:
-            return "（暂无已埋入的伏笔）"
+            return "(Chưa có phục bút đã gài)"
         
         # 分类伏笔
         must_resolve = [fs for fs in foreshadows if fs.get('resolve_status') == 'must_resolve_now']
@@ -222,48 +222,48 @@ class PlotAnalyzer:
         # === 第1层：本章必须回收的伏笔（最详细）===
         if must_resolve:
             lines.append("=" * 40)
-            lines.append("【🎯 本章必须回收的伏笔】")
+            lines.append("【🎯 Phục bút bắt buộc thu hồi trong chương này】")
             lines.append("=" * 40)
             for i, fs in enumerate(must_resolve, 1):
                 fs_id = fs.get('id', 'unknown')
-                fs_title = fs.get('title', '未命名伏笔')
+                fs_title = fs.get('title', 'Phục bút chưa đặt tên')
                 fs_content = fs.get('content', '')[:200]
                 plant_chapter = fs.get('plant_chapter_number', '?')
                 hint_text = fs.get('hint_text', '')
                 
                 lines.append(f"{i}. 【ID: {fs_id}】{fs_title}")
-                lines.append(f"   埋入章节：第{plant_chapter}章")
-                lines.append(f"   伏笔内容：{fs_content}{'...' if len(fs.get('content', '')) > 200 else ''}")
+                lines.append(f"   Chương gài: chương {plant_chapter}")
+                lines.append(f"   Nội dung phục bút: {fs_content}{'...' if len(fs.get('content', '')) > 200 else ''}")
                 if hint_text:
-                    lines.append(f"   埋入暗示：{hint_text[:100]}")
-                lines.append(f"   ⚠️ 回收时 reference_foreshadow_id 填写: {fs_id}")
+                    lines.append(f"   Gợi ý gài cắm: {hint_text[:100]}")
+                lines.append(f"   ⚠️ Khi thu hồi, điền reference_foreshadow_id: {fs_id}")
                 lines.append("")
         
         # === 第2层：超期伏笔 ===
         if overdue:
-            lines.append("【⚠️ 超期未回收伏笔 - 如章节内容回收了请标记】")
+            lines.append("【⚠️ Phục bút quá hạn chưa thu hồi - nếu nội dung chương đã thu hồi hãy đánh dấu】")
             for fs in overdue[:5]:
                 fs_id = fs.get('id', 'unknown')
                 fs_title = fs.get('title', '')
                 plant_chapter = fs.get('plant_chapter_number', '?')
-                lines.append(f"- 【ID: {fs_id}】{fs_title}（第{plant_chapter}章埋入）")
+                lines.append(f"- 【ID: {fs_id}】{fs_title} (gài ở chương {plant_chapter})")
             lines.append("")
         
         # === 第3层：其他已埋入伏笔（精简）===
         if others:
-            lines.append("【📋 其他已埋入伏笔 - 如章节内容自然回收了请标记】")
+            lines.append("【📋 Phục bút khác đã gài - nếu nội dung chương tự nhiên thu hồi hãy đánh dấu】")
             for fs in others[:10]:
                 fs_id = fs.get('id', 'unknown')
                 fs_title = fs.get('title', '')
                 plant_chapter = fs.get('plant_chapter_number', '?')
-                lines.append(f"- 【ID: {fs_id}】{fs_title}（第{plant_chapter}章埋入）")
+                lines.append(f"- 【ID: {fs_id}】{fs_title} (gài ở chương {plant_chapter})")
             if len(others) > 10:
-                lines.append(f"  ... 还有{len(others) - 10}个伏笔未列出")
+                lines.append(f"  ... Còn {len(others) - 10} phục bút chưa được liệt kê")
             lines.append("")
         
         # 操作指引
-        lines.append("提示：如果章节内容回收了上述任一伏笔，请在 foreshadows 数组中")
-        lines.append("添加 type='resolved' 的记录，并在 reference_foreshadow_id 填写对应ID。")
+        lines.append("Gợi ý: nếu nội dung chương thu hồi bất kỳ phục bút nào ở trên, hãy trong mảng foreshadows")
+        lines.append("Thêm bản ghi có type='resolved' và điền ID tương ứng vào reference_foreshadow_id.")
         
         return "\n".join(lines)
     
@@ -335,7 +335,7 @@ class PlotAnalyzer:
             # 或者从情节点组合生成摘要
             elif analysis.get('plot_points'):
                 plot_summaries = [p.get('content', '') for p in analysis.get('plot_points', [])[:3]]
-                chapter_summary = "；".join(plot_summaries)
+                chapter_summary = "; ".join(plot_summaries)
             # 或者使用内容前300字
             elif chapter_content:
                 chapter_summary = chapter_content[:300] + ("..." if len(chapter_content) > 300 else "")
@@ -345,12 +345,12 @@ class PlotAnalyzer:
                 memories.append({
                     'type': 'chapter_summary',
                     'content': chapter_summary,
-                    'title': f"第{chapter_number}章《{chapter_title}》摘要",
+                    'title': f"Chương {chapter_number}«{chapter_title}» - Tóm tắt",
                     'metadata': {
                         'chapter_id': chapter_id,
                         'chapter_number': chapter_number,
                         'importance_score': 0.6,  # 中等重要性
-                        'tags': ['摘要', '章节概览', chapter_title],
+                        'tags': ['Tóm tắt', 'Tổng quan chương', chapter_title],
                         'is_foreshadow': 0,
                         'text_position': 0,
                         'text_length': len(chapter_summary)
@@ -368,13 +368,13 @@ class PlotAnalyzer:
                     
                     memories.append({
                         'type': 'hook',
-                        'content': f"[{hook.get('type', '未知')}钩子] {hook.get('content', '')}",
-                        'title': f"{hook.get('type', '钩子')} - {hook.get('position', '')}",
+                        'content': f"[{hook.get('type', 'Không rõ')} - móc câu] {hook.get('content', '')}",
+                        'title': f"{hook.get('type', 'Móc câu')} - {hook.get('position', '')}",
                         'metadata': {
                             'chapter_id': chapter_id,
                             'chapter_number': chapter_number,
                             'importance_score': min(hook.get('strength', 5) / 10, 1.0),
-                            'tags': [hook.get('type', '钩子'), hook.get('position', '')],
+                            'tags': [hook.get('type', 'Móc câu'), hook.get('position', '')],
                             'is_foreshadow': 0,
                             'keyword': keyword,
                             'text_position': position,
@@ -395,12 +395,12 @@ class PlotAnalyzer:
                 memories.append({
                     'type': 'foreshadow',
                     'content': foreshadow.get('content', ''),
-                    'title': f"{'埋下伏笔' if is_planted else '回收伏笔'}",
+                    'title': f"{'Gài phục bút' if is_planted else 'Thu hồi phục bút'}",
                     'metadata': {
                         'chapter_id': chapter_id,
                         'chapter_number': chapter_number,
                         'importance_score': min(foreshadow.get('strength', 5) / 10, 1.0),
-                        'tags': ['伏笔', foreshadow.get('type', 'planted')],
+                        'tags': ['Phục bút', foreshadow.get('type', 'planted')],
                         'is_foreshadow': 1 if is_planted else 2,
                         'reference_chapter': foreshadow.get('reference_chapter'),
                         'keyword': keyword,
@@ -421,13 +421,13 @@ class PlotAnalyzer:
                     
                     memories.append({
                         'type': 'plot_point',
-                        'content': f"{plot_point.get('content', '')}。影响: {plot_point.get('impact', '')}",
-                        'title': f"情节点 - {plot_point.get('type', '未知')}",
+                        'content': f"{plot_point.get('content', '')}. Ảnh hưởng: {plot_point.get('impact', '')}",
+                        'title': f"Tình tiết - {plot_point.get('type', 'Không rõ')}",
                         'metadata': {
                             'chapter_id': chapter_id,
                             'chapter_number': chapter_number,
                             'importance_score': plot_point.get('importance', 0.5),
-                            'tags': ['情节点', plot_point.get('type', '未知')],
+                            'tags': ['Tình tiết', plot_point.get('type', 'Không rõ')],
                             'is_foreshadow': 0,
                             'keyword': keyword,
                             'text_position': position,
@@ -437,16 +437,16 @@ class PlotAnalyzer:
             
             # 4. 提取角色状态变化
             for i, char_state in enumerate(analysis.get('character_states', [])):
-                char_name = char_state.get('character_name', '未知角色')
+                char_name = char_state.get('character_name', 'Nhân vật không rõ')
                 memories.append({
                     'type': 'character_event',
-                    'content': f"{char_name}的状态变化: {char_state.get('state_before', '')} → {char_state.get('state_after', '')}。{char_state.get('psychological_change', '')}",
-                    'title': f"{char_name}的变化",
+                    'content': f"Thay đổi trạng thái của {char_name}: {char_state.get('state_before', '')} → {char_state.get('state_after', '')}. {char_state.get('psychological_change', '')}",
+                    'title': f"Thay đổi của {char_name}",
                     'metadata': {
                         'chapter_id': chapter_id,
                         'chapter_number': chapter_number,
                         'importance_score': 0.7,
-                        'tags': ['角色', char_name, '状态变化'],
+                        'tags': ['Nhân vật', char_name, 'Thay đổi trạng thái'],
                         'related_characters': [char_name],
                         'is_foreshadow': 0
                     }
@@ -467,13 +467,13 @@ class PlotAnalyzer:
                 
                 memories.append({
                     'type': 'plot_point',
-                    'content': f"重要冲突: {conflict.get('description', '')}。冲突各方: {', '.join(parties)}",
-                    'title': f"冲突 - 强度{conflict.get('level', 0)}",
+                    'content': f"Xung đột quan trọng: {conflict.get('description', '')}. Các bên xung đột: {', '.join(parties)}",
+                    'title': f"Xung đột - Mức độ {conflict.get('level', 0)}",
                     'metadata': {
                         'chapter_id': chapter_id,
                         'chapter_number': chapter_number,
                         'importance_score': min(conflict.get('level', 5) / 10, 1.0),
-                        'tags': ['冲突'] + types,
+                        'tags': ['Xung đột'] + types,
                         'is_foreshadow': 0
                     }
                 })
@@ -507,8 +507,8 @@ class PlotAnalyzer:
             
             # 2. 去除标点符号后匹配
             import re
-            clean_keyword = re.sub(r'[，。！？、；：""''（）《》【】]', '', keyword)
-            clean_text = re.sub(r'[，。！？、；：""''（）《》【】]', '', full_text)
+            clean_keyword = re.sub(r'[，。！？、；：""''（）«»【】]', '', keyword)
+            clean_text = re.sub(r'[，。！？、；：""''（）«»【】]', '', full_text)
             pos = clean_text.find(clean_keyword)
             
             if pos != -1:
@@ -541,25 +541,25 @@ class PlotAnalyzer:
             格式化的摘要文本
         """
         try:
-            lines = ["=== 章节分析报告 ===\n"]
+            lines = ["=== Báo cáo phân tích chương ===\n"]
             
             # 整体评分
             scores = analysis.get('scores', {})
-            lines.append(f"【整体评分】")
-            lines.append(f"  整体质量: {scores.get('overall', 'N/A')}/10")
-            lines.append(f"  节奏把控: {scores.get('pacing', 'N/A')}/10")
-            lines.append(f"  吸引力: {scores.get('engagement', 'N/A')}/10")
-            lines.append(f"  连贯性: {scores.get('coherence', 'N/A')}/10\n")
+            lines.append(f"【Đánh giá tổng thể】")
+            lines.append(f"  Chất lượng tổng thể: {scores.get('overall', 'N/A')}/10")
+            lines.append(f"  Nhịp điệu: {scores.get('pacing', 'N/A')}/10")
+            lines.append(f"  Sức hấp dẫn: {scores.get('engagement', 'N/A')}/10")
+            lines.append(f"  Tính mạch lạc: {scores.get('coherence', 'N/A')}/10\n")
             
             # 剧情阶段
-            lines.append(f"【剧情阶段】{analysis.get('plot_stage', '未知')}\n")
+            lines.append(f"【Giai đoạn cốt truyện】{analysis.get('plot_stage', 'Không rõ')}\n")
             
             # 钩子统计
             hooks = analysis.get('hooks', [])
             if hooks:
-                lines.append(f"【钩子分析】共{len(hooks)}个")
+                lines.append(f"【Phân tích móc câu】Có {len(hooks)} mục")
                 for hook in hooks[:3]:  # 只显示前3个
-                    lines.append(f"  • [{hook.get('type')}] {hook.get('content', '')[:50]}... (强度:{hook.get('strength', 0)})")
+                    lines.append(f"  • [{hook.get('type')}] {hook.get('content', '')[:50]}... (Cường độ: {hook.get('strength', 0)})")
                 lines.append("")
             
             # 伏笔统计
@@ -567,20 +567,20 @@ class PlotAnalyzer:
             if foreshadows:
                 planted = sum(1 for f in foreshadows if f.get('type') == 'planted')
                 resolved = sum(1 for f in foreshadows if f.get('type') == 'resolved')
-                lines.append(f"【伏笔分析】埋下{planted}个, 回收{resolved}个\n")
+                lines.append(f"【Phân tích phục bút】Gài {planted} mục, thu hồi {resolved} mục\n")
             
             # 冲突分析
             conflict = analysis.get('conflict', {})
             if conflict:
-                lines.append(f"【冲突分析】")
-                lines.append(f"  类型: {', '.join(conflict.get('types', []))}")
-                lines.append(f"  强度: {conflict.get('level', 0)}/10")
-                lines.append(f"  进度: {int(conflict.get('resolution_progress', 0) * 100)}%\n")
+                lines.append(f"【Phân tích xung đột】")
+                lines.append(f"  Loại: {', '.join(conflict.get('types', []))}")
+                lines.append(f"  Cường độ: {conflict.get('level', 0)}/10")
+                lines.append(f"  Tiến độ: {int(conflict.get('resolution_progress', 0) * 100)}%\n")
             
             # 改进建议
             suggestions = analysis.get('suggestions', [])
             if suggestions:
-                lines.append(f"【改进建议】")
+                lines.append(f"【Đề xuất cải thiện】")
                 for i, sug in enumerate(suggestions, 1):
                     lines.append(f"  {i}. {sug}")
             
@@ -588,7 +588,7 @@ class PlotAnalyzer:
             
         except Exception as e:
             logger.error(f"❌ 生成摘要失败: {str(e)}")
-            return "分析摘要生成失败"
+            return "Tạo tóm tắt phân tích thất bại"
 
 
 # 创建全局实例(需要时手动初始化)

@@ -77,8 +77,8 @@ async def lifespan(app: FastAPI):
                 .where(BackgroundTask.status.in_(["pending", "running"]))
                 .values(
                     status="failed",
-                    error_message="服务重启，后台任务已中断",
-                    status_message="服务重启，任务已中断，请重新发起",
+                    error_message="Dịch vụ khởi động lại, tác vụ nền đã bị gián đoạn",
+                    status_message="Dịch vụ khởi động lại, tác vụ đã bị gián đoạn, vui lòng khởi tạo lại",
                     completed_at=interrupted_at,
                     updated_at=interrupted_at,
                 )
@@ -88,7 +88,7 @@ async def lifespan(app: FastAPI):
                 .where(BatchGenerationTask.status.in_(["pending", "running"]))
                 .values(
                     status="failed",
-                    error_message="服务重启，批量生成任务已中断",
+                    error_message="Dịch vụ khởi động lại, tác vụ tạo hàng loạt đã bị gián đoạn",
                     completed_at=interrupted_at,
                 )
             )
@@ -97,7 +97,7 @@ async def lifespan(app: FastAPI):
                 .where(AnalysisTask.status.in_(["pending", "running"]))
                 .values(
                     status="failed",
-                    error_message="服务重启，章节分析任务已中断",
+                    error_message="Dịch vụ khởi động lại, tác vụ phân tích chương đã bị gián đoạn",
                     progress=0,
                     completed_at=interrupted_at,
                 )
@@ -126,7 +126,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=config_settings.app_name,
     version=config_settings.app_version,
-    description="AI写小说工具 - 智能小说创作助手",
+    description="Công cụ AI viết tiểu thuyết - Trợ lý sáng tác thông minh",
     lifespan=lifespan
 )
 
@@ -137,7 +137,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
-            "detail": "请求参数验证失败",
+            "detail": "Xác thực tham số yêu cầu thất bại",
             "errors": exc.errors()
         }
     )
@@ -149,8 +149,8 @@ async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
-            "detail": "服务器内部错误",
-            "message": str(exc) if config_settings.debug else "请稍后重试"
+            "detail": "Lỗi nội bộ máy chủ",
+            "message": str(exc) if config_settings.debug else "Vui lòng thử lại sau"
         }
     )
 
@@ -184,22 +184,22 @@ async def health_check():
 @app.get("/health/db-sessions")
 async def db_session_stats(request: Request):
     """
-    数据库会话统计（监控连接泄漏）
+    Thống kê phiên database (theo dõi rò rỉ kết nối)
     
-    返回：
-    - created: 总创建会话数
-    - closed: 总关闭会话数
-    - active: 当前活跃会话数（应该接近0）
-    - errors: 错误次数
-    - generator_exits: SSE断开次数
-    - last_check: 最后检查时间
+    Trả về:
+    - created: Tổng số phiên đã tạo
+    - closed: Tổng số phiên đã đóng
+    - active: Số phiên đang hoạt động (nên gần 0)
+    - errors: Số lần lỗi
+    - generator_exits: Số lần SSE ngắt kết nối
+    - last_check: Thời điểm kiểm tra gần nhất
     """
     if not getattr(request.state, "is_admin", False):
-        raise HTTPException(status_code=403, detail="需要管理员权限")
+        raise HTTPException(status_code=403, detail="Cần quyền quản trị viên")
     return {
         "status": "ok",
         "session_stats": _session_stats,
-        "warning": "活跃会话数过多" if _session_stats["active"] > 10 else None
+        "warning": "Số phiên hoạt động quá nhiều" if _session_stats["active"] > 10 else None
     }
 
 
@@ -225,21 +225,21 @@ app.include_router(inspiration.router, prefix="/api")
 app.include_router(outlines.router, prefix="/api")
 app.include_router(outline_transfer.router, prefix="/api")
 app.include_router(characters.router, prefix="/api")
-app.include_router(careers.router, prefix="/api")  # 职业管理API
+app.include_router(careers.router, prefix="/api")  # API quản lý nghề nghiệp
 app.include_router(chapters.router, prefix="/api")
 app.include_router(relationships.router, prefix="/api")
 app.include_router(organizations.router, prefix="/api")
 app.include_router(writing_styles.router, prefix="/api")
 app.include_router(memories.router)  # 记忆管理API (已包含/api前缀)
 app.include_router(foreshadows.router)  # 伏笔管理API (已包含/api前缀)
-app.include_router(mcp_plugins.router, prefix="/api")  # MCP插件管理API
-app.include_router(prompt_templates.router, prefix="/api")  # 提示词模板管理API
-app.include_router(changelog.router, prefix="/api")  # 更新日志API
+app.include_router(mcp_plugins.router, prefix="/api")  # API quản lý plugin MCP
+app.include_router(prompt_templates.router, prefix="/api")  # API quản lý template prompt
+app.include_router(changelog.router, prefix="/api")  # API nhật ký cập nhật
 app.include_router(skills.router)  # Skill API（已包含/api前缀）
-app.include_router(prompt_workshop.router, prefix="/api")  # 提示词工坊API
-app.include_router(book_import.router, prefix="/api")  # 拆书导入API
-app.include_router(tasks.router, prefix="/api")  # 后台任务API
-app.include_router(announcements.router, prefix="/api")  # 公告API
+app.include_router(prompt_workshop.router, prefix="/api")  # API xưởng prompt
+app.include_router(book_import.router, prefix="/api")  # API nhập/đọc tách sách
+app.include_router(tasks.router, prefix="/api")  # API tác vụ nền
+app.include_router(announcements.router, prefix="/api")  # API thông báo
 
 if getattr(sys, "frozen", False):
     static_dir = Path(sys._MEIPASS) / "backend" / "static"
@@ -259,7 +259,7 @@ if static_dir.exists():
         if full_path.startswith("api/"):
             return JSONResponse(
                 status_code=404,
-                content={"detail": "API路径不存在"}
+                content={"detail": "Đường dẫn API không tồn tại"}
             )
         
         file_path = static_dir / full_path
@@ -270,7 +270,7 @@ if static_dir.exists():
         except ValueError:
             return JSONResponse(
                 status_code=404,
-                content={"detail": "页面不存在"}
+                content={"detail": "Trang không tồn tại"}
             )
 
         if resolved_file.is_file():
@@ -285,7 +285,7 @@ if static_dir.exists():
         
         return JSONResponse(
             status_code=404,
-            content={"detail": "页面不存在"}
+            content={"detail": "Trang không tồn tại"}
         )
 else:
     logger.warning("静态文件目录不存在，请先构建前端: cd frontend && npm run build")
@@ -293,10 +293,10 @@ else:
     @app.get("/")
     async def root():
         return {
-            "message": "欢迎使用MuMuAINovel",
+            "message": "Chào mừng sử dụng MuMuAINovel",
             "version": config_settings.app_version,
             "docs": "/docs",
-            "notice": "请先构建前端: cd frontend && npm run build"
+            "notice": "Vui lòng build frontend trước: cd frontend && npm run build"
         }
 
 

@@ -63,7 +63,7 @@ export default function ProjectWizardNew() {
         signal,
       });
       if (!response.ok) {
-        throw new Error('获取项目信息失败');
+        throw new Error('Lấy thông tin dự án thất bại');
       }
       const project = await response.json();
 
@@ -90,8 +90,8 @@ export default function ProjectWizardNew() {
         return;
       }
 
-      console.error('恢复生成失败:', error);
-      message.error('恢复生成失败,请重试');
+      console.error('Khôi phục quá trình tạo thất bại:', error);
+      message.error('Khôi phục tạo thất bại, vui lòng thử lại');
       navigate('/');
     }
   };
@@ -116,7 +116,7 @@ export default function ProjectWizardNew() {
 
   // 生成完成回调
   const handleComplete = (projectId: string) => {
-    console.log('项目创建完成:', projectId);
+    console.log('Tạo dự án hoàn tất:', projectId);
   };
 
   // 返回表单页面
@@ -129,10 +129,10 @@ export default function ProjectWizardNew() {
   const renderForm = () => (
     <Card>
       <Title level={isMobile ? 4 : 3} style={{ marginBottom: 24 }}>
-        创建新项目
+        Tạo dự án mới
       </Title>
       <Paragraph type="secondary" style={{ marginBottom: 32 }}>
-        填写基本信息后，AI将自动为您生成世界观、角色和大纲节点（大纲可在项目内手动展开为章节）
+        Sau khi điền thông tin cơ bản, AI sẽ tự tạo bối cảnh thế giới, nhân vật và nút dàn ý (có thể mở rộng thủ công thành chương trong dự án)
       </Paragraph>
 
       <Form
@@ -149,67 +149,67 @@ export default function ProjectWizardNew() {
         }}
       >
         <Form.Item
-          label="书名"
+          label="Tên sách"
           name="title"
-          rules={[{ required: true, message: '请输入书名' }]}
+          rules={[{ required: true, message: 'Vui lòng nhập tên sách' }]}
         >
-          <Input placeholder="输入你的小说标题" size="large" />
+          <Input placeholder="Nhập tiêu đề tiểu thuyết của bạn" size="large" />
         </Form.Item>
 
         <Form.Item
-          label="小说简介"
+          label="Tóm tắt tiểu thuyết"
           name="description"
-          rules={[{ required: true, message: '请输入小说简介' }]}
+          rules={[{ required: true, message: 'Vui lòng nhập tóm tắt tiểu thuyết' }]}
         >
           <TextArea
             rows={3}
-            placeholder="用一段话介绍你的小说..."
+            placeholder="Giới thiệu tiểu thuyết bằng một đoạn..."
             showCount
           />
         </Form.Item>
 
         <Form.Item
-          label="主题"
+          label="Chủ đề"
           name="theme"
-          rules={[{ required: true, message: '请输入主题' }]}
+          rules={[{ required: true, message: 'Vui lòng nhập chủ đề' }]}
         >
           <TextArea
             rows={4}
-            placeholder="描述你的小说主题..."
+            placeholder="Mô tả chủ đề tiểu thuyết của bạn..."
             showCount
           />
         </Form.Item>
 
         <Form.Item
-          label="类型"
+          label="Loại"
           name="genre"
-          rules={[{ required: true, message: '请选择小说类型' }]}
+          rules={[{ required: true, message: 'Vui lòng chọn thể loại tiểu thuyết' }]}
         >
           <Select
             mode="tags"
-            placeholder="选择或输入类型标签（如：玄幻、都市、修仙）"
+            placeholder="Chọn hoặc nhập nhãn thể loại (VD: huyền huyễn, đô thị, tu tiên)"
             size="large"
             tokenSeparators={[',']}
             maxTagCount={5}
           >
-            <Select.Option value="玄幻">玄幻</Select.Option>
-            <Select.Option value="都市">都市</Select.Option>
-            <Select.Option value="历史">历史</Select.Option>
-            <Select.Option value="科幻">科幻</Select.Option>
-            <Select.Option value="武侠">武侠</Select.Option>
-            <Select.Option value="仙侠">仙侠</Select.Option>
-            <Select.Option value="奇幻">奇幻</Select.Option>
-            <Select.Option value="悬疑">悬疑</Select.Option>
-            <Select.Option value="言情">言情</Select.Option>
-            <Select.Option value="修仙">修仙</Select.Option>
+            <Select.Option value="玄幻">Huyền huyễn</Select.Option>
+            <Select.Option value="都市">Đô thị</Select.Option>
+            <Select.Option value="历史">Lịch sử</Select.Option>
+            <Select.Option value="科幻">Khoa học viễn tưởng</Select.Option>
+            <Select.Option value="武侠">Võ hiệp</Select.Option>
+            <Select.Option value="仙侠">Tiên hiệp</Select.Option>
+            <Select.Option value="奇幻">Kỳ ảo</Select.Option>
+            <Select.Option value="悬疑">Huyền nghi</Select.Option>
+            <Select.Option value="言情">Ngôn tình</Select.Option>
+            <Select.Option value="修仙">Tu tiên</Select.Option>
           </Select>
         </Form.Item>
 
         <Form.Item
-          label="大纲章节模式"
+          label="Chế độ chương dàn ý"
           name="outline_mode"
-          rules={[{ required: true, message: '请选择大纲章节模式' }]}
-          tooltip="创建后不可更改，请根据创作习惯选择"
+          rules={[{ required: true, message: 'Vui lòng chọn chế độ chương dàn ý' }]}
+          tooltip="Không thể đổi sau khi tạo, hãy chọn theo thói quen sáng tác"
         >
           <Radio.Group size="large">
             <Row gutter={16}>
@@ -227,13 +227,13 @@ export default function ProjectWizardNew() {
                     <Space direction="vertical" size={4} style={{ width: '100%' }}>
                       <div style={{ fontSize: 16, fontWeight: 'bold' }}>
                         <CheckCircleOutlined style={{ marginRight: 8, color: token.colorSuccess }} />
-                        传统模式 (1→1)
+                        Chế độ truyền thống (1→1)
                       </div>
                       <div style={{ fontSize: 12, color: token.colorTextSecondary }}>
-                        一个大纲对应一个章节，简单直接
+                        Một dàn ý tương ứng một chương, đơn giản trực tiếp
                       </div>
                       <div style={{ fontSize: 11, color: token.colorTextTertiary }}>
-                        💡 适合：简单剧情、快速创作、短篇小说
+                        💡 Phù hợp: cốt truyện đơn giản, sáng tác nhanh, truyện ngắn
                       </div>
                     </Space>
                   </Radio>
@@ -254,13 +254,13 @@ export default function ProjectWizardNew() {
                     <Space direction="vertical" size={4} style={{ width: '100%' }}>
                       <div style={{ fontSize: 16, fontWeight: 'bold' }}>
                         <CheckCircleOutlined style={{ marginRight: 8, color: token.colorSuccess }} />
-                        细化模式 (1→N) 推荐
+                        Chế độ chi tiết (1→N) khuyến nghị
                       </div>
                       <div style={{ fontSize: 12, color: token.colorTextSecondary }}>
-                        一个大纲可展开为多个章节，灵活控制
+                        Một dàn ý có thể mở rộng thành nhiều chương, linh hoạt
                       </div>
                       <div style={{ fontSize: 11, color: token.colorTextTertiary }}>
-                        💡 适合：复杂剧情、长篇创作、需要细化控制
+                        💡 Phù hợp: cốt truyện phức tạp, sáng tác dài, cần kiểm soát chi tiết
                       </div>
                     </Space>
                   </Radio>
@@ -273,46 +273,46 @@ export default function ProjectWizardNew() {
         <Row gutter={16}>
           <Col xs={24} sm={12}>
             <Form.Item
-              label="叙事视角"
+              label="Góc kể chuyện"
               name="narrative_perspective"
-              rules={[{ required: true, message: '请选择叙事视角' }]}
+              rules={[{ required: true, message: 'Vui lòng chọn góc kể chuyện' }]}
             >
-              <Select size="large" placeholder="选择小说的叙事视角">
-                <Select.Option value="第一人称">第一人称</Select.Option>
-                <Select.Option value="第三人称">第三人称</Select.Option>
-                <Select.Option value="全知视角">全知视角</Select.Option>
+              <Select size="large" placeholder="Chọn góc kể chuyện của tiểu thuyết">
+                <Select.Option value="第一人称">Ngôi thứ nhất</Select.Option>
+                <Select.Option value="第三人称">Ngôi thứ ba</Select.Option>
+                <Select.Option value="全知视角">Toàn tri</Select.Option>
               </Select>
             </Form.Item>
           </Col>
           <Col xs={24} sm={12}>
             <Form.Item
-              label="角色数量"
+              label="Số lượng nhân vật"
               name="character_count"
-              rules={[{ required: true, message: '请输入角色数量' }]}
+              rules={[{ required: true, message: 'Vui lòng nhập số lượng nhân vật' }]}
             >
               <InputNumber
                 min={3}
                 max={20}
                 style={{ width: '100%' }}
                 size="large"
-                addonAfter="个"
-                placeholder="AI生成的角色数量"
+                addonAfter=" cái"
+                placeholder="Số nhân vật do AI tạo"
               />
             </Form.Item>
           </Col>
         </Row>
 
         <Form.Item
-          label="目标字数"
+          label="Số chữ mục tiêu"
           name="target_words"
-          rules={[{ required: true, message: '请输入目标字数' }]}
+          rules={[{ required: true, message: 'Vui lòng nhập số chữ mục tiêu' }]}
         >
           <InputNumber
             min={10000}
             style={{ width: '100%' }}
             size="large"
-            addonAfter="字"
-            placeholder="整部小说的目标字数"
+            addonAfter="chữ"
+            placeholder="Số chữ mục tiêu của cả tiểu thuyết"
           />
         </Form.Item>
 
@@ -325,14 +325,14 @@ export default function ProjectWizardNew() {
               block
               icon={<RocketOutlined />}
             >
-              开始创建项目
+              Bắt đầu tạo dự án
             </Button>
             <Button
               size="large"
               block
               onClick={() => navigate('/')}
             >
-              返回首页
+              Về trang chủ
             </Button>
           </Space>
         </Form.Item>
@@ -372,7 +372,7 @@ export default function ProjectWizardNew() {
               color: token.colorWhite,
             }}
           >
-            {isMobile ? '返回' : '返回首页'}
+            {isMobile ? 'Quay lại' : 'Về trang chủ'}
           </Button>
 
           <Title level={isMobile ? 4 : 2} style={{
@@ -381,7 +381,7 @@ export default function ProjectWizardNew() {
             textShadow: '0 2px 4px color-mix(in srgb, var(--ant-color-black) 18%, transparent)',
           }}>
             <RocketOutlined style={{ marginRight: 8 }} />
-            项目创建向导
+            Hướng dẫn tạo dự án
           </Title>
 
           <div style={{ width: isMobile ? 60 : 120 }}></div>

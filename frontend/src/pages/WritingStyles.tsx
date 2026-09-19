@@ -79,7 +79,7 @@ export default function WritingStyles() {
       
       setStyles(sortedStyles);
     } catch {
-      message.error('加载风格列表失败');
+      message.error('Tải danh sách phong cách thất bại');
     } finally {
       setLoading(false);
     }
@@ -95,12 +95,12 @@ export default function WritingStyles() {
       };
 
       await writingStyleApi.createStyle(createData);
-      message.success('创建成功');
+      message.success('Tạo thành công');
       setIsCreateModalOpen(false);
       createForm.resetFields();
       await loadStyles();
     } catch {
-      message.error('创建失败');
+      message.error('Tạo thất bại');
     }
   };
 
@@ -119,38 +119,38 @@ export default function WritingStyles() {
 
     try {
       await writingStyleApi.updateStyle(editingStyle.id, values);
-      message.success('更新成功');
+      message.success('Cập nhật thành công');
       setIsEditModalOpen(false);
       editForm.resetFields();
       setEditingStyle(null);
       await loadStyles();
     } catch {
-      message.error('更新失败');
+      message.error('Cập nhật thất bại');
     }
   };
 
   const handleDelete = async (styleId: number) => {
     try {
       await writingStyleApi.deleteStyle(styleId);
-      message.success('删除成功');
+      message.success('Xóa thành công');
       await loadStyles();
     } catch {
-      message.error('删除失败');
+      message.error('Xóa thất bại');
     }
   };
 
   const handleSetDefault = async (styleId: number) => {
     if (!currentProject?.id) {
-      message.warning('请先选择项目');
+      message.warning('Vui lòng chọn dự án trước');
       return;
     }
     
     try {
       await writingStyleApi.setDefaultStyle(styleId, currentProject.id);
-      message.success('设置默认风格成功');
+      message.success('Đặt phong cách mặc định thành công');
       await loadStyles();
     } catch {
-      message.error('设置失败');
+      message.error('Đặt thất bại');
     }
   };
 
@@ -164,7 +164,7 @@ export default function WritingStyles() {
   };
 
   const getStyleTypeLabel = (styleType: string) => {
-    return styleType === 'preset' ? '预设' : '自定义';
+    return styleType === 'preset' ? 'Cấu hình sẵn' : 'Tùy chỉnh';
   };
 
   return (
@@ -183,20 +183,20 @@ export default function WritingStyles() {
       }}>
         <h2 style={{ margin: 0, fontSize: isMobile ? 18 : 24 }}>
           <EditOutlined style={{ marginRight: 8 }} />
-          写作风格管理
+          Quản lý phong cách viết
         </h2>
         <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={showCreateModal}
         >
-          创建自定义风格
+          Tạo phong cách tùy chỉnh
         </Button>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {styles.length === 0 ? (
-          <Empty description="暂无风格数据" />
+          <Empty description="Chưa có dữ liệu phong cách" />
         ) : (
           <Row
             gutter={[0, gridConfig.gutter]}
@@ -254,11 +254,11 @@ export default function WritingStyles() {
                     />,
                     <Popconfirm
                       key="delete"
-                      title="确定删除这个风格吗？"
-                      description={style.is_default ? '这是默认风格，删除后需要设置新的默认风格' : undefined}
+                      title="Bạn có chắc chắn xóa phong cách này không?"
+                      description={style.is_default ? 'Đây là phong cách mặc định, sau khi xóa cần đặt phong cách mặc định mới' : undefined}
                       onConfirm={() => handleDelete(style.id)}
-                      okText="确定"
-                      cancelText="取消"
+                      okText="Xác nhận"
+                      cancelText="Hủy"
                       disabled={style.user_id === null}
                     >
                       <DeleteOutlined
@@ -277,7 +277,7 @@ export default function WritingStyles() {
                       <Tag color={getStyleTypeColor(style.style_type)}>
                         {getStyleTypeLabel(style.style_type)}
                       </Tag>
-                      {style.is_default && <Tag color="gold">默认</Tag>}
+                      {style.is_default && <Tag color="gold">Mặc định</Tag>}
                     </Space>
                     
                     {style.description && (
@@ -315,7 +315,7 @@ export default function WritingStyles() {
 
       {/* 创建自定义风格 Modal */}
       <Modal
-        title="创建自定义风格"
+        title="Tạo phong cách tùy chỉnh"
         open={isCreateModalOpen}
         onCancel={() => {
           setIsCreateModalOpen(false);
@@ -333,25 +333,25 @@ export default function WritingStyles() {
           style={{ marginTop: 16 }}
         >
           <Form.Item
-            label="风格名称"
+            label="Tên phong cách"
             name="name"
-            rules={[{ required: true, message: '请输入风格名称' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập tên phong cách' }]}
           >
-            <Input placeholder="如：武侠风、科幻风" />
+            <Input placeholder="Ví dụ: phong cách võ hiệp, khoa học viễn tưởng" />
           </Form.Item>
           
-          <Form.Item label="风格描述" name="description">
-            <TextArea rows={2} placeholder="简要描述这个风格的特点..." />
+          <Form.Item label="Mô tả phong cách" name="description">
+            <TextArea rows={2} placeholder="Mô tả ngắn gọn đặc điểm của phong cách này..." />
           </Form.Item>
           
           <Form.Item
-            label="提示词内容"
+            label="Nội dung prompt"
             name="prompt_content"
-            rules={[{ required: true, message: '请输入提示词内容' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập nội dung prompt' }]}
           >
             <TextArea
               rows={6}
-              placeholder="输入风格的提示词，用于引导AI生成符合该风格的内容..."
+              placeholder="Nhập prompt của phong cách, dùng để hướng dẫn AI tạo nội dung phù hợp với phong cách này..."
             />
           </Form.Item>
           
@@ -361,10 +361,10 @@ export default function WritingStyles() {
                 setIsCreateModalOpen(false);
                 createForm.resetFields();
               }}>
-                取消
+                Hủy
               </Button>
               <Button type="primary" htmlType="submit" loading={loading}>
-                创建
+                Tạo
               </Button>
             </Space>
           </Form.Item>
@@ -373,7 +373,7 @@ export default function WritingStyles() {
 
       {/* 编辑风格 Modal */}
       <Modal
-        title="编辑写作风格"
+        title="Chỉnh sửa phong cách viết"
         open={isEditModalOpen}
         onCancel={() => {
           setIsEditModalOpen(false);
@@ -387,25 +387,25 @@ export default function WritingStyles() {
       >
         <Form form={editForm} layout="vertical" onFinish={handleUpdate} style={{ marginTop: 16 }}>
           <Form.Item
-            label="风格名称"
+            label="Tên phong cách"
             name="name"
-            rules={[{ required: true, message: '请输入风格名称' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập tên phong cách' }]}
           >
-            <Input placeholder="输入风格名称" />
+            <Input placeholder="Nhập tên phong cách" />
           </Form.Item>
           
-          <Form.Item label="风格描述" name="description">
-            <TextArea rows={2} placeholder="简要描述这个风格的特点..." />
+          <Form.Item label="Mô tả phong cách" name="description">
+            <TextArea rows={2} placeholder="Mô tả ngắn gọn đặc điểm của phong cách này..." />
           </Form.Item>
           
           <Form.Item
-            label="提示词内容"
+            label="Nội dung prompt"
             name="prompt_content"
-            rules={[{ required: true, message: '请输入提示词内容' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập nội dung prompt' }]}
           >
             <TextArea 
               rows={6} 
-              placeholder="输入风格的提示词..."
+              placeholder="Nhập prompt của phong cách..."
             />
           </Form.Item>
           
@@ -416,10 +416,10 @@ export default function WritingStyles() {
                 editForm.resetFields();
                 setEditingStyle(null);
               }}>
-                取消
+                Hủy
               </Button>
               <Button type="primary" htmlType="submit" loading={loading}>
-                保存
+                Lưu
               </Button>
             </Space>
           </Form.Item>

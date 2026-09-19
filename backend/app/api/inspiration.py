@@ -11,7 +11,7 @@ from app.api.settings import get_user_ai_service
 from app.services.prompt_service import PromptService
 from app.logger import get_logger
 
-router = APIRouter(prefix="/inspiration", tags=["灵感模式"])
+router = APIRouter(prefix="/inspiration", tags=["Chế độ cảm hứng"])
 logger = get_logger(__name__)
 
 
@@ -33,36 +33,36 @@ def validate_options_response(result: Dict[str, Any], step: str, max_retries: in
     """
     # 检查必需字段
     if "options" not in result:
-        return False, "缺少options字段"
+        return False, "Thiếu trường options"
     
     options = result.get("options", [])
     
     # 检查options是否为数组
     if not isinstance(options, list):
-        return False, "options必须是数组"
+        return False, "options phải là một mảng"
     
     # 检查数组长度
     if len(options) < 3:
-        return False, f"选项数量不足，至少需要3个，当前只有{len(options)}个"
+        return False, f"Chưa đủ số lượng lựa chọn, cần ít nhất 3 lựa chọn, hiện chỉ có {len(options)} lựa chọn"
     
     if len(options) > 10:
-        return False, f"选项数量过多，最多10个，当前有{len(options)}个"
+        return False, f"Quá nhiều lựa chọn, tối đa 10 lựa chọn, hiện có {len(options)} lựa chọn"
     
     # 检查每个选项是否为字符串且不为空
     for i, option in enumerate(options):
         if not isinstance(option, str):
-            return False, f"第{i+1}个选项不是字符串类型"
+            return False, f"Lựa chọn thứ {i+1} không phải kiểu chuỗi"
         if not option.strip():
-            return False, f"第{i+1}个选项为空"
+            return False, f"Lựa chọn thứ {i+1} bị trống"
         if len(option) > 500:
-            return False, f"第{i+1}个选项过长（超过500字符）"
+            return False, f"Lựa chọn thứ {i+1} quá dài (vượt quá 500 ký tự)"
     
     # 根据不同步骤进行特定校验
     if step == "genre":
         # 类型标签应该比较短
         for i, option in enumerate(options):
             if len(option) > 10:
-                return False, f"类型标签【{option}】过长，应该在2-10字之间"
+                return False, f"Nhãn thể loại 【{option}】 quá dài, nên có độ dài từ 2-10 ký tự"
     
     return True, ""
 
@@ -117,7 +117,7 @@ async def generate_options(
             
             if not template_keys:
                 return {
-                    "error": f"不支持的步骤: {step}",
+                    "error": f"Bước không được hỗ trợ: {step}",
                     "prompt": "",
                     "options": []
                 }
@@ -142,7 +142,7 @@ async def generate_options(
             
             # 如果是重试，在提示词中强调格式要求
             if attempt > 0:
-                system_prompt += f"\n\n⚠️ 这是第{attempt + 1}次生成，请务必严格按照JSON格式返回，确保options数组包含6个有效选项！"
+                system_prompt += f"\n\n⚠️ Đây là lần tạo thứ {attempt + 1}, hãy đảm bảo trả về đúng định dạng JSON và mảng options chứa 6 lựa chọn hợp lệ!"
             
             # 调用AI生成选项
             # 关键改进：使用递减的temperature以保持后续阶段与前文的一致性
@@ -180,9 +180,9 @@ async def generate_options(
                     else:
                         # 最后一次尝试也失败了
                         return {
-                            "prompt": f"请为【{step}】提供内容：",
-                            "options": ["让AI重新生成", "我自己输入"],
-                            "error": f"AI生成格式错误（{error_msg}），已自动重试{max_retries}次，请手动重试或自己输入"
+                            "prompt": f"Hãy cung cấp nội dung cho 【{step}】:",
+                            "options": ["Để AI tạo lại", "Tôi sẽ tự nhập"],
+                            "error": f"Lỗi định dạng tạo AI ({error_msg}), đã tự động thử lại {max_retries} lần, vui lòng thử lại thủ công hoặc tự nhập"
                         }
                 
                 logger.info(f"✅ 第{attempt + 1}次成功生成{len(result.get('options', []))}个有效选项")
@@ -197,9 +197,9 @@ async def generate_options(
                 else:
                     # 最后一次尝试也失败了
                     return {
-                        "prompt": f"请为【{step}】提供内容：",
-                        "options": ["让AI重新生成", "我自己输入"],
-                        "error": f"AI返回格式错误，已自动重试{max_retries}次，请手动重试或自己输入"
+                        "prompt": f"Hãy cung cấp nội dung cho 【{step}】:",
+                        "options": ["Để AI tạo lại", "Tôi sẽ tự nhập"],
+                        "error": f"Định dạng phản hồi AI không đúng, đã tự động thử lại {max_retries} lần; vui lòng thử lại hoặc tự nhập"
                     }
         
         except Exception as e:
@@ -210,14 +210,14 @@ async def generate_options(
             else:
                 return {
                     "error": str(e),
-                    "prompt": "生成失败，请重试",
-                    "options": ["重新生成", "我自己输入"]
+                    "prompt": "Tạo thất bại, vui lòng thử lại",
+                    "options": ["Tạo lại", "Tôi sẽ tự nhập"]
                 }
     
     # 理论上不会到这里
     return {
-        "error": "生成失败",
-        "prompt": "请重试",
+        "error": "Tạo thất bại",
+        "prompt": "Vui lòng thử lại",
         "options": []
     }
 
@@ -277,7 +277,7 @@ async def refine_options(
             
             if not template_keys:
                 return {
-                    "error": f"不支持的步骤: {step}",
+                    "error": f"Bước không được hỗ trợ: {step}",
                     "prompt": "",
                     "options": []
                 }
@@ -303,25 +303,25 @@ async def refine_options(
             # 添加反馈信息到提示词
             feedback_instruction = f"""
 
-⚠️ 用户对之前的选项不太满意，提供了以下反馈：
+⚠️ Người dùng chưa hài lòng với các lựa chọn trước đó và đưa ra phản hồi sau:
 「{feedback}」
 
-之前生成的选项：
-{chr(10).join([f"- {opt}" for opt in previous_options]) if previous_options else "（无）"}
+Các lựa chọn đã tạo trước đó:
+{chr(10).join([f"- {opt}" for opt in previous_options]) if previous_options else "(Không có)"}
 
-请根据用户的反馈调整生成策略，提供更符合用户期望的新选项。
-注意：
-1. 仔细理解用户的反馈意图
-2. 生成的新选项要明显体现用户要求的调整方向
-3. 保持与已有上下文的一致性
-4. 确保返回6个有效选项
+Hãy điều chỉnh chiến lược tạo dựa trên phản hồi của người dùng và cung cấp các lựa chọn mới phù hợp hơn với mong muốn của họ.
+Lưu ý:
+1. Hiểu kỹ ý định trong phản hồi của người dùng
+2. Các lựa chọn mới phải thể hiện rõ hướng điều chỉnh mà người dùng yêu cầu
+3. Duy trì tính nhất quán với ngữ cảnh hiện có
+4. Đảm bảo trả về 6 lựa chọn hợp lệ
 """
             
             system_prompt += feedback_instruction
             
             # 如果是重试，强调格式要求
             if attempt > 0:
-                system_prompt += f"\n\n⚠️ 这是第{attempt + 1}次生成，请务必严格按照JSON格式返回！"
+                system_prompt += f"\n\n⚠️ Đây là lần tạo thứ {attempt + 1}, hãy đảm bảo trả về đúng định dạng JSON!"
             
             # 调用AI生成选项
             temperature = TEMPERATURE_SETTINGS.get(step, 0.7)
@@ -356,9 +356,9 @@ async def refine_options(
                         continue
                     else:
                         return {
-                            "prompt": f"请为【{step}】提供内容：",
-                            "options": ["让AI重新生成", "我自己输入"],
-                            "error": f"AI生成格式错误（{error_msg}），已自动重试{max_retries}次"
+                            "prompt": f"Hãy cung cấp nội dung cho 【{step}】:",
+                            "options": ["Để AI tạo lại", "Tôi sẽ tự nhập"],
+                            "error": f"Lỗi định dạng tạo AI ({error_msg}), đã tự động thử lại {max_retries} lần"
                         }
                 
                 logger.info(f"✅ 第{attempt + 1}次根据反馈成功生成{len(result.get('options', []))}个有效选项")
@@ -372,9 +372,9 @@ async def refine_options(
                     continue
                 else:
                     return {
-                        "prompt": f"请为【{step}】提供内容：",
-                        "options": ["让AI重新生成", "我自己输入"],
-                        "error": f"AI返回格式错误，已自动重试{max_retries}次"
+                        "prompt": f"Hãy cung cấp nội dung cho 【{step}】:",
+                        "options": ["Để AI tạo lại", "Tôi sẽ tự nhập"],
+                        "error": f"Lỗi định dạng phản hồi AI, đã tự động thử lại {max_retries} lần"
                     }
         
         except Exception as e:
@@ -385,13 +385,13 @@ async def refine_options(
             else:
                 return {
                     "error": str(e),
-                    "prompt": "生成失败，请重试",
-                    "options": ["重新生成", "我自己输入"]
+                    "prompt": "Tạo thất bại, vui lòng thử lại",
+                    "options": ["Tạo lại", "Tôi sẽ tự nhập"]
                 }
     
     return {
-        "error": "生成失败",
-        "prompt": "请重试",
+        "error": "Tạo thất bại",
+        "prompt": "Vui lòng thử lại",
         "options": []
     }
 
@@ -431,15 +431,15 @@ async def quick_generate(
         # 构建补全提示词
         existing_info = []
         if data.get("title"):
-            existing_info.append(f"- 书名：{data['title']}")
+            existing_info.append(f"- Tên sách: {data['title']}")
         if data.get("description"):
-            existing_info.append(f"- 简介：{data['description']}")
+            existing_info.append(f"- Giới thiệu: {data['description']}")
         if data.get("theme"):
-            existing_info.append(f"- 主题：{data['theme']}")
+            existing_info.append(f"- Chủ đề: {data['theme']}")
         if data.get("genre"):
-            existing_info.append(f"- 类型：{', '.join(data['genre'])}")
+            existing_info.append(f"- Thể loại: {', '.join(data['genre'])}")
         
-        existing_text = "\n".join(existing_info) if existing_info else "暂无信息"
+        existing_text = "\n".join(existing_info) if existing_info else "Chưa có thông tin"
         
         # 获取自定义提示词模板
         system_template = await PromptService.get_template("INSPIRATION_QUICK_COMPLETE", user_id, db)
@@ -447,7 +447,7 @@ async def quick_generate(
         # 格式化提示词
         prompts = {
             "system": PromptService.format_prompt(system_template, existing=existing_text),
-            "user": "请补全小说信息"
+            "user": "Hãy bổ sung thông tin tiểu thuyết"
         }
         
         # 调用AI - 流式生成并累积文本
@@ -482,7 +482,7 @@ async def quick_generate(
             
         except json.JSONDecodeError as e:
             logger.error(f"JSON解析失败: {e}")
-            raise Exception("AI返回格式错误，请重试")
+            raise Exception("Định dạng phản hồi của AI không đúng, vui lòng thử lại")
     
     except Exception as e:
         logger.error(f"智能补全失败: {e}", exc_info=True)

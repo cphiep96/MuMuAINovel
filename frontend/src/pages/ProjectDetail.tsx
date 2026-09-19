@@ -133,7 +133,7 @@ export default function ProjectDetail() {
           refreshChapters(id),
         ]);
       } catch (error) {
-        console.error('加载项目数据失败:', error);
+        console.error('Tải dữ liệu dự án thất bại:', error);
       } finally {
         setLoading(false);
       }
@@ -155,82 +155,82 @@ export default function ProjectDetail() {
     {
       key: 'sponsor',
       icon: <HeartOutlined />,
-      label: <Link to={`/project/${projectId}/sponsor`}>赞助支持</Link>,
+      label: <Link to={`/project/${projectId}/sponsor`}>Ủng hộ</Link>,
     },
     {
       type: 'group' as const,
-      label: '创作管理',
+      label: 'Quản lý sáng tác',
       children: [
         {
           key: 'world-setting',
           icon: <GlobalOutlined />,
-          label: <Link to={`/project/${projectId}/world-setting`}>世界设定</Link>,
+          label: <Link to={`/project/${projectId}/world-setting`}>Thiết lập thế giới</Link>,
         },
         {
           key: 'characters',
           icon: <TeamOutlined />,
-          label: <Link to={`/project/${projectId}/characters`}>角色管理</Link>,
+          label: <Link to={`/project/${projectId}/characters`}>Quản lý nhân vật</Link>,
         },
         {
           key: 'organizations',
           icon: <BankOutlined />,
-          label: <Link to={`/project/${projectId}/organizations`}>组织管理</Link>,
+          label: <Link to={`/project/${projectId}/organizations`}>Quản lý tổ chức</Link>,
         },
         {
           key: 'careers',
           icon: <TrophyOutlined />,
-          label: <Link to={`/project/${projectId}/careers`}>职业管理</Link>,
+          label: <Link to={`/project/${projectId}/careers`}>Quản lý nghề nghiệp</Link>,
         },
         {
           key: 'relationships',
           icon: <ApartmentOutlined />,
-          label: <Link to={`/project/${projectId}/relationships`}>关系管理</Link>,
+          label: <Link to={`/project/${projectId}/relationships`}>Quản lý quan hệ</Link>,
         },
         {
           key: 'outline',
           icon: <FileTextOutlined />,
-          label: <Link to={`/project/${projectId}/outline`}>大纲管理</Link>,
+          label: <Link to={`/project/${projectId}/outline`}>Quản lý dàn ý</Link>,
         },
         {
           key: 'chapters',
           icon: <BookOutlined />,
-          label: <Link to={`/project/${projectId}/chapters`}>章节管理</Link>,
+          label: <Link to={`/project/${projectId}/chapters`}>Quản lý chương</Link>,
         },
         {
           key: 'chapter-analysis',
           icon: <FundOutlined />,
-          label: <Link to={`/project/${projectId}/chapter-analysis`}>剧情分析</Link>,
+          label: <Link to={`/project/${projectId}/chapter-analysis`}>Phân tích cốt truyện</Link>,
         },
         {
           key: 'foreshadows',
           icon: <BulbOutlined />,
-          label: <Link to={`/project/${projectId}/foreshadows`}>伏笔管理</Link>,
+          label: <Link to={`/project/${projectId}/foreshadows`}>Quản lý phục bút</Link>,
         },
       ],
     },
     {
       type: 'group' as const,
-      label: '创作工具',
+      label: 'Công cụ sáng tác',
       children: [
         {
           key: 'writing-styles',
           icon: <EditOutlined />,
-          label: <Link to={`/project/${projectId}/writing-styles`}>写作风格</Link>,
+          label: <Link to={`/project/${projectId}/writing-styles`}>Phong cách viết</Link>,
         },
         {
           key: 'prompt-workshop',
           icon: <CloudOutlined />,
-          label: <Link to={`/project/${projectId}/prompt-workshop`}>提示词工坊</Link>,
+          label: <Link to={`/project/${projectId}/prompt-workshop`}>Xưởng prompt</Link>,
         },
         {
           key: 'skill-chat',
           icon: <ThunderboltOutlined />,
-          label: <Link to={`/project/${projectId}/skill-chat`}>Skill 工具箱</Link>,
+          label: <Link to={`/project/${projectId}/skill-chat`}>Hộp công cụ Skill</Link>,
         },
         {
           key: 'skill-manage',
           icon: <SettingOutlined />,
-          label: <Link to={`/project/${projectId}/skill-manage`}>Skill 管理</Link>,
+          label: <Link to={`/project/${projectId}/skill-manage`}>Quản lý Skill</Link>,
         },
       ],
     },
@@ -240,72 +240,72 @@ export default function ProjectDetail() {
     {
       key: 'sponsor',
       icon: <HeartOutlined />,
-      label: <Link to={`/project/${projectId}/sponsor`}>赞助支持</Link>,
+      label: <Link to={`/project/${projectId}/sponsor`}>Ủng hộ</Link>,
     },
     {
       key: 'world-setting',
       icon: <GlobalOutlined />,
-      label: <Link to={`/project/${projectId}/world-setting`}>世界设定</Link>,
+      label: <Link to={`/project/${projectId}/world-setting`}>Thiết lập thế giới</Link>,
     },
     {
       key: 'careers',
       icon: <TrophyOutlined />,
-      label: <Link to={`/project/${projectId}/careers`}>职业管理</Link>,
+      label: <Link to={`/project/${projectId}/careers`}>Quản lý nghề nghiệp</Link>,
     },
     {
       key: 'characters',
       icon: <TeamOutlined />,
-      label: <Link to={`/project/${projectId}/characters`}>角色管理</Link>,
+      label: <Link to={`/project/${projectId}/characters`}>Quản lý nhân vật</Link>,
     },
     {
       key: 'relationships',
       icon: <ApartmentOutlined />,
-      label: <Link to={`/project/${projectId}/relationships`}>关系管理</Link>,
+      label: <Link to={`/project/${projectId}/relationships`}>Quản lý quan hệ</Link>,
     },
     {
       key: 'organizations',
       icon: <BankOutlined />,
-      label: <Link to={`/project/${projectId}/organizations`}>组织管理</Link>,
+      label: <Link to={`/project/${projectId}/organizations`}>Quản lý tổ chức</Link>,
     },
     {
       key: 'outline',
       icon: <FileTextOutlined />,
-      label: <Link to={`/project/${projectId}/outline`}>大纲管理</Link>,
+      label: <Link to={`/project/${projectId}/outline`}>Quản lý dàn ý</Link>,
     },
     {
       key: 'chapters',
       icon: <BookOutlined />,
-      label: <Link to={`/project/${projectId}/chapters`}>章节管理</Link>,
+      label: <Link to={`/project/${projectId}/chapters`}>Quản lý chương</Link>,
     },
     {
       key: 'chapter-analysis',
       icon: <FundOutlined />,
-      label: <Link to={`/project/${projectId}/chapter-analysis`}>剧情分析</Link>,
+      label: <Link to={`/project/${projectId}/chapter-analysis`}>Phân tích cốt truyện</Link>,
     },
     {
       key: 'foreshadows',
       icon: <BulbOutlined />,
-      label: <Link to={`/project/${projectId}/foreshadows`}>伏笔管理</Link>,
+      label: <Link to={`/project/${projectId}/foreshadows`}>Quản lý phục bút</Link>,
     },
     {
       key: 'writing-styles',
       icon: <EditOutlined />,
-      label: <Link to={`/project/${projectId}/writing-styles`}>写作风格</Link>,
+      label: <Link to={`/project/${projectId}/writing-styles`}>Phong cách viết</Link>,
     },
     {
       key: 'prompt-workshop',
       icon: <CloudOutlined />,
-      label: <Link to={`/project/${projectId}/prompt-workshop`}>提示词工坊</Link>,
+      label: <Link to={`/project/${projectId}/prompt-workshop`}>Xưởng prompt</Link>,
     },
     {
       key: 'skill-chat',
       icon: <ThunderboltOutlined />,
-      label: <Link to={`/project/${projectId}/skill-chat`}>Skill 工具箱</Link>,
+      label: <Link to={`/project/${projectId}/skill-chat`}>Hộp công cụ Skill</Link>,
     },
     {
       key: 'skill-manage',
       icon: <SettingOutlined />,
-      label: <Link to={`/project/${projectId}/skill-manage`}>Skill 管理</Link>,
+      label: <Link to={`/project/${projectId}/skill-manage`}>Quản lý Skill</Link>,
     },
   ];
 
@@ -327,7 +327,7 @@ export default function ProjectDetail() {
     if (path.includes('/skill-manage')) return 'skill-manage';
     if (path.includes('/sponsor')) return 'sponsor';
     // if (path.includes('/polish')) return 'polish';
-    return 'sponsor'; // 默认选中赞助支持
+    return 'sponsor'; // 默认选中Ủng hộ
   }, [location.pathname]);
 
   if (loading || !currentProject) {
@@ -417,7 +417,7 @@ export default function ProjectDetail() {
           <Space size={2} style={{ zIndex: 1 }}>
             <Button
               type="text"
-              icon={<img src="/logo.svg" alt="木木创作助手" style={{ width: 20, height: 20, display: 'block' }} />}
+              icon={<img src="/logo.svg" alt="Trợ lý sáng tác MuMu" style={{ width: 20, height: 20, display: 'block' }} />}
               onClick={() => setAgentDrawerVisible(true)}
               style={{ color: token.colorWhite, width: 36, height: 36 }}
             />
@@ -432,7 +432,7 @@ export default function ProjectDetail() {
                 padding: '0 6px',
               }}
             >
-              主页
+              Trang chủ
             </Button>
           </Space>
         )}
@@ -441,10 +441,10 @@ export default function ProjectDetail() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', zIndex: 1 }}>
             <div style={{ display: 'flex', gap: '16px' }}>
               {[
-                { label: '大纲', value: outlines.length, unit: '条' },
-                { label: '角色', value: characters.length, unit: '个' },
-                { label: '章节', value: chapters.length, unit: '章' },
-                { label: '已写', value: currentProject.current_words, unit: '字' },
+                { label: 'Dàn ý', value: outlines.length, unit: ' mục' },
+                { label: 'Nhân vật', value: characters.length, unit: ' cái' },
+                { label: 'Chương', value: chapters.length, unit: 'Chương' },
+                { label: 'Đã viết', value: currentProject.current_words, unit: 'chữ' },
               ].map((item, index) => (
                 <div
                   key={index}
@@ -527,8 +527,8 @@ export default function ProjectDetail() {
             {renderMenu()}
             <div style={{ padding: 16, borderTop: `1px solid ${token.colorBorderSecondary}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: token.colorTextTertiary, marginBottom: 8 }}>
-                <span>主题模式</span>
-                <span>{resolvedMode === 'dark' ? '深色' : '浅色'}</span>
+                <span>Chế độ giao diện</span>
+                <span>{resolvedMode === 'dark' ? 'Tối' : 'Sáng'}</span>
               </div>
               <ThemeSwitch block />
             </div>
@@ -641,7 +641,7 @@ export default function ProjectDetail() {
                       type="text"
                       icon={collapsedThemeIcon}
                       onClick={cycleThemeMode}
-                      title={`主题模式：${mode === 'light' ? '浅色' : mode === 'dark' ? '深色' : '跟随系统'}（点击切换）`}
+                      title={`Chế độ giao diện: ${mode === 'light' ? 'Sáng' : mode === 'dark' ? 'Tối' : 'Theo hệ thống'} (nhấn để đổi)`}
                       style={{
                         width: 40,
                         height: 40,
@@ -670,8 +670,8 @@ export default function ProjectDetail() {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: token.colorTextTertiary }}>
-                      <span>主题模式</span>
-                      <span>{resolvedMode === 'dark' ? '深色' : '浅色'}</span>
+                      <span>Chế độ giao diện</span>
+                      <span>{resolvedMode === 'dark' ? 'Tối' : 'Sáng'}</span>
                     </div>
                     <ThemeSwitch block />
                     <Button
@@ -686,7 +686,7 @@ export default function ProjectDetail() {
                         padding: '0 12px'
                       }}
                     >
-                      返回主页
+                      Về trang chủ
                     </Button>
                   </div>
                 )}

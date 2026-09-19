@@ -10,11 +10,11 @@ from app.services.prompt_service import prompt_service, PromptService
 from app.logger import get_logger
 from app.api.settings import get_user_ai_service
 
-router = APIRouter(prefix="/polish", tags=["AI去味"])
+router = APIRouter(prefix="/polish", tags=["Khử dấu vết AI"])
 logger = get_logger(__name__)
 
 
-@router.post("", response_model=PolishResponse, summary="AI去味")
+@router.post("", response_model=PolishResponse, summary="Khử dấu vết AI")
 async def polish_text(
     request: PolishRequest,
     http_request: Request,
@@ -66,7 +66,7 @@ async def polish_text(
             history = GenerationHistory(
                 project_id=request.project_id,
                 generation_type="polish",
-                prompt=f"原文: {request.original_text[:100]}...",
+                prompt=f"Nguyên văn: {request.original_text[:100]}...",
                 result=polished_text,
                 provider=request.provider or "default",
                 model=request.model or "default"
@@ -83,10 +83,10 @@ async def polish_text(
         
     except Exception as e:
         logger.error(f"AI去味失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"AI去味失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Khử dấu vết AI thất bại: {str(e)}")
 
 
-@router.post("/batch", summary="批量AI去味")
+@router.post("/batch", summary="Khử dấu vết AI hàng loạt")
 async def polish_batch(
     texts: list[str],
     project_id: int = None,
@@ -138,4 +138,4 @@ async def polish_batch(
         
     except Exception as e:
         logger.error(f"批量AI去味失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"批量AI去味失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Khử dấu vết AI hàng loạt thất bại: {str(e)}")

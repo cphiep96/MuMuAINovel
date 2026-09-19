@@ -46,16 +46,16 @@ class AnnouncementClient:
                 return response.json()
         except httpx.ConnectError as e:
             logger.error(f"无法连接到云端公告服务: {self.base_url}, 错误: {e}")
-            raise AnnouncementClientError("无法连接到云端公告服务，请检查网络连接")
+            raise AnnouncementClientError("Không thể kết nối dịch vụ thông báo đám mây, vui lòng kiểm tra mạng")
         except httpx.TimeoutException:
             logger.error(f"云端公告服务请求超时: {url}")
-            raise AnnouncementClientError("云端公告服务请求超时，请稍后重试")
+            raise AnnouncementClientError("Yêu cầu dịch vụ thông báo đám mây hết thời gian, vui lòng thử lại sau")
         except httpx.HTTPStatusError as e:
             logger.error(f"云端公告服务返回错误: {e.response.status_code}, response={safe_preview(e.response.text, 500)}")
-            raise AnnouncementClientError(f"云端公告服务错误: {e.response.status_code}")
+            raise AnnouncementClientError(f"Lỗi dịch vụ thông báo đám mây: {e.response.status_code}")
         except Exception as e:
             logger.error(f"请求云端公告服务异常: {e}")
-            raise AnnouncementClientError(f"请求云端公告服务失败: {str(e)}")
+            raise AnnouncementClientError(f"Yêu cầu dịch vụ thông báo đám mây thất bại: {str(e)}")
 
     async def check_connection(self) -> bool:
         """检查云端连接状态"""

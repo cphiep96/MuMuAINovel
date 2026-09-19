@@ -23,32 +23,32 @@ class WritingStyleManager:
             追加输出指令后的提示词
         """
         # 写作风格已在 system_prompt 中注入，此处只追加输出格式指令
-        return f"{base_prompt}\n\n请直接输出章节正文内容，不要包含章节标题和其他说明文字。"
+        return f"{base_prompt}\n\nHãy xuất trực tiếp nội dung chính văn chương, không kèm tiêu đề chương hay chữ giải thích khác."
 
 
 class PromptService:
     """提示词模板管理"""
 
-    NOVEL_COVER_PROMPT_TEMPLATE = """创作一幅高质量小说封面插图，适用于竖版书籍封面。
+    NOVEL_COVER_PROMPT_TEMPLATE = """Tạo một minh họa bìa tiểu thuyết chất lượng cao, phù hợp bìa sách khổ dọc.
 
-小说标题是：“{title}”。
-类型为 {genre}。核心主题是 {theme}。故事摘要如下：{description}
+Tiêu đề tiểu thuyết là: “{title}”.
+Thể loại: {genre}. Chủ đề cốt lõi: {theme}. Tóm tắt câu chuyện: {description}
 
-画面应具有电影感、精致、富有氛围和情感表现力，并具备清晰的视觉焦点和强烈的象征性意象。请优先展现符合小说类型的视觉叙事和情绪，而不是死板地描绘具体场景。
+Hình ảnh cần có cảm giác điện ảnh, tinh tế, giàu bầu không khí và biểu cảm cảm xúc, với điểm nhấn thị giác rõ ràng cùng hình tượng tượng trưng mạnh. Hãy ưu tiên kể chuyện thị giác và cảm xúc phù hợp thể loại tiểu thuyết, thay vì miêu tả máy móc một cảnh cụ thể.
 
-这必须看起来像一幅专业的网络小说或实体出版物风格的封面。
+Kết quả phải trông như bìa chuyên nghiệp kiểu tiểu thuyết mạng hoặc ấn bản giấy.
 
-硬性要求：
-- 必须在画面醒目位置包含小说标题文字：“{title}”，文字排版需极具艺术感，并与小说的 {genre} 类型风格完美融合。
-- 适用于标准小说封面的竖版构图（2:3 比例）。
-- 画面中只能出现标题文字，绝不能出现作者名字、副标题或其他无关的随机字母。
-- 无标志 (Logo)。
-- 无水印。
-- 无边框。
-- 无 UI 元素。
-- 无样机展示效果 (Mockup)。
+Yêu cầu cứng:
+- Phải có chữ tiêu đề tiểu thuyết “{title}” ở vị trí nổi bật, sắp chữ đầy tính nghệ thuật và hòa quyện với phong cách thể loại {genre}.
+- Bố cục dọc chuẩn bìa tiểu thuyết (tỉ lệ 2:3).
+- Trong khung hình chỉ được có chữ tiêu đề; tuyệt đối không có tên tác giả, phụ đề hay chữ cái ngẫu nhiên không liên quan.
+- Không logo.
+- Không watermark.
+- Không khung viền.
+- Không phần tử UI.
+- Không hiệu ứng mockup.
 
-最终图像必须是一张完整、专业的书籍封面艺术作品，背景插画与标题排版需相得益彰。"""
+Ảnh cuối phải là một tác phẩm bìa sách hoàn chỉnh, chuyên nghiệp; minh họa nền và chữ tiêu đề phải bổ trợ lẫn nhau."""
 
     @classmethod
     async def build_novel_cover_prompt(
@@ -58,10 +58,10 @@ class PromptService:
         db = None,
     ) -> str:
         """基于项目基础信息构建小说封面提示词，支持用户自定义模板"""
-        title = (getattr(project, "title", "") or "未命名小说").strip()
-        genre = (getattr(project, "genre", "") or "未指定类型").strip()
-        theme = (getattr(project, "theme", "") or "未指定主题").strip()
-        description = (getattr(project, "description", "") or "无额外简介").strip()
+        title = (getattr(project, "title", "") or "Tiểu thuyết chưa đặt tên").strip()
+        genre = (getattr(project, "genre", "") or "Chưa chỉ định thể loại").strip()
+        theme = (getattr(project, "theme", "") or "Chưa chỉ định chủ đề").strip()
+        description = (getattr(project, "description", "") or "Không có mô tả thêm").strip()
 
         compact_description = description[:300]
         template = await cls.get_template_with_fallback(
@@ -80,283 +80,289 @@ class PromptService:
     
     # 世界构建提示词 V2（RTCO框架）
     WORLD_BUILDING = """<system>
-你是资深的世界观设计师，擅长为{genre}类型的小说构建真实、自洽的世界观。
+Bạn là nhà thiết kế bối cảnh thế giới dày dạn, giỏi dựng bối cảnh chân thực, tự nhất quán cho tiểu thuyết thể loại {genre}.
 </system>
 
-<task>
-【设计任务】
-为小说《{title}》构建完整的世界观设定。
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
 
-【核心要求】
-- 主题契合：世界观必须支撑主题"{theme}"
-- 简介匹配：为简介中的情节提供合理背景
-- 类型适配：符合{genre}类型的特征
-- 规模适当：根据题材选择合适的设定尺度
+<task>
+[Nhiệm vụ thiết kế]
+Dựng thiết lập bối cảnh thế giới hoàn chỉnh cho tiểu thuyết «{title}».
+
+[Yêu cầu cốt lõi]
+- Khớp chủ đề: bối cảnh thế giới phải chống đỡ chủ đề "{theme}"
+- Khớp mô tả: cung cấp nền hợp lý cho tình tiết trong phần giới thiệu
+- Khớp thể loại: phù hợp đặc trưng thể loại {genre}
+- Quy mô phù hợp: chọn mức thiết lập thích hợp theo đề tài
 </task>
 
 <input priority="P0">
-【项目信息】
-书名：{title}
-类型：{genre}
-主题：{theme}
-简介：{description}
+[Thông tin dự án]
+Tên sách: {title}
+Thể loại: {genre}
+Chủ đề: {theme}
+Mô tả: {description}
 </input>
 
 <guidelines priority="P1">
-【类型指导原则】
+[Nguyên tắc hướng dẫn theo thể loại]
 
-**现代都市/言情/青春**：
-- 时间：当代社会（2020年代）或近未来（2030-2050年）
-- 避免：大崩解、纪元、末日等宏大概念
-- 重点：具体城市环境、职场文化、社会现状
+**Đô thị hiện đại / ngôn tình / thanh xuân**:
+- Thời gian: xã hội đương đại (thập niên 2020) hoặc cận tương lai (2030-2050)
+- Tránh: khái niệm đồ sộ kiểu đại sụp đổ, kỷ nguyên, tận thế
+- Trọng tâm: môi trường đô thị cụ thể, văn hóa công sở, hiện trạng xã hội
 
-**历史/古代**：
-- 时间：明确的历史朝代或虚构古代
-- 重点：时代特征、礼教制度、阶级分化
+**Lịch sử / cổ đại**:
+- Thời gian: triều đại lịch sử rõ ràng hoặc cổ đại hư cấu
+- Trọng tâm: đặc trưng thời đại, lễ giáo, phân hóa giai cấp
 
-**玄幻/仙侠/修真**：
-- 时间：修炼文明的特定时期
-- 重点：修炼规则、灵气环境、门派势力
+**Huyền huyễn / tiên hiệp / tu chân**:
+- Thời gian: giai đoạn cụ thể của nền văn minh tu luyện
+- Trọng tâm: quy tắc tu luyện, môi trường linh khí, thế lực môn phái
 
-**科幻**：
-- 时间：未来明确时期（如2150年、星际时代初期）
-- 重点：科技水平、社会形态、文明转折
+**Khoa huyễn**:
+- Thời gian: giai đoạn tương lai rõ ràng (vd: năm 2150, sơ kỳ kỷ nguyên liên sao)
+- Trọng tâm: trình độ khoa học kỹ thuật, hình thái xã hội, bước ngoặt văn minh
 
-**奇幻/魔法**：
-- 时间：魔法文明的特定阶段
-- 重点：魔法体系、种族关系、大陆格局
+**Kỳ ảo / phép thuật**:
+- Thời gian: giai đoạn cụ thể của nền văn minh phép thuật
+- Trọng tâm: hệ thống phép thuật, quan hệ chủng tộc, cục diện lục địa
 
-**设定尺度控制**：
-- 现代都市：聚焦某个城市、行业、阶层
-- 校园青春：学校环境、学生生活、成长困境
-- 职场言情：公司文化、行业特点、职业压力
-- 史诗题材：才需要宏大的世界观架构
+**Kiểm soát quy mô thiết lập**:
+- Đô thị hiện đại: tập trung một thành phố, ngành nghề, tầng lớp
+- Thanh xuân học đường: môi trường trường học, đời sống học sinh, khó khăn trưởng thành
+- Ngôn tình công sở: văn hóa công ty, đặc thù ngành, áp lực nghề nghiệp
+- Đề tài sử thi: mới cần kiến trúc bối cảnh thế giới đồ sộ
 </guidelines>
 
 <output priority="P0">
-【输出格式】
-生成包含以下四个字段的JSON对象，每个字段300-500字：
+[Định dạng đầu ra]
+Tạo một object JSON gồm bốn trường sau, mỗi trường 300-500 chữ:
 
-1. **time_period**（时间背景与社会状态）
-   - 根据类型设定合适规模的时间背景
-   - 现代题材：具体社会特征（如：2024年北京，互联网行业高速发展）
-   - 历史题材：明确朝代和阶段（如：明朝嘉靖年间，海禁政策下的沿海）
-   - 幻想题材：文明发展阶段，具体而非空泛
-   - 阐明时代核心矛盾和社会焦虑
+1. **time_period**(Bối cảnh thời gian và trạng thái xã hội)
+   - Thiết lập bối cảnh thời gian quy mô phù hợp theo thể loại
+   - Đề tài hiện đại: đặc trưng xã hội cụ thể (vd: Bắc Kinh 2024, ngành internet phát triển nhanh)
+   - Đề tài lịch sử: triều đại và giai đoạn rõ ràng (vd: niên hiệu Gia Tĩnh nhà Minh, duyên hải dưới chính sách hải cấm)
+   - Đề tài kỳ ảo: giai đoạn phát triển văn minh, cụ thể chứ không rỗng
+   - Làm rõ mâu thuẫn cốt lõi thời đại và lo âu xã hội
 
-2. **location**（空间环境与地理特征）
-   - 故事主要发生的空间环境
-   - 现代题材：具体城市名或类型
-   - 环境如何影响居民生存方式
-   - 标志性场景描述
+2. **location**(Môi trường không gian và đặc trưng địa lý)
+   - Môi trường không gian nơi câu chuyện chủ yếu diễn ra
+   - Đề tài hiện đại: tên thành phố cụ thể hoặc loại thành phố
+   - Môi trường ảnh hưởng cách sinh tồn của cư dân thế nào
+   - Mô tả cảnh biểu tượng
 
-3. **atmosphere**（感官体验与情感基调）
-   - 身临其境的感官细节（视觉、听觉、嗅觉）
-   - 美学风格和色彩基调
-   - 居民心理状态和情绪氛围
-   - 与主题情感呼应
+3. **atmosphere**(Trải nghiệm giác quan và gam cảm xúc)
+   - Chi tiết giác quan khiến người đọc như đang ở đó (thị giác, thính giác, khứu giác)
+   - Phong cách thẩm mỹ và gam màu
+   - Trạng thái tâm lý cư dân và bầu không khí cảm xúc
+   - Họa âm với cảm xúc chủ đề
 
-4. **rules**（世界规则与社会结构）
-   - 世界运行的核心法则
-   - 现代题材：社会规则、行业潜规则、人际法则
-   - 幻想题材:力量体系、社会等级、资源分配
-   - 权力结构和利益格局
-   - 社会禁忌及后果
+4. **rules**(Quy tắc thế giới và cấu trúc xã hội)
+   - Quy tắc cốt lõi vận hành thế giới
+   - Đề tài hiện đại: quy tắc xã hội, luật ngầm ngành, quy tắc quan hệ người
+   - Đề tài kỳ ảo: hệ lực lượng, đẳng cấp xã hội, phân bổ tài nguyên
+   - Cấu trúc quyền lực và cục diện lợi ích
+   - Điều cấm xã hội và hậu quả
 
-【格式规范】
-- 纯JSON输出，以{{开始、}}结束
-- 无markdown标记、代码块符号
-- 字段值为完整段落文本
-- 不使用特殊符号包裹内容
-- 提供充实原创内容
+[Quy chuẩn định dạng]
+- Xuất JSON thuần, bắt đầu bằng {{ và kết thúc bằng }}
+- Không có đánh dấu markdown hay ký hiệu khối mã
+- Giá trị trường là đoạn văn đầy đủ
+- Không bọc nội dung bằng ký hiệu đặc biệt
+- Cung cấp nội dung gốc phong phú
 
-【JSON示例】
+[Ví dụ JSON]
 {{
-  "time_period": "时间背景与社会状态的详细描述（300-500字）",
-  "location": "空间环境与地理特征的详细描述（300-500字）",
-  "atmosphere": "感官体验与情感基调的详细描述（300-500字）",
-  "rules": "世界规则与社会结构的详细描述（300-500字）"
+  "time_period": "Mô tả chi tiết bối cảnh thời gian và trạng thái xã hội (300-500 chữ)",
+  "location": "Mô tả chi tiết môi trường không gian và đặc trưng địa lý (300-500 chữ)",
+  "atmosphere": "Mô tả chi tiết trải nghiệm giác quan và gam cảm xúc (300-500 chữ)",
+  "rules": "Mô tả chi tiết quy tắc thế giới và cấu trúc xã hội (300-500 chữ)"
 }}
 </output>
 
 <constraints>
-【必须遵守】
-✅ 简介契合：为简介情节提供合理背景
-✅ 类型适配：符合{genre}的特征
-✅ 主题贴合：支撑主题"{theme}"
-✅ 具象化：用具体细节而非空洞概念
-✅ 逻辑自洽：所有设定相互支撑
+[Bắt buộc tuân thủ]
+✅ Khớp mô tả: cung cấp nền hợp lý cho tình tiết phần giới thiệu
+✅ Khớp thể loại: phù hợp đặc trưng của {genre}
+✅ Bám chủ đề: chống đỡ chủ đề "{theme}"
+✅ Cụ thể hóa: dùng chi tiết cụ thể thay vì khái niệm rỗng
+✅ Tự nhất quán logic: mọi thiết lập nâng đỡ lẫn nhau
 
-【禁止事项】
-❌ 生成与类型不匹配的设定
-❌ 为小规模题材使用宏大世界观
-❌ 使用模板化、空泛的表达
-❌ 输出markdown或代码块标记
+[Điều cấm]
+❌ Tạo thiết lập không khớp thể loại
+❌ Dùng bối cảnh thế giới đồ sộ cho đề tài quy mô nhỏ
+❌ Dùng diễn đạt khuôn mẫu, rỗng
+❌ Xuất markdown hoặc đánh dấu khối mã
 </constraints>"""
 
     # 批量角色生成提示词 V2（RTCO框架）
     CHARACTERS_BATCH_GENERATION = """<system>
-你是专业的角色设定师，擅长为{genre}类型的小说创建立体丰满的角色。
+Bạn là chuyên gia thiết lập nhân vật, giỏi tạo nhân vật đầy đặn, đa chiều cho tiểu thuyết thể loại {genre}.
 </system>
 
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
+
 <task>
-【生成任务】
-生成{count}个角色和组织实体。
+[Nhiệm vụ tạo]
+Tạo {count} thực thể nhân vật và tổ chức.
 
-【数量要求 - 严格遵守】
-数组中必须精确包含{count}个对象，不多不少。
+[Yêu cầu số lượng - tuân thủ nghiêm]
+Mảng phải chứa đúng {count} object, không hơn không kém.
 
-【实体类型分配】
-- 至少1个主角（protagonist）
-- 多个配角（supporting）
-- 可包含反派（antagonist）
-- 可包含1-2个高影响力组织（power_level: 70-95）
+[Phân bổ loại thực thể]
+- Ít nhất 1 nhân vật chính (protagonist)
+- Nhiều nhân vật phụ (supporting)
+- Có thể gồm phản diện (antagonist)
+- Có thể gồm 1-2 tổ chức ảnh hưởng cao (power_level: 70-95)
 </task>
 
 <worldview priority="P0">
-【世界观信息】
-时间背景：{time_period}
-地理位置：{location}
-氛围基调：{atmosphere}
-世界规则：{rules}
+[Thông tin bối cảnh thế giới]
+Bối cảnh thời gian: {time_period}
+Vị trí địa lý: {location}
+Gam bầu không khí: {atmosphere}
+Quy tắc thế giới: {rules}
 
-主题：{theme}
-类型：{genre}
+Chủ đề: {theme}
+Thể loại: {genre}
 </worldview>
 
 <requirements priority="P1">
-【特殊要求】
+[Yêu cầu đặc biệt]
 {requirements}
 </requirements>
 
 <output priority="P0">
-【输出格式】
-返回纯JSON数组，每个对象包含：
+[Định dạng đầu ra]
+Trả về mảng JSON thuần, mỗi object gồm:
 
-**角色对象**：
+**Object nhân vật**:
 {{
-  "name": "角色姓名",
+  "name": "Họ tên nhân vật",
   "age": 25,
-  "gender": "男/女/其他",
+  "gender": "nam/nữ/khác",
   "is_organization": false,
   "role_type": "protagonist/supporting/antagonist",
-  "personality": "性格特点（100-200字）：核心性格、优缺点、特殊习惯",
-  "background": "背景故事（100-200字）：家庭背景、成长经历、重要转折",
-  "appearance": "外貌描述（50-100字）：身高、体型、面容、着装风格",
-  "traits": ["特长1", "特长2", "特长3"],
+  "personality": "Đặc điểm tính cách (100-200 chữ): tính cách cốt lõi, ưu/nhược, thói quen đặc biệt",
+  "background": "Câu chuyện nền (100-200 chữ): gia cảnh, trải nghiệm trưởng thành, bước ngoặt quan trọng",
+  "appearance": "Mô tả ngoại hình (50-100 chữ): chiều cao, vóc dáng, khuôn mặt, phong cách ăn mặc",
+  "traits": ["Đặc điểm 1", "Đặc điểm 2", "Đặc điểm 3"],
   "relationships_array": [
     {{
-      "target_character_name": "已生成的角色名称",
-      "relationship_type": "关系类型",
+      "target_character_name": "Tên nhân vật đã tạo",
+      "relationship_type": "Loại quan hệ",
       "intimacy_level": 75,
-      "description": "关系描述"
+      "description": "Mô tả quan hệ"
     }}
   ],
   "organization_memberships": [
     {{
-      "organization_name": "已生成的组织名称",
-      "position": "职位",
+      "organization_name": "Tên tổ chức đã tạo",
+      "position": "Chức vụ",
       "rank": 5,
       "loyalty": 80
     }}
   ]
 }}
 
-**组织对象**：
+**Object tổ chức**:
 {{
-  "name": "组织名称",
+  "name": "Tên tổ chức",
   "is_organization": true,
   "role_type": "supporting",
-  "personality": "组织特性（100-200字）：运作方式、核心理念、行事风格",
-  "background": "组织背景（100-200字）：建立历史、发展历程、重要事件",
-  "appearance": "外在表现（50-100字）：总部位置、标志性建筑",
-  "organization_type": "组织类型",
-  "organization_purpose": "组织目的",
-  "organization_members": ["成员1", "成员2"],
+  "personality": "Đặc tính tổ chức (100-200 chữ): cách vận hành, ý niệm cốt lõi, phong cách hành sự",
+  "background": "Bối cảnh tổ chức (100-200 chữ): lịch sử thành lập, quá trình phát triển, sự kiện quan trọng",
+  "appearance": "Biểu hiện bên ngoài (50-100 chữ): vị trí trụ sở, công trình biểu tượng",
+  "organization_type": "Loại tổ chức",
+  "organization_purpose": "Mục đích tổ chức",
+  "organization_members": ["Thành viên 1", "Thành viên 2"],
   "power_level": 85,
-  "location": "所在地或主要活动区域",
-  "motto": "组织格言、口号或宗旨",
-  "color": "代表颜色",
+  "location": "Địa điểm hoặc khu vực hoạt động chính",
+  "motto": "Châm ngôn, khẩu hiệu hoặc tôn chỉ tổ chức",
+  "color": "Màu đại diện",
   "traits": []
 }}
 
-【关系类型参考】
-- 家族：父亲、母亲、兄弟、姐妹、子女、配偶、恋人
-- 社交：师父、徒弟、朋友、同学、同事、邻居、知己
-- 职业：上司、下属、合作伙伴
-- 敌对：敌人、仇人、竞争对手、宿敌
+[Tham chiếu loại quan hệ]
+- Gia tộc: cha, mẹ, anh/em trai, chị/em gái, con cái, vợ/chồng, người yêu
+- Xã giao: sư phụ, đệ tử, bạn, bạn học, đồng nghiệp, hàng xóm, tri kỷ
+- Nghề nghiệp: cấp trên, cấp dưới, đối tác
+- Đối địch: kẻ thù, thù nhà, đối thủ cạnh tranh, tử thù
 
-【数值范围】
-- intimacy_level：-100到100（负值表示敌对）
-- loyalty：0到100
-- rank：0到10（职位等级）
-- power_level：70到95（组织影响力）
+[Phạm vi số]
+- intimacy_level: -100 đến 100 (âm nghĩa là đối địch)
+- loyalty: 0 đến 100
+- rank: 0 đến 10 (cấp chức vụ)
+- power_level: 70 đến 95 (ảnh hưởng tổ chức)
 </output>
 
 <constraints>
-【必须遵守】
-✅ 数量精确：数组必须包含{count}个对象
-✅ 符合世界观：角色设定与世界观一致
-✅ 有深度：性格和背景要立体
-✅ 关系网络：角色间形成合理关系
-✅ 组织合理：组织是推动剧情的关键力量
+[Bắt buộc tuân thủ]
+✅ Số lượng chính xác: mảng phải chứa {count} object
+✅ Khớp bối cảnh: thiết lập nhân vật nhất quán với thế giới
+✅ Có chiều sâu: tính cách và nền phải đầy đặn
+✅ Mạng quan hệ: giữa các nhân vật hình thành quan hệ hợp lý
+✅ Tổ chức hợp lý: tổ chức là lực lượng then chốt đẩy cốt truyện
 
-【关系约束】
-✅ relationships_array只能引用本批次已出现的角色
-✅ organization_memberships只能引用本批次的组织
-✅ 第一个角色的relationships_array必须为空[]
-✅ 禁止幻觉：不引用不存在的角色或组织
+[Ràng buộc quan hệ]
+✅ relationships_array chỉ được tham chiếu nhân vật đã xuất hiện trong lô này
+✅ organization_memberships chỉ được tham chiếu tổ chức trong lô này
+✅ relationships_array của nhân vật đầu tiên phải là [] rỗng
+✅ Cấm ảo giác: không tham chiếu nhân vật/tổ chức không tồn tại
 
-【格式约束】
-✅ 纯JSON数组输出，无markdown标记
-✅ 内容描述中严禁使用特殊符号（引号、方括号、书名号等）
-✅ 专有名词直接书写，不使用符号包裹
+[Ràng buộc định dạng]
+✅ Xuất mảng JSON thuần, không đánh dấu markdown
+✅ Nghiêm cấm dùng ký hiệu đặc biệt trong mô tả nội dung (dấu ngoặc kép, ngoặc vuông, ngoặc sách...)
+✅ Danh từ riêng viết trực tiếp, không dùng ký hiệu bao quanh
 
-【禁止事项】
-❌ 生成数量不符（多于或少于{count}个）
-❌ 引用不存在的角色或组织
-❌ 生成低影响力的无关紧要组织
-❌ 使用markdown或代码块标记
-❌ 在描述中使用特殊符号
+[Điều cấm]
+❌ Số lượng tạo không khớp (nhiều hơn hoặc ít hơn {count})
+❌ Trích dẫn nhân vật hoặc tổ chức không tồn tại
+❌ Tạo tổ chức tầm thường, ảnh hưởng thấp
+❌ Dùng markdown hoặc đánh dấu khối mã
+❌ Dùng ký hiệu đặc biệt trong mô tả
 </constraints>"""
 
     # 大纲生成提示词 V2（RTCO框架）
     OUTLINE_CREATE = """<system>
-你是经验丰富的小说作家和编剧，擅长为{genre}类型的小说设计精彩开篇。
+Bạn là nhà văn và biên kịch tiểu thuyết dày kinh nghiệm, giỏi thiết kế mở đầu hấp dẫn cho tiểu thuyết thể loại {genre}.
 </system>
 
-<task>
-【创作任务】
-为小说《{title}》生成开篇{chapter_count}章的大纲。
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
 
-【重要说明】
-这是项目初始化的开头部分，不是完整大纲：
-- 完成开局设定和世界观展示
-- 引入主要角色，建立初始关系
-- 埋下核心矛盾和悬念钩子
-- 为后续剧情发展打下基础
-- 不需要完整闭环，为续写留空间
+<task>
+[Nhiệm vụ sáng tác]
+Tạo dàn ý {chapter_count} chương mở đầu cho tiểu thuyết «{title}».
+
+[Lưu ý quan trọng]
+Đây là phần mở đầu của quá trình khởi tạo dự án, không phải dàn ý hoàn chỉnh:
+- Hoàn thành thiết lập mở đầu và giới thiệu bối cảnh thế giới
+- Giới thiệu nhân vật chính, thiết lập quan hệ ban đầu
+- Gài cắm xung đột cốt lõi và móc câu nghi vấn
+- Đặt nền tảng cho diễn biến tình tiết về sau
+- Không cần khép kín hoàn chỉnh, chừa không gian cho việc viết tiếp
 </task>
 
 <project priority="P0">
-【项目信息】
-书名：{title}
-主题：{theme}
-类型：{genre}
-开篇章节数：{chapter_count}
-叙事视角：{narrative_perspective}
+[Thông tin dự án]
+Tên sách: {title}
+Chủ đề: {theme}
+Thể loại: {genre}
+Số chương mở đầu: {chapter_count}
+Góc kể chuyện: {narrative_perspective}
 </project>
 
 <worldview priority="P1">
-【世界观】
-时间背景：{time_period}
-地理位置：{location}
-氛围基调：{atmosphere}
-世界规则：{rules}
+[Bối cảnh thế giới]
+Bối cảnh thời gian: {time_period}
+Vị trí địa lý: {location}
+Gam bầu không khí: {atmosphere}
+Quy tắc thế giới: {rules}
 </worldview>
 
 <characters priority="P1">
-【角色信息】
+[Thông tin nhân vật]
 {characters_info}
 </characters>
 
@@ -365,108 +371,110 @@ class PromptService:
 </mcp_context>
 
 <requirements priority="P1">
-【其他要求】
+[Yêu cầu khác]
 {requirements}
 </requirements>
 
 <output priority="P0">
-【输出格式】
-返回包含{chapter_count}个章节对象的JSON数组：
+[Định dạng đầu ra]
+Trả về mảng JSON chứa {chapter_count} object chương:
 
 [
   {{
    "chapter_number": 1,
-   "title": "章节标题",
-   "summary": "章节概要（500-1000字）：主要情节、角色互动、关键事件、冲突与转折",
-   "scenes": ["场景1描述", "场景2描述", "场景3描述"],
+   "title": "Tiêu đề chương",
+   "summary": "Tóm tắt chương (500-1000 chữ): tình tiết chính, tương tác nhân vật, sự kiện then chốt, xung đột và bước ngoặt",
+   "scenes": ["Mô tả cảnh 1", "Mô tả cảnh 2", "Mô tả cảnh 3"],
    "characters": [
-     {{"name": "角色名1", "type": "character"}},
-     {{"name": "组织/势力名1", "type": "organization"}}
+     {{"name": "Tên nhân vật 1", "type": "character"}},
+     {{"name": "Tên tổ chức/thế lực 1", "type": "organization"}}
    ],
-   "key_points": ["情节要点1", "情节要点2"],
-   "emotion": "本章情感基调",
-   "goal": "本章叙事目标"
+   "key_points": ["Điểm tình tiết 1", "Điểm tình tiết 2"],
+   "emotion": "Gam cảm xúc chương này",
+   "goal": "Mục tiêu kể chuyện chương này"
  }},
  {{
    "chapter_number": 2,
-   "title": "章节标题",
-   "summary": "章节概要...",
-   "scenes": ["场景1", "场景2"],
+   "title": "Tiêu đề chương",
+   "summary": "Tóm tắt chương...",
+   "scenes": ["Cảnh 1", "Cảnh 2"],
    "characters": [
-     {{"name": "角色名2", "type": "character"}},
-     {{"name": "组织名2", "type": "organization"}}
+     {{"name": "Tên nhân vật 2", "type": "character"}},
+     {{"name": "Tên tổ chức 2", "type": "organization"}}
    ],
-   "key_points": ["要点1", "要点2"],
-   "emotion": "情感基调",
-   "goal": "叙事目标"
+   "key_points": ["Điểm chính 1", "Điểm chính 2"],
+   "emotion": "Gam cảm xúc",
+   "goal": "Mục tiêu kể chuyện"
  }}
 ]
 
-【characters字段说明】
-- type为"character"表示个人角色，type为"organization"表示组织/势力/门派/帮派等
-- 必须区分角色和组织，不要把组织当作角色
+[Giải thích trường characters]
+- type là "character" nghĩa là nhân vật cá nhân; type là "organization" nghĩa là tổ chức/thế lực/môn phái/bang hội...
+- Phải phân biệt nhân vật và tổ chức, không coi tổ chức như nhân vật
 
-【格式规范】
-- 纯JSON数组输出，无markdown标记
-- 内容描述中严禁使用特殊符号
-- 专有名词直接书写
-- 字段结构与已有章节完全一致
+[Quy chuẩn định dạng]
+- Xuất mảng JSON thuần, không đánh dấu markdown
+- Nghiêm cấm dùng ký hiệu đặc biệt trong mô tả nội dung
+- Danh từ riêng viết trực tiếp
+- Cấu trúc trường khớp hoàn toàn với chương hiện có
 </output>
 
 <constraints>
-【开篇大纲要求】
-✅ 开局设定：前几章完成世界观呈现、主角登场、初始状态
-✅ 矛盾引入：引出核心冲突，但不急于展开
-✅ 角色亮相：主要角色依次登场，展示性格和关系
-✅ 节奏控制：开篇不宜过快，给读者适应时间
-✅ 悬念设置：埋下伏笔和钩子，为续写预留空间
-✅ 视角统一：采用{narrative_perspective}视角
-✅ 留白艺术：结尾不收束过紧，留发展空间
+[Yêu cầu dàn ý mở đầu]
+✅ Thiết lập mở đầu: vài chương đầu hoàn thành giới thiệu bối cảnh thế giới, nhân vật chính xuất hiện, trạng thái ban đầu
+✅ Đưa vào xung đột: gợi ra xung đột cốt lõi, nhưng không vội triển khai
+✅ Nhân vật xuất hiện: các nhân vật chính lần lượt xuất hiện, thể hiện tính cách và quan hệ
+✅ Kiểm soát nhịp độ: phần mở đầu không nên quá nhanh, cho người đọc thời gian thích nghi
+✅ Tạo nghi vấn: gài cắm phục bút và móc câu, chừa không gian cho việc viết tiếp
+✅ Thống nhất góc nhìn: dùng góc nhìn {narrative_perspective}
+✅ Nghệ thuật để trống: kết thúc không khép lại quá chặt, chừa không gian phát triển
 
-【必须遵守】
-✅ 数量精确：数组包含{chapter_count}个章节对象
-✅ 符合类型：情节符合{genre}类型特征
-✅ 主题贴合：体现主题"{theme}"
-✅ 开篇定位：是开局而非完整故事
-✅ 描述详细：每个summary 500-1000字
+[Bắt buộc tuân thủ]
+✅ Số lượng chính xác: mảng chứa {chapter_count} object chương
+✅ Khớp thể loại: tình tiết phù hợp đặc trưng thể loại {genre}
+✅ Bám chủ đề: thể hiện chủ đề "{theme}"
+✅ Định vị mở đầu: là khởi đầu chứ không phải câu chuyện hoàn chỉnh
+✅ Mô tả chi tiết: mỗi summary 500-1000 chữ
 
-【禁止事项】
-❌ 输出markdown或代码块标记
-❌ 在描述中使用特殊符号
-❌ 试图在开篇完结故事
-❌ 节奏过快，信息过载
+[Điều cấm]
+❌ Xuất markdown hoặc đánh dấu khối mã
+❌ Dùng ký hiệu đặc biệt trong mô tả
+❌ Cố kết thúc câu chuyện ngay ở phần mở đầu
+❌ Nhịp độ quá nhanh, quá tải thông tin
 </constraints>"""
     
     # 大纲续写提示词 V2（RTCO框架 - 简化版）
     OUTLINE_CONTINUE = """<system>
-你是经验丰富的小说作家和编剧，擅长续写{genre}类型的小说大纲。
+Bạn là nhà văn và biên kịch tiểu thuyết dày kinh nghiệm, giỏi viết tiếp dàn ý tiểu thuyết thể loại {genre}.
 </system>
 
-<task>
-【续写任务】
-基于已有{current_chapter_count}章内容，续写第{start_chapter}章到第{end_chapter}章的大纲（共{chapter_count}章）。
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
 
-【当前情节阶段】
+<task>
+[Nhiệm vụ viết tiếp]
+Dựa trên nội dung {current_chapter_count} chương đã có, viết tiếp dàn ý từ chương {start_chapter} đến chương {end_chapter} (tổng {chapter_count} chương).
+
+[Giai đoạn tình tiết hiện tại]
 {plot_stage_instruction}
 
-【故事发展方向】
+[Hướng phát triển câu chuyện]
 {story_direction}
 </task>
 
 <project priority="P0">
-【项目信息】
-书名：{title}
-主题：{theme}
-类型：{genre}
-叙事视角：{narrative_perspective}
+[Thông tin dự án]
+Tên sách: {title}
+Chủ đề: {theme}
+Thể loại: {genre}
+Góc kể chuyện: {narrative_perspective}
 </project>
 
 <worldview priority="P1">
-【世界观】
-时间背景：{time_period}
-地理位置：{location}
-氛围基调：{atmosphere}
-世界规则：{rules}
+[Bối cảnh thế giới]
+Bối cảnh thời gian: {time_period}
+Vị trí địa lý: {location}
+Gam bầu không khí: {atmosphere}
+Quy tắc thế giới: {rules}
 </worldview>
 
 <previous_context priority="P0">
@@ -474,16 +482,16 @@ class PromptService:
 </previous_context>
 
 <characters priority="P0">
-【所有角色信息】
+[Toàn bộ thông tin nhân vật]
 {characters_info}
 </characters>
 
 <user_input priority="P0">
-【用户输入】
-续写章节数：{chapter_count}章
-情节阶段：{plot_stage_instruction}
-故事方向：{story_direction}
-其他要求：{requirements}
+[Thông tin người dùng]
+Số chương viết tiếp: {chapter_count} chương
+Giai đoạn tình tiết: {plot_stage_instruction}
+Hướng phát triển câu chuyện: {story_direction}
+Yêu cầu khác: {requirements}
 </user_input>
 
 <mcp_context priority="P2">
@@ -491,847 +499,861 @@ class PromptService:
 </mcp_context>
 
 <output priority="P0">
-【输出格式】
-返回第{start_chapter}到第{end_chapter}章的JSON数组（共{chapter_count}个对象）：
+[Định dạng đầu ra]
+Trả về mảng JSON từ chương {start_chapter} đến chương {end_chapter} (tổng {chapter_count} object):
 
 [
   {{
    "chapter_number": {start_chapter},
-   "title": "章节标题",
-   "summary": "章节概要（500-1000字）：主要情节、角色互动、关键事件、冲突与转折",
-   "scenes": ["场景1描述", "场景2描述", "场景3描述"],
+   "title": "Tiêu đề chương",
+   "summary": "Tóm tắt chương (500-1000 chữ): tình tiết chính, tương tác nhân vật, sự kiện then chốt, xung đột và bước ngoặt",
+   "scenes": ["Mô tả cảnh 1", "Mô tả cảnh 2", "Mô tả cảnh 3"],
    "characters": [
-     {{"name": "角色名1", "type": "character"}},
-     {{"name": "组织/势力名1", "type": "organization"}}
+     {{"name": "Tên nhân vật 1", "type": "character"}},
+     {{"name": "Tên tổ chức/thế lực 1", "type": "organization"}}
    ],
-   "key_points": ["情节要点1", "情节要点2"],
-   "emotion": "本章情感基调",
-   "goal": "本章叙事目标"
+   "key_points": ["Điểm tình tiết 1", "Điểm tình tiết 2"],
+   "emotion": "Gam cảm xúc chương này",
+   "goal": "Mục tiêu kể chuyện chương này"
  }},
  {{
    "chapter_number": {start_chapter} + 1,
-   "title": "章节标题",
-   "summary": "章节概要...",
-   "scenes": ["场景1", "场景2"],
+   "title": "Tiêu đề chương",
+   "summary": "Tóm tắt chương...",
+   "scenes": ["Cảnh 1", "Cảnh 2"],
    "characters": [
-     {{"name": "角色名2", "type": "character"}},
-     {{"name": "组织名2", "type": "organization"}}
+     {{"name": "Tên nhân vật 2", "type": "character"}},
+     {{"name": "Tên tổ chức 2", "type": "organization"}}
    ],
-   "key_points": ["要点1", "要点2"],
-   "emotion": "情感基调",
-   "goal": "叙事目标"
+   "key_points": ["Điểm chính 1", "Điểm chính 2"],
+   "emotion": "Gam cảm xúc",
+   "goal": "Mục tiêu kể chuyện"
  }}
 ]
 
-【characters字段说明】
-- type为"character"表示个人角色，type为"organization"表示组织/势力/门派/帮派等
-- 必须区分角色和组织，不要把组织当作角色
+[Giải thích trường characters]
+- type là "character" nghĩa là nhân vật cá nhân; type là "organization" nghĩa là tổ chức/thế lực/môn phái/bang hội...
+- Phải phân biệt nhân vật và tổ chức, không coi tổ chức như nhân vật
 
-【格式规范】
-- 纯JSON数组输出，无markdown标记
-- 内容描述中严禁使用特殊符号
-- 专有名词直接书写
-- 字段结构与已有章节完全一致
+[Quy chuẩn định dạng]
+- Xuất mảng JSON thuần, không đánh dấu markdown
+- Nghiêm cấm dùng ký hiệu đặc biệt trong mô tả nội dung
+- Danh từ riêng viết trực tiếp
+- Cấu trúc trường khớp hoàn toàn với chương hiện có
 </output>
 
 <constraints>
-【续写要求】
-✅ 剧情连贯：与前文自然衔接，保持连贯性
-✅ 角色发展：遵循角色成长轨迹，充分利用角色信息
-✅ 情节阶段：遵循{plot_stage_instruction}的要求
-✅ 风格一致：保持与已有章节相同风格和详细程度
-✅ 大纲详细：充分解析最近10章大纲的structure字段信息
+[Yêu cầu viết tiếp]
+✅ Tình tiết liền mạch: nối tự nhiên với phần trước, giữ tính liên tục
+✅ Phát triển nhân vật: tuân theo quỹ đạo trưởng thành của nhân vật, tận dụng đầy đủ thông tin nhân vật
+✅ Giai đoạn tình tiết: tuân theo yêu cầu {plot_stage_instruction}
+✅ Phong cách nhất quán: giữ cùng phong cách và mức độ chi tiết với các chương đã có
+✅ Dàn ý chi tiết: phân tích đầy đủ thông tin trường structure của dàn ý 10 chương gần nhất
 
-【必须遵守】
-✅ 数量精确：数组包含{chapter_count}个章节
-✅ 编号正确：从第{start_chapter}章开始
-✅ 描述详细：每个summary 500-1000字
-✅ 承上启下：自然衔接前文
+[Bắt buộc tuân thủ]
+✅ Số lượng chính xác: mảng chứa {chapter_count} chương
+✅ Đánh số đúng: bắt đầu từ chương {start_chapter}
+✅ Mô tả chi tiết: mỗi summary 500-1000 chữ
+✅ Kế trước mở sau: nối tự nhiên với phần trước
 
-【禁止事项】
-❌ 输出markdown或代码块标记
-❌ 在描述中使用特殊符号
-❌ 与前文矛盾或脱节
-❌ 忽略已有角色发展
-❌ 忽略最近大纲中的情节线索
+[Điều cấm]
+❌ Xuất markdown hoặc đánh dấu khối mã
+❌ Dùng ký hiệu đặc biệt trong mô tả
+❌ Mâu thuẫn hoặc đứt gãy với phần trước
+❌ Bỏ qua phát triển nhân vật đã có
+❌ Bỏ qua manh mối tình tiết trong dàn ý gần nhất
 </constraints>"""
     
     # 章节生成 - 1-N模式（第1章）
     CHAPTER_GENERATION_ONE_TO_MANY = """<system>
-你是《{project_title}》的作者，一位专注于{genre}类型的网络小说家。
+Bạn là tác giả của «{project_title}», một nhà văn tiểu thuyết mạng chuyên về thể loại {genre}.
 </system>
 
-<task>
-【创作任务】
-撰写第{chapter_number}章《{chapter_title}》的完整正文。
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
 
-【基本要求】
-- 目标字数：{target_word_count}字（允许±200字浮动）
-- 叙事视角：{narrative_perspective}
+<task>
+[Nhiệm vụ sáng tác]
+Viết toàn bộ chính văn chương {chapter_number} «{chapter_title}».
+
+[Yêu cầu cơ bản]
+- Số chữ mục tiêu: {target_word_count} chữ (cho phép lệch ±200 chữ)
+- Góc kể chuyện: {narrative_perspective}
 </task>
 
 <outline priority="P0">
-【本章大纲 - 必须遵循】
+[Dàn ý chương này - bắt buộc tuân thủ]
 {chapter_outline}
 </outline>
 
 <characters priority="P1">
-【本章角色 - 请严格遵循角色设定】
+[Nhân vật chương này - tuân thủ nghiêm thiết lập nhân vật]
 {characters_info}
 
-⚠️ 角色互动须知：
-- 角色之间的对话和行为必须符合其关系设定（如师徒、敌对等）
-- 涉及组织的情节须体现角色在组织中的身份和职位
-- 角色的能力表现须符合其职业和阶段设定
+⚠️ Lưu ý tương tác nhân vật:
+- Hội thoại và hành vi giữa nhân vật phải khớp thiết lập quan hệ (vd: sư đồ, đối địch)
+- Tình tiết liên quan tổ chức phải thể hiện thân phận và chức vụ của nhân vật trong tổ chức
+- Biểu hiện năng lực nhân vật phải khớp nghề và giai đoạn đã thiết lập
 </characters>
 
 <careers priority="P2">
-【本章职业】
+[Nghề nghiệp chương này]
 {chapter_careers}
 </careers>
 
 <foreshadow_reminders priority="P2">
-【🎯 伏笔提醒】
+[🎯 Nhắc phục bút]
 {foreshadow_reminders}
 </foreshadow_reminders>
 
 <memory priority="P2">
-【相关记忆】
+[Ghi nhớ liên quan]
 {relevant_memories}
 </memory>
 
 <constraints>
-【必须遵守】
-✅ 严格按照大纲推进情节
-✅ 保持角色性格、说话方式一致
-✅ 角色互动须符合关系设定（师徒、朋友、敌对等）
-✅ 组织相关情节须体现成员身份和职位层级
-✅ 字数控制在目标范围内
-✅ 如有伏笔提醒，请在本章中适当埋入或回收相应伏笔
+[Bắt buộc tuân thủ]
+✅ Đẩy tình tiết đúng theo dàn ý
+✅ Giữ tính cách và cách nói của nhân vật nhất quán
+✅ Tương tác nhân vật phải khớp thiết lập quan hệ (sư đồ, bạn bè, đối địch...)
+✅ Tình tiết tổ chức phải thể hiện thân phận thành viên và cấp bậc chức vụ
+✅ Kiểm soát số chữ trong phạm vi mục tiêu
+✅ Nếu có nhắc phục bút, hãy gài hoặc thu hồi phục bút tương ứng trong chương này một cách hợp lý
 
-【禁止事项】
-❌ 输出章节标题、序号等元信息
-❌ 使用"总之"、"综上所述"等AI常见总结语
-❌ 在结尾处使用开放式反问
-❌ 添加作者注释或创作说明
-❌ 角色行为超出其职业阶段的能力范围
+[Điều cấm]
+❌ Xuất tiêu đề chương, số thứ tự và siêu thông tin khác
+❌ Dùng câu tổng kết kiểu AI như "Tóm lại", "Tóm tắt lại"
+❌ Dùng câu hỏi tu từ mở ở phần kết
+❌ Thêm chú thích tác giả hoặc ghi chú sáng tác
+❌ Hành vi nhân vật vượt năng lực giai đoạn nghề của họ
 </constraints>
 
 <output>
-【输出规范】
-直接输出小说正文内容，从故事场景或动作开始。
-无需任何前言、后记或解释性文字。
+[Quy chuẩn đầu ra]
+Xuất trực tiếp chính văn tiểu thuyết, bắt đầu từ cảnh hoặc hành động.
+Không cần lời mở đầu, kết hay chữ giải thích.
 
-现在开始创作：
+Bắt đầu sáng tác ngay:
 </output>"""
 
     # 章节生成 - 1-1模式（第1章）
     CHAPTER_GENERATION_ONE_TO_ONE = """<system>
-你是《{project_title}》的作者，一位专注于{genre}类型的网络小说家。
+Bạn là tác giả của «{project_title}», một nhà văn tiểu thuyết mạng chuyên về thể loại {genre}.
 </system>
 
-<task priority="P0">
-【创作任务】
-撰写第{chapter_number}章《{chapter_title}》的完整正文。
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
 
-【基本要求】
-- 目标字数：{target_word_count}字（允许±200字浮动）
-- 叙事视角：{narrative_perspective}
+<task priority="P0">
+[Nhiệm vụ sáng tác]
+Viết toàn bộ chính văn chương {chapter_number} «{chapter_title}».
+
+[Yêu cầu cơ bản]
+- Số chữ mục tiêu: {target_word_count} chữ (cho phép lệch ±200 chữ)
+- Góc kể chuyện: {narrative_perspective}
 </task>
 
 <outline priority="P0">
-【本章大纲】
+[Dàn ý chương này]
 {chapter_outline}
 </outline>
 
 <characters priority="P1">
-【本章角色】
+[Nhân vật chương này]
 {characters_info}
 </characters>
 
 <careers priority="P2">
-【本章职业】
+[Nghề nghiệp chương này]
 {chapter_careers}
 </careers>
 
 <foreshadow_reminders priority="P2">
-【🎯 伏笔提醒】
+[🎯 Nhắc phục bút]
 {foreshadow_reminders}
 </foreshadow_reminders>
 
 <memory priority="P2">
-【相关记忆】
+[Ghi nhớ liên quan]
 {relevant_memories}
 </memory>
 
 <constraints>
-【必须遵守】
-✅ 严格按照大纲推进情节
-✅ 保持角色性格、说话方式一致
-✅ 字数需要严格控制在目标字数内
-✅ 如有伏笔提醒，请在本章中适当埋入或回收相应伏笔
+[Bắt buộc tuân thủ]
+✅ Đẩy tình tiết đúng theo dàn ý
+✅ Giữ tính cách và cách nói của nhân vật nhất quán
+✅ Số chữ phải được kiểm soát nghiêm trong số chữ mục tiêu
+✅ Nếu có nhắc phục bút, hãy gài hoặc thu hồi phục bút tương ứng trong chương này một cách hợp lý
 
-【禁止事项】
-❌ 输出章节标题、序号等元信息
-❌ 使用"总之"、"综上所述"等AI常见总结语
-❌ 添加作者注释或创作说明
-❌ 生成字数禁止超过目标字数
+[Điều cấm]
+❌ Xuất tiêu đề chương, số thứ tự và siêu thông tin khác
+❌ Dùng câu tổng kết kiểu AI như "Tóm lại", "Tóm tắt lại"
+❌ Thêm chú thích tác giả hoặc ghi chú sáng tác
+❌ Số chữ tạo ra không được vượt số chữ mục tiêu
 </constraints>
 
 <output>
-【输出规范】
-直接输出小说正文内容，从故事场景或动作开始。
-无需任何前言、后记或解释性文字。
+[Quy chuẩn đầu ra]
+Xuất trực tiếp chính văn tiểu thuyết, bắt đầu từ cảnh hoặc hành động.
+Không cần lời mở đầu, kết hay chữ giải thích.
 
-现在开始创作：
+Bắt đầu sáng tác ngay:
 </output>"""
 
     # 章节生成 - 1-1模式（第2章及以后）
     CHAPTER_GENERATION_ONE_TO_ONE_NEXT = """<system>
-你是《{project_title}》的作者，一位专注于{genre}类型的网络小说家。
+Bạn là tác giả của «{project_title}», một nhà văn tiểu thuyết mạng chuyên về thể loại {genre}.
 </system>
 
-<task priority="P0">
-【创作任务】
-撰写第{chapter_number}章《{chapter_title}》的完整正文。
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
 
-【基本要求】
-- 目标字数：{target_word_count}字（允许±200字浮动）
-- 叙事视角：{narrative_perspective}
+<task priority="P0">
+[Nhiệm vụ sáng tác]
+Viết toàn bộ chính văn chương {chapter_number} «{chapter_title}».
+
+[Yêu cầu cơ bản]
+- Số chữ mục tiêu: {target_word_count} chữ (cho phép lệch ±200 chữ)
+- Góc kể chuyện: {narrative_perspective}
 </task>
 
 <outline priority="P0">
-【本章大纲】
+[Dàn ý chương này]
 {chapter_outline}
 </outline>
 
 <previous_chapter_summary priority="P1">
-【上一章剧情概要】
+[Tóm tắt tình tiết chương trước]
 {previous_chapter_summary}
 </previous_chapter_summary>
 
 <recent_context priority="P1">
-【最近章节摘要 - 故事脉络参考】
+[Tóm tắt các chương gần đây - tham chiếu mạch truyện]
 {recent_chapters_context}
 </recent_context>
 
 <previous_chapter priority="P1">
-【上一章完整正文】
+[Toàn văn chương trước]
 {previous_chapter_content}
 </previous_chapter>
 
 <characters priority="P1">
-【本章角色】
+[Nhân vật chương này]
 {characters_info}
 </characters>
 
 <careers priority="P2">
-【本章职业】
+[Nghề nghiệp chương này]
 {chapter_careers}
 </careers>
 
 <foreshadow_reminders priority="P2">
-【🎯 伏笔提醒】
+[🎯 Nhắc phục bút]
 {foreshadow_reminders}
 </foreshadow_reminders>
 
 <memory priority="P2">
-【相关记忆】
+[Ghi nhớ liên quan]
 {relevant_memories}
 </memory>
 
 <constraints>
-【必须遵守】
-✅ 严格按照大纲推进情节
-✅ 自然承接上一章末尾内容，保持连贯性
-✅ 保持角色性格、说话方式一致
-✅ 字数需要严格控制在目标字数内
-✅ 如有伏笔提醒，请在本章中适当埋入或回收相应伏笔
+[Bắt buộc tuân thủ]
+✅ Đẩy tình tiết đúng theo dàn ý
+✅ Nối tự nhiên với nội dung cuối chương trước, giữ tính liên tục
+✅ Giữ tính cách và cách nói của nhân vật nhất quán
+✅ Số chữ phải được kiểm soát nghiêm trong số chữ mục tiêu
+✅ Nếu có nhắc phục bút, hãy gài hoặc thu hồi phục bút tương ứng trong chương này một cách hợp lý
 
-【禁止事项】
-❌ 输出章节标题、序号等元信息
-❌ 使用"总之"、"综上所述"等AI常见总结语
-❌ 在结尾处使用开放式反问
-❌ 添加作者注释或创作说明
-❌ 重复上一章已发生的事件
-❌ 生成字数禁止超过目标字数
+[Điều cấm]
+❌ Xuất tiêu đề chương, số thứ tự và siêu thông tin khác
+❌ Dùng câu tổng kết kiểu AI như "Tóm lại", "Tóm tắt lại"
+❌ Dùng câu hỏi tu từ mở ở phần kết
+❌ Thêm chú thích tác giả hoặc ghi chú sáng tác
+❌ Lặp lại sự kiện đã xảy ra ở chương trước
+❌ Số chữ tạo ra không được vượt số chữ mục tiêu
 </constraints>
 
 <output>
-【输出规范】
-直接输出小说正文内容，从故事场景或动作开始。
-无需任何前言、后记或解释性文字。
+[Quy chuẩn đầu ra]
+Xuất trực tiếp chính văn tiểu thuyết, bắt đầu từ cảnh hoặc hành động.
+Không cần lời mở đầu, kết hay chữ giải thích.
 
-现在开始创作：
+Bắt đầu sáng tác ngay:
 </output>"""
 
     # 章节生成 - 1-N模式（第2章及以后）
     CHAPTER_GENERATION_ONE_TO_MANY_NEXT = """<system>
-你是《{project_title}》的作者，一位专注于{genre}类型的网络小说家。
+Bạn là tác giả của «{project_title}», một nhà văn tiểu thuyết mạng chuyên về thể loại {genre}.
 </system>
 
-<task>
-【创作任务】
-撰写第{chapter_number}章《{chapter_title}》的完整正文。
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
 
-【基本要求】
-- 目标字数：{target_word_count}字（允许±200字浮动）
-- 叙事视角：{narrative_perspective}
+<task>
+[Nhiệm vụ sáng tác]
+Viết toàn bộ chính văn chương {chapter_number} «{chapter_title}».
+
+[Yêu cầu cơ bản]
+- Số chữ mục tiêu: {target_word_count} chữ (cho phép lệch ±200 chữ)
+- Góc kể chuyện: {narrative_perspective}
 </task>
 
 <outline priority="P0">
-【本章大纲 - 必须遵循】
+[Dàn ý chương này - bắt buộc tuân thủ]
 {chapter_outline}
 </outline>
 
 <recent_context priority="P1">
-【最近章节规划 - 故事脉络参考】
+[Kế hoạch các chương gần đây - tham chiếu mạch truyện]
 {recent_chapters_context}
 </recent_context>
 
 <continuation priority="P0">
-【衔接锚点 - 必须承接】
-上一章完整正文：
-「{continuation_point}」
+[Mốc nối - bắt buộc tiếp nối]
+Toàn văn chương trước:
+"{continuation_point}"
 
-【🔴 上一章已完成剧情（禁止重复！）】
+[🔴 Tình tiết đã hoàn thành ở chương trước (cấm lặp lại!)]
 {previous_chapter_summary}
 
-⚠️ 严重警告：
-1. 上述"已完成剧情"和"衔接锚点"是**已经写过的**内容
-2. 本章必须推进到**新的情节点**，绝对不能重新叙述已经发生的事件
-3. 本章应承接上一章最后的情境继续推进，不要复述上一章完整正文
-4. 如果上一章以对话或场景结束，请从结束后的动作、反应或场景转换开始
+⚠️ Cảnh báo nghiêm trọng:
+1. "Tình tiết đã hoàn thành" và "mốc nối" ở trên là nội dung **đã được viết**
+2. Chương này phải tiến tới **điểm tình tiết mới**, tuyệt đối không kể lại sự kiện đã xảy ra
+3. Chương này phải tiếp nối tình huống cuối chương trước để phát triển tiếp, không nhắc lại toàn văn chương trước
+4. Nếu chương trước kết thúc bằng hội thoại hoặc bối cảnh, hãy bắt đầu từ hành động, phản ứng hoặc chuyển cảnh sau đó
 </continuation>
 
 <characters priority="P1">
-【本章角色 - 请严格遵循角色设定】
+[Nhân vật chương này - tuân thủ nghiêm thiết lập nhân vật]
 {characters_info}
 
-⚠️ 角色互动须知：
-- 角色之间的对话和行为必须符合其关系设定（如师徒、敌对等）
-- 涉及组织的情节须体现角色在组织中的身份和职位
-- 角色的能力表现须符合其职业和阶段设定
+⚠️ Lưu ý tương tác nhân vật:
+- Hội thoại và hành vi giữa nhân vật phải khớp thiết lập quan hệ (vd: sư đồ, đối địch)
+- Tình tiết liên quan tổ chức phải thể hiện thân phận và chức vụ của nhân vật trong tổ chức
+- Biểu hiện năng lực nhân vật phải khớp nghề và giai đoạn đã thiết lập
 </characters>
 
 <careers priority="P2">
-【本章职业】
+[Nghề nghiệp chương này]
 {chapter_careers}
 </careers>
 
 <foreshadow_reminders priority="P1">
-【🎯 伏笔提醒 - 需关注】
+[🎯 Nhắc phục bút - cần chú ý]
 {foreshadow_reminders}
 </foreshadow_reminders>
 
 <memory priority="P2">
-【相关记忆 - 参考】
+[Ký ức liên quan - tham khảo]
 {relevant_memories}
 </memory>
 
 <constraints>
-【必须遵守】
-✅ 严格按照大纲推进情节
-✅ 自然承接上一章结尾，不重复已发生事件
-✅ 保持角色性格、说话方式一致
-✅ 角色互动须符合关系设定（师徒、朋友、敌对等）
-✅ 组织相关情节须体现成员身份和职位层级
-✅ 字数控制在目标范围内
-✅ 如有伏笔提醒，请在本章中适当埋入或回收相应伏笔
+[Bắt buộc tuân thủ]
+✅ Đẩy tình tiết đúng theo dàn ý
+✅ Tự nhiên tiếp nối phần cuối chương trước, không lặp lại sự kiện đã xảy ra
+✅ Giữ tính cách và cách nói của nhân vật nhất quán
+✅ Tương tác nhân vật phải khớp thiết lập quan hệ (sư đồ, bạn bè, đối địch...)
+✅ Tình tiết tổ chức phải thể hiện thân phận thành viên và cấp bậc chức vụ
+✅ Kiểm soát số chữ trong phạm vi mục tiêu
+✅ Nếu có nhắc phục bút, hãy gài hoặc thu hồi phục bút tương ứng trong chương này một cách hợp lý
 
-【🔴 反重复特别指令】
-✅ 检查本章开篇是否与"衔接锚点"内容重复
-✅ 检查本章情节是否与"上一章已完成剧情"重复
-✅ 确保本章推进到了大纲中规划的新事件
+[🔴 Chỉ thị đặc biệt chống lặp]
+✅ Kiểm tra phần mở đầu chương này có lặp nội dung "mốc nối" hay không
+✅ Kiểm tra tình tiết chương này có lặp "tình tiết đã hoàn thành ở chương trước" hay không
+✅ Đảm bảo chương này tiến tới sự kiện mới được dàn ý hoạch định
 
-【禁止事项】
-❌ 输出章节标题、序号等元信息
-❌ 使用"总之"、"综上所述"等AI常见总结语
-❌ 在结尾处使用开放式反问
-❌ 添加作者注释或创作说明
-❌ 重复叙述上一章已发生的事件（包括环境描写、心理活动）
-❌ 在开篇使用"接上回"、"书接上文"等套话
-❌ 角色行为超出其职业阶段的能力范围
+[Điều cấm]
+❌ Xuất tiêu đề chương, số thứ tự và siêu thông tin khác
+❌ Dùng câu tổng kết kiểu AI như "Tóm lại", "Tóm tắt lại"
+❌ Dùng câu hỏi tu từ mở ở phần kết
+❌ Thêm chú thích tác giả hoặc ghi chú sáng tác
+❌ Kể lại sự kiện đã xảy ra ở chương trước (bao gồm miêu tả môi trường và hoạt động tâm lý)
+❌ Dùng những câu sáo rỗng như "tiếp nối chương trước" hoặc "nối tiếp phần trên" ở phần mở đầu
+❌ Hành vi nhân vật vượt năng lực giai đoạn nghề của họ
 </constraints>
 
 <output>
-【输出规范】
-直接输出小说正文内容，从故事场景或动作开始。
-无需任何前言、后记或解释性文字。
+[Quy chuẩn đầu ra]
+Xuất trực tiếp chính văn tiểu thuyết, bắt đầu từ cảnh hoặc hành động.
+Không cần lời mở đầu, kết hay chữ giải thích.
 
-现在开始创作：
+Bắt đầu sáng tác ngay:
 </output>"""
 
     # 单个角色生成提示词 V2（RTCO框架）
     SINGLE_CHARACTER_GENERATION = """<system>
-你是专业的角色设定师，擅长创建立体饱满的小说角色。
+Bạn là chuyên gia thiết lập nhân vật, giỏi tạo nhân vật tiểu thuyết đầy đặn, đa chiều.
 </system>
 
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
+
 <task>
-【设计任务】
-根据用户需求和项目上下文，创建一个完整的角色设定。
+[Nhiệm vụ thiết kế]
+Dựa trên nhu cầu người dùng và ngữ cảnh dự án, tạo một thiết lập nhân vật hoàn chỉnh.
 </task>
 
 <context priority="P0">
-【项目上下文】
+[Ngữ cảnh dự án]
 {project_context}
 
-【用户需求】
+[Nhu cầu người dùng]
 {user_input}
 </context>
 
 <output priority="P0">
-【输出格式】
-生成完整的角色卡片JSON对象：
+[Định dạng đầu ra]
+Tạo object JSON thẻ nhân vật hoàn chỉnh:
 
 {{
-  "name": "角色姓名（如用户未提供则生成符合世界观的名字）",
-  "age": "年龄（具体数字或年龄段）",
-  "gender": "男/女/其他",
-  "appearance": "外貌描述（100-150字）：身高体型、面容特征、着装风格",
-  "personality": "性格特点（150-200字）：核心性格特质、优缺点、特殊习惯",
-  "background": "背景故事（200-300字）：家庭背景、成长经历、重要转折、与主题关联",
-  "traits": ["特长1", "特长2", "特长3"],
-  "relationships_text": "人际关系的自然语言描述",
+  "name": "Họ tên nhân vật (nếu người dùng không cung cấp thì tạo tên phù hợp với bối cảnh thế giới)",
+  "age": "Tuổi (số cụ thể hoặc khoảng tuổi)",
+  "gender": "nam/nữ/khác",
+  "appearance": "Mô tả ngoại hình (100-150 chữ): chiều cao, vóc dáng, đặc điểm khuôn mặt, phong cách ăn mặc",
+  "personality": "Đặc điểm tính cách (150-200 chữ): nét tính cách cốt lõi, ưu nhược điểm, thói quen đặc biệt",
+  "background": "Câu chuyện nền (200-300 chữ): gia cảnh, trải nghiệm trưởng thành, bước ngoặt quan trọng, mối liên hệ với chủ đề",
+  "traits": ["Đặc điểm 1", "Đặc điểm 2", "Đặc điểm 3"],
+  "relationships_text": "Mô tả quan hệ giữa người với người bằng ngôn ngữ tự nhiên",
   "relationships": [
     {{
-      "target_character_name": "已存在的角色名称",
-      "relationship_type": "关系类型",
+      "target_character_name": "Tên nhân vật đã tồn tại",
+      "relationship_type": "Loại quan hệ",
       "intimacy_level": 75,
-      "description": "关系的详细描述",
-      "started_at": "关系开始的故事时间点（可选）"
+      "description": "Mô tả chi tiết quan hệ",
+      "started_at": "Mốc thời gian trong truyện khi quan hệ bắt đầu (tuỳ chọn)"
     }}
   ],
   "organization_memberships": [
     {{
-      "organization_name": "已存在的组织名称",
-      "position": "职位名称",
+      "organization_name": "Tên tổ chức đã tồn tại",
+      "position": "Tên chức vụ",
       "rank": 8,
       "loyalty": 80,
-      "joined_at": "加入时间（可选）",
+      "joined_at": "Thời điểm gia nhập (tuỳ chọn)",
       "status": "active"
     }}
   ],
   "career_info": {{
-    "main_career_name": "从可用主职业列表中选择的职业名称",
+    "main_career_name": "Tên nghề chọn từ danh sách nghề chính khả dụng",
     "main_career_stage": 5,
     "sub_careers": [
       {{
-        "career_name": "从可用副职业列表中选择的职业名称",
+        "career_name": "Tên nghề chọn từ danh sách nghề phụ khả dụng",
         "stage": 3
       }}
     ]
   }}
 }}
 
-【职业信息说明】
-如果项目上下文包含职业列表：
-- 主职业：从"可用主职业"列表中选择最符合角色的职业
-- 主职业阶段：根据角色实力设定合理阶段（1到max_stage）
-- 副职业：可选择0-2个副职业
-- ⚠️ 填写职业名称而非ID，系统会自动匹配
-- 职业选择必须与角色背景、能力和定位高度契合
+[Giải thích thông tin nghề nghiệp]
+Nếu ngữ cảnh dự án có danh sách nghề:
+- Nghề chính: chọn nghề phù hợp nhất với nhân vật từ danh sách "nghề chính khả dụng"
+- Giai đoạn nghề chính: thiết lập giai đoạn hợp lý theo thực lực nhân vật (từ 1 đến max_stage)
+- Nghề phụ: có thể chọn 0-2 nghề phụ
+- ⚠️ Điền Tên nghề thay vì ID, hệ thống sẽ tự động đối chiếu
+- Lựa chọn nghề phải rất phù hợp với bối cảnh, năng lực và định vị nhân vật
 
-【关系类型参考】
-- 家族：父亲、母亲、兄弟、姐妹、子女、配偶、恋人
-- 社交：师父、徒弟、朋友、同学、同事、邻居、知己
-- 职业：上司、下属、合作伙伴
-- 敌对：敌人、仇人、竞争对手、宿敌
+[Tham chiếu loại quan hệ]
+- Gia tộc: cha, mẹ, anh/em trai, chị/em gái, con cái, vợ/chồng, người yêu
+- Xã giao: sư phụ, đệ tử, bạn, bạn học, đồng nghiệp, hàng xóm, tri kỷ
+- Nghề nghiệp: cấp trên, cấp dưới, đối tác
+- Đối địch: kẻ thù, thù nhà, đối thủ cạnh tranh, tử thù
 
-【数值范围】
-- intimacy_level：-100到100（负值表示敌对）
-- loyalty：0到100
-- rank：0到10
+[Phạm vi số]
+- intimacy_level: -100 đến 100 (âm nghĩa là đối địch)
+- loyalty: 0 đến 100
+- rank: 0 đến 10
 </output>
 
 <constraints>
-【必须遵守】
-✅ 符合世界观：角色设定与项目世界观一致
-✅ 主题关联：背景故事与项目主题关联
-✅ 立体饱满：性格复杂有矛盾性，不脸谱化
-✅ 为故事服务：设定要推动剧情发展
-✅ 职业匹配：职业选择与角色高度契合
+[Bắt buộc tuân thủ]
+✅ Phù hợp bối cảnh thế giới: thiết lập nhân vật nhất quán với bối cảnh thế giới của dự án
+✅ Liên hệ chủ đề: câu chuyện nền gắn với chủ đề dự án
+✅ Đa chiều đầy đặn: tính cách phức tạp, có mâu thuẫn, không rập khuôn
+✅ Phục vụ câu chuyện: thiết lập phải thúc đẩy diễn biến tình tiết
+✅ Phù hợp nghề: lựa chọn nghề phải rất phù hợp với nhân vật
 
-【角色定位要求】
-✅ 主角：有成长空间和目标动机
-✅ 反派：有合理动机，不脸谱化
-✅ 配角：有独特性，不是工具人
+[Yêu cầu định vị nhân vật]
+✅ Nhân vật chính: có không gian trưởng thành và động lực mục tiêu
+✅ Phản diện: có động cơ hợp lý, không rập khuôn
+✅ Nhân vật phụ: có nét riêng, không phải công cụ
 
-【关系约束】
-✅ relationships只引用已存在的角色
-✅ organization_memberships只引用已存在的组织
-✅ 无关系或组织时对应数组为空[]
+[Ràng buộc quan hệ]
+✅ relationships chỉ được tham chiếu nhân vật đã tồn tại
+✅ organization_memberships chỉ được tham chiếu tổ chức đã tồn tại
+✅ Khi không có quan hệ hoặc tổ chức, mảng tương ứng phải là []
 
-【格式约束】
-✅ 纯JSON对象输出，无markdown标记
-✅ 内容描述中严禁使用特殊符号
-✅ 专有名词直接书写
+[Ràng buộc định dạng]
+✅ Xuất object JSON thuần, không đánh dấu markdown
+✅ Nghiêm cấm dùng ký hiệu đặc biệt trong mô tả nội dung
+✅ Danh từ riêng viết trực tiếp
 
-【禁止事项】
-❌ 输出markdown或代码块标记
-❌ 在描述中使用特殊符号（引号、方括号等）
-❌ 引用不存在的角色或组织
-❌ 脸谱化的角色设定
+[Điều cấm]
+❌ Xuất markdown hoặc đánh dấu khối mã
+❌ Dùng ký hiệu đặc biệt trong mô tả (ngoặc kép, ngoặc vuông...)
+❌ Trích dẫn nhân vật hoặc tổ chức không tồn tại
+❌ Thiết lập nhân vật rập khuôn
 </constraints>"""
 
     # 单个组织生成提示词 V2（RTCO框架）
     SINGLE_ORGANIZATION_GENERATION = """<system>
-你是专业的组织设定师，擅长创建完整的组织/势力设定。
+Bạn là chuyên gia thiết lập tổ chức, giỏi tạo thiết lập tổ chức/thế lực hoàn chỉnh.
 </system>
 
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
+
 <task>
-【设计任务】
-根据用户需求和项目上下文，创建一个完整的组织/势力设定。
+[Nhiệm vụ thiết kế]
+Dựa trên nhu cầu người dùng và ngữ cảnh dự án, tạo một thiết lập tổ chức/thế lực hoàn chỉnh.
 </task>
 
 <context priority="P0">
-【项目上下文】
+[Ngữ cảnh dự án]
 {project_context}
 
-【用户需求】
+[Nhu cầu người dùng]
 {user_input}
 </context>
 
 <output priority="P0">
-【输出格式】
-生成完整的组织设定JSON对象：
+[Định dạng đầu ra]
+Tạo object JSON thiết lập tổ chức hoàn chỉnh:
 
 {{
-  "name": "组织名称（如用户未提供则生成符合世界观的名称）",
+  "name": "Tên tổ chức (nếu người dùng không cung cấp thì tạo tên phù hợp với bối cảnh thế giới)",
   "is_organization": true,
-  "organization_type": "组织类型（帮派/公司/门派/学院/政府机构/宗教组织等）",
-  "personality": "组织特性（150-200字）：核心理念、行事风格、文化价值观、运作方式",
-  "background": "组织背景（200-300字）：建立历史、发展历程、重要事件、当前地位",
-  "appearance": "外在表现（100-150字）：总部位置、标志性建筑、组织标志、制服等",
-  "organization_purpose": "组织目的和宗旨：明确目标、长期愿景、行动准则",
+  "organization_type": "Loại tổ chức (bang phái/công ty/môn phái/học viện/cơ quan chính phủ/tổ chức tôn giáo...) ",
+  "personality": "Đặc tính tổ chức (150-200 chữ): ý niệm cốt lõi, phong cách hành sự, giá trị văn hóa, cách vận hành",
+  "background": "Bối cảnh tổ chức (200-300 chữ): lịch sử thành lập, quá trình phát triển, sự kiện quan trọng, địa vị hiện tại",
+  "appearance": "Biểu hiện bên ngoài (100-150 chữ): vị trí trụ sở, công trình biểu tượng, biểu trưng tổ chức, đồng phục...",
+  "organization_purpose": "Mục đích và tôn chỉ tổ chức: mục tiêu rõ ràng, tầm nhìn dài hạn, nguyên tắc hành động",
   "power_level": 75,
-  "location": "所在地点：主要活动区域、势力范围",
-  "motto": "组织格言或口号",
-  "traits": ["特征1", "特征2", "特征3"],
-  "color": "组织代表颜色（如：深红色、金色、黑色等）",
-  "organization_members": ["重要成员1", "重要成员2", "重要成员3"]
+  "location": "Địa điểm: khu vực hoạt động chính, phạm vi thế lực",
+  "motto": "Châm ngôn hoặc khẩu hiệu tổ chức",
+  "traits": ["Đặc trưng 1", "Đặc trưng 2", "Đặc trưng 3"],
+  "color": "Màu đại diện tổ chức (ví dụ: đỏ sẫm, vàng, đen...)",
+  "organization_members": ["Thành viên quan trọng 1", "Thành viên quan trọng 2", "Thành viên quan trọng 3"]
 }}
 
-【字段说明】
-- power_level：0-100的整数，表示在世界中的影响力
-- organization_members：组织内重要成员名字列表（可关联已有角色）
-- 成立时间：在background中描述
+[Giải thích trường]
+- power_level: số nguyên 0-100, thể hiện ảnh hưởng trong thế giới
+- organization_members: danh sách tên thành viên quan trọng trong tổ chức (có thể liên kết nhân vật đã tồn tại)
+- Thời điểm thành lập: mô tả trong background
 </output>
 
 <constraints>
-【必须遵守】
-✅ 符合世界观：组织设定与项目世界观一致
-✅ 主题关联：背景与项目主题关联
-✅ 推动剧情：组织能推动故事发展
-✅ 有层级结构：内部有明确的层级和结构
-✅ 势力互动：与其他势力有互动关系
+[Bắt buộc tuân thủ]
+✅ Phù hợp bối cảnh thế giới: thiết lập tổ chức nhất quán với bối cảnh thế giới của dự án
+✅ Liên hệ chủ đề: bối cảnh gắn với chủ đề dự án
+✅ Thúc đẩy tình tiết: tổ chức có thể thúc đẩy diễn biến câu chuyện
+✅ Có cấu trúc tầng bậc: bên trong có cấp bậc và cơ cấu rõ ràng
+✅ Tương tác thế lực: có quan hệ tương tác với các thế lực khác
 
-【组织定位要求】
-✅ 有存在必要性：不是可有可无的背景板
-✅ 目标合理：不过于理想化或脸谱化
-✅ 具体细节：描述详细具体，避免空泛
+[Yêu cầu định vị tổ chức]
+✅ Cần thiết cho câu chuyện: không phải phông nền có cũng được không có cũng xong
+✅ Mục tiêu hợp lý: không quá lý tưởng hóa hoặc rập khuôn
+✅ Chi tiết cụ thể: mô tả chi tiết, rõ ràng, tránh chung chung
 
-【格式约束】
-✅ 纯JSON对象输出，无markdown标记
-✅ 内容描述中严禁使用特殊符号
-✅ 专有名词直接书写
+[Ràng buộc định dạng]
+✅ Xuất object JSON thuần, không đánh dấu markdown
+✅ Nghiêm cấm dùng ký hiệu đặc biệt trong mô tả nội dung
+✅ Danh từ riêng viết trực tiếp
 
-【禁止事项】
-❌ 输出markdown或代码块标记
-❌ 在描述中使用特殊符号（引号、方括号等）
-❌ 过于理想化或脸谱化的设定
-❌ 空泛的描述
+[Điều cấm]
+❌ Xuất markdown hoặc đánh dấu khối mã
+❌ Dùng ký hiệu đặc biệt trong mô tả (ngoặc kép, ngoặc vuông...)
+❌ Thiết lập quá lý tưởng hóa hoặc rập khuôn
+❌ Mô tả chung chung
 </constraints>"""
 
     # 情节分析提示词 V2（RTCO框架 + 伏笔ID追踪）
     PLOT_ANALYSIS = """<system>
-你是专业的小说编辑和剧情分析师，擅长深度剖析章节内容。
+Bạn là biên tập viên tiểu thuyết và chuyên gia phân tích cốt truyện, giỏi mổ xẻ sâu nội dung chương.
 </system>
 
-<task>
-【分析任务】
-全面分析第{chapter_number}章《{title}》的剧情要素、钩子、伏笔、冲突和角色发展。
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
 
-【🔴 伏笔追踪任务（重要）】
-系统已提供【已埋入伏笔列表】，当你识别到章节中有回收伏笔时：
-1. 必须从列表中找出对应的伏笔ID
-2. 在 foreshadows 数组中使用 reference_foreshadow_id 字段关联
-3. 如果无法确定是哪个伏笔，reference_foreshadow_id 填 null
+<task>
+[Nhiệm vụ phân tích]
+Phân tích toàn diện các yếu tố tình tiết, móc câu, phục bút, xung đột và diễn biến nhân vật của chương {chapter_number} «{title}».
+
+[🔴 Nhiệm vụ theo dõi phục bút (quan trọng)]
+Hệ thống đã cung cấp [danh sách phục bút đã gài]. Khi nhận diện chương có thu hồi phục bút:
+1. Bắt buộc tìm ID phục bút tương ứng trong danh sách
+2. Dùng trường reference_foreshadow_id để liên kết trong mảng foreshadows
+3. Nếu không thể xác định đó là phục bút nào, điền null vào reference_foreshadow_id
 </task>
 
 <chapter priority="P0">
-【章节信息】
-章节：第{chapter_number}章
-标题：{title}
-字数：{word_count}字
+[Thông tin chương]
+Chương: chương {chapter_number}
+Tiêu đề: {title}
+Số chữ: {word_count} chữ
 
-【章节内容】
+[Nội dung chương]
 {content}
 </chapter>
 
 <existing_foreshadows priority="P1">
-【已埋入伏笔列表 - 用于回收匹配】
-以下是本项目中已埋入但尚未回收的伏笔，分析时如发现章节内容回收了某个伏笔，请使用对应的ID：
+[Danh sách phục bút đã gài - dùng để đối chiếu thu hồi]
+Dưới đây là các phục bút đã gài trong dự án nhưng chưa được thu hồi. Nếu phát hiện nội dung chương thu hồi một phục bút, hãy dùng ID tương ứng:
 
 {existing_foreshadows}
 </existing_foreshadows>
 
 <characters priority="P1">
-【项目角色信息 - 用于角色状态分析】
-以下是项目中已有的角色列表，分析 character_states 和 relationship_changes 时请使用这些角色的准确名称：
+[Thông tin nhân vật dự án - dùng để phân tích trạng thái nhân vật]
+Dưới đây là danh sách nhân vật đã có trong dự án. Khi phân tích character_states và relationship_changes, hãy dùng chính xác tên các nhân vật này:
 
 {characters_info}
 </characters>
 
 <analysis_framework priority="P0">
-【分析维度】
+[Các chiều phân tích]
 
-**1. 剧情钩子 (Hooks)**
-识别吸引读者的关键元素：
-- 悬念钩子：未解之谜、疑问、谜团
-- 情感钩子：引发共鸣的情感点
-- 冲突钩子：矛盾对抗、紧张局势
-- 认知钩子：颠覆认知的信息
+**1. Móc câu tình tiết (Hooks)**
+Nhận diện các yếu tố then chốt thu hút người đọc:
+- Móc câu hồi hộp: bí ẩn, câu hỏi, điều chưa được giải đáp
+- Móc câu cảm xúc: điểm cảm xúc khơi gợi đồng cảm
+- Móc câu xung đột: đối đầu mâu thuẫn, tình thế căng thẳng
+- Móc câu nhận thức: thông tin đảo lộn nhận thức
 
-每个钩子需要：
-- 类型分类
-- 具体内容描述
-- 强度评分(1-10)
-- 出现位置(开头/中段/结尾)
-- **关键词**：【必填】从原文逐字复制8-25字的文本片段，用于精确定位
+Mỗi móc câu cần có:
+- Phân loại
+- Mô tả nội dung cụ thể
+- Chấm điểm cường độ (1-10)
+- Vị trí xuất hiện (mở đầu/giữa/cuối)
+- **Từ khóa**: [Bắt buộc]sao chép nguyên văn 8-25 chữ từ đoạn văn gốc để định vị chính xác
 
-**2. 伏笔分析 (Foreshadowing) - 🔴 支持ID追踪**
-- 埋下的新伏笔：内容、预期作用、隐藏程度(1-10)
-- 回收的旧伏笔：【必须】从已埋入伏笔列表中匹配ID
-- 伏笔质量：巧妙性和合理性
-- **关键词**：【必填】从原文逐字复制8-25字
+**2. Phân tích phục bút (Foreshadowing) - 🔴 hỗ trợ theo dõi ID**
+- Phục bút mới được gài: nội dung, tác dụng dự kiến, mức độ che giấu (1-10)
+- Phục bút cũ được thu hồi: [bắt buộc]đối chiếu ID trong danh sách phục bút đã gài
+- Chất lượng phục bút: sự tinh tế và hợp lý
+- **Từ khóa**: [Bắt buộc]sao chép nguyên văn 8-25 chữ từ đoạn văn gốc
 
-每个伏笔需要：
-- **title**：简洁标题（10-20字，概括伏笔核心）
-  - ⚠️ 回收伏笔时，标题应与原伏笔标题保持一致，不要添加"回收"等后缀
-  - 例如：原伏笔标题是"绿头发的视觉符号"，回收时标题仍为"绿头发的视觉符号"，而非"绿头发的视觉符号回收"
-- **content**：详细描述伏笔内容和预期作用
-- **type**：planted（埋下）或 resolved（回收）
-- **strength**：强度1-10（对读者的吸引力）
-- **subtlety**：隐藏度1-10（越高越隐蔽）
-- **reference_chapter**：回收时引用的原埋入章节号，埋下时为null
-- **reference_foreshadow_id**：【回收时必填】被回收伏笔的ID（从已埋入伏笔列表中选择），埋下时为null
-  - 🔴 重要：回收伏笔时，必须从【已埋入伏笔列表】中找到对应的伏笔ID并填写
-  - 如果列表中有标注【ID: xxx】的伏笔，回收时必须使用该ID
-  - 如果无法确定是哪个伏笔，才填写null（但应尽量避免）
-- **keyword**：【必填】从原文逐字复制8-25字的定位文本
-- **category**：分类（identity=身世/mystery=悬念/item=物品/relationship=关系/event=事件/ability=能力/prophecy=预言）
-- **is_long_term**：是否长线伏笔（跨10章以上回收为true）
-- **related_characters**：涉及的角色名列表
-- **estimated_resolve_chapter**：【必填】预估回收章节号（埋下时必须预估，回收时为当前章节）
+Mỗi phục bút cần có:
+- **title**: tiêu đề ngắn gọn (10-20 chữ, khái quát cốt lõi phục bút)
+  - ⚠️ Khi thu hồi phục bút, tiêu đề phải giữ nguyên như tiêu đề gốc, không thêm hậu tố như "đã thu hồi"
+  - Ví dụ: tiêu đề phục bút gốc là "biểu tượng thị giác mái tóc xanh", khi thu hồi vẫn phải là "biểu tượng thị giác mái tóc xanh", không phải "biểu tượng thị giác mái tóc xanh đã thu hồi"
+- **content**: mô tả chi tiết nội dung và tác dụng dự kiến của phục bút
+- **type**: planted (gài) hoặc resolved (thu hồi)
+- **strength**: cường độ 1-10 (sức hút với người đọc)
+- **subtlety**: mức độ che giấu 1-10 (càng cao càng khó nhận ra)
+- **reference_chapter**: số chương gốc được viện dẫn khi thu hồi, khi gài là null
+- **reference_foreshadow_id**: [bắt buộc khi thu hồi]ID phục bút được thu hồi (chọn từ danh sách phục bút đã gài), khi gài là null
+  - 🔴 Quan trọng: khi thu hồi phục bút, bắt buộc tìm ID tương ứng trong [danh sách phục bút đã gài] và điền vào
+  - Nếu danh sách có phục bút được đánh dấu [ID: xxx], khi thu hồi bắt buộc dùng ID đó
+  - Chỉ điền null nếu không thể xác định đó là phục bút nào (nhưng nên cố gắng tránh)
+- **keyword**: [bắt buộc]sao chép nguyên văn đoạn định vị dài 8-25 chữ từ văn bản gốc
+- **category**: phân loại (identity=thân thế/mystery=hồi hộp/item=vật phẩm/relationship=quan hệ/event=sự kiện/ability=năng lực/prophecy=lời tiên tri)
+- **is_long_term**: có phải phục bút dài hạn hay không (thu hồi sau hơn 10 chương là true)
+- **related_characters**: danh sách tên nhân vật liên quan
+- **estimated_resolve_chapter**: [bắt buộc]số chương dự kiến thu hồi (khi gài phải dự kiến, khi thu hồi là chương hiện tại)
 
-**3. 冲突分析 (Conflict)**
-- 冲突类型：人与人/人与己/人与环境/人与社会
-- 冲突各方及立场
-- 冲突强度(1-10)
-- 解决进度(0-100%)
+**3. Phân tích xung đột (Conflict)**
+- Loại xung đột: người với người/người với chính mình/người với môi trường/người với xã hội
+- Các bên xung đột và lập trường
+- Cường độ xung đột (1-10)
+- Tiến độ giải quyết (0-100%)
 
-**4. 情感曲线 (Emotional Arc)**
-- 主导情绪（最多10字）
-- 情感强度(1-10)
-- 情绪变化轨迹
+**4. Đường cong cảm xúc (Emotional Arc)**
+- Cảm xúc chủ đạo (tối đa 10 chữ)
+- Cường độ cảm xúc (1-10)
+- Quỹ đạo biến đổi cảm xúc
 
-**5. 角色状态追踪 (Character Development)**
-对每个出场角色分析：
-- 心理状态变化(前→后)
-- 关系变化
-- 关键行动和决策
-- 成长或退步
-- **💀 存活状态（重要）**：
-  - survival_status: 角色当前存活状态
-  - 可选值：active(正常)/deceased(死亡)/missing(失踪)/retired(退场)
-  - 默认为null（表示无变化），仅当章节中角色明确死亡、失踪或永久退场时才填写
-  - 死亡/失踪需要有明确的剧情依据，不可臆测
-- ** 职业变化（可选）**：
-  - 仅当章节明确描述职业进展时填写
-  - main_career_stage_change: 整数(+1晋升/-1退步/0无变化)
-  - sub_career_changes: 副职业变化数组
-  - new_careers: 新获得职业
-  - career_breakthrough: 突破过程描述
-- **🏛️ 组织变化（可选）**：
-  - 仅当章节明确描述角色与组织关系变化时填写
-  - organization_changes: 组织变动数组
-  - 每项包含：organization_name(组织名)、change_type(加入joined/离开left/晋升promoted/降级demoted/开除expelled/叛变betrayed)、new_position(新职位，可选)、loyalty_change(忠诚度变化描述，可选)、description(变化描述)
+**5. Theo dõi trạng thái nhân vật (Character Development)**
+Phân tích từng nhân vật xuất hiện:
+- Thay đổi trạng thái tâm lý (trước → sau)
+- Thay đổi quan hệ
+- Hành động và quyết định then chốt
+- Trưởng thành hoặc thụt lùi
+- **💀 Trạng thái sống còn (quan trọng)**:
+  - survival_status: trạng thái sống còn hiện tại của nhân vật
+  - Giá trị cho phép: active (bình thường)/deceased (đã chết)/missing (mất tích)/retired (rời truyện)
+  - Mặc định là null (nghĩa là không thay đổi), chỉ điền khi chương mô tả rõ nhân vật chết, mất tích hoặc rời truyện vĩnh viễn
+  - Cái chết hoặc mất tích phải có căn cứ tình tiết rõ ràng, không được suy đoán
+- ** Thay đổi nghề nghiệp (tuỳ chọn)**:
+  - Chỉ điền khi chương mô tả rõ tiến triển nghề nghiệp
+  - main_career_stage_change: số nguyên (+1 thăng tiến/-1 thụt lùi/0 không thay đổi)
+  - sub_career_changes: mảng thay đổi nghề phụ
+  - new_careers: nghề mới đạt được
+  - career_breakthrough: mô tả quá trình đột phá
+- **🏛️ Thay đổi tổ chức (tuỳ chọn)**:
+  - Chỉ điền khi chương mô tả rõ thay đổi quan hệ giữa nhân vật và tổ chức
+  - organization_changes: mảng thay đổi tổ chức
+  - Mỗi mục gồm: organization_name (tên tổ chức), change_type (gia nhập joined/rời đi left/thăng chức promoted/giáng chức demoted/khai trừ expelled/phản bội betrayed), new_position (chức vụ mới, tuỳ chọn), loyalty_change (mô tả thay đổi lòng trung thành, tuỳ chọn), description (mô tả thay đổi)
 
-**5b. 组织状态追踪 (Organization Status) - 可选**
-仅当章节涉及组织势力变化时填写，分析出场组织的状态变化：
-- 组织名称
-- 势力等级变化(power_change: 整数，+N增强/-N削弱/0无变化)
-- 据点变化(new_location: 新据点，可选)
-- 宗旨/目标变化(new_purpose: 新目标，可选)
-- 组织状态描述(status_description: 当前状态概述)
-- 关键事件(key_event: 触发变化的事件)
-- **💀 组织存续状态（重要）**：
-  - is_destroyed: 组织是否被覆灭（true/false，默认false）
-  - 仅当章节明确描述组织被彻底消灭、瓦解、灭亡时设为true
+**5b. Theo dõi trạng thái tổ chức (Organization Status) - tuỳ chọn**
+Chỉ điền khi chương liên quan đến thay đổi thế lực tổ chức, phân tích thay đổi trạng thái của tổ chức xuất hiện:
+- Tên tổ chức
+- Thay đổi cấp bậc thế lực (power_change: số nguyên, +N tăng cường/-N suy yếu/0 không thay đổi)
+- Thay đổi căn cứ (new_location: căn cứ mới, tuỳ chọn)
+- Thay đổi tôn chỉ/mục tiêu (new_purpose: mục tiêu mới, tuỳ chọn)
+- Mô tả trạng thái tổ chức (status_description: khái quát trạng thái hiện tại)
+- Sự kiện then chốt (key_event: sự kiện kích hoạt thay đổi)
+- **💀 Trạng thái tồn tại của tổ chức (quan trọng)**:
+  - is_destroyed: tổ chức có bị tiêu diệt hay không (true/false, mặc định false)
+  - Chỉ đặt true khi chương mô tả rõ tổ chức bị tiêu diệt hoàn toàn, tan rã hoặc diệt vong
 
-**6. 关键情节点 (Plot Points)**
-列出3-5个核心情节点：
-- 情节内容
-- 类型(revelation/conflict/resolution/transition)
-- 重要性(0.0-1.0)
-- 对故事的影响
-- **关键词**：【必填】从原文逐字复制8-25字
+**6. Điểm tình tiết then chốt (Plot Points)**
+Liệt kê 3-5 điểm tình tiết cốt lõi:
+- Nội dung tình tiết
+- Loại (revelation/conflict/resolution/transition)
+- Mức độ quan trọng (0.0-1.0)
+- Ảnh hưởng đến câu chuyện
+- **Từ khóa**: [Bắt buộc]sao chép nguyên văn 8-25 chữ từ bản gốc
 
-**7. 场景与节奏**
-- 主要场景
-- 叙事节奏(快/中/慢)
-- 对话与描写比例
+**7. Bối cảnh và nhịp độ**
+- Bối cảnh chính
+- Nhịp kể chuyện (nhanh/vừa/chậm)
+- Tỷ lệ hội thoại và miêu tả
 
-**8. 质量评分（支持小数，严格区分度）**
-评分范围：1.0-10.0，支持一位小数（如 6.5、7.8）
-每个维度必须根据以下标准严格评分，避免所有内容都打中等分数：
+**8. Chấm điểm chất lượng (hỗ trợ số thập phân, phân biệt nghiêm ngặt)**
+Phạm vi điểm: 1.0-10.0, hỗ trợ một chữ số thập phân (ví dụ 6.5, 7.8)
+Mỗi chiều phải được chấm nghiêm ngặt theo tiêu chuẩn dưới đây, tránh chấm mọi nội dung ở mức trung bình:
 
-**节奏把控 (pacing)**：
-- 1.0-3.9（差）：节奏混乱，该快不快该慢不慢；场景切换生硬；大段无意义描写拖沓
-- 4.0-5.9（中下）：节奏基本可读但有明显问题；部分场景过于冗长或仓促
-- 6.0-7.9（中上）：节奏整体流畅，偶有小问题；张弛有度但不够精妙
-- 8.0-9.4（优秀）：节奏把控精准，高潮迭起；场景切换自然，详略得当
-- 9.5-10.0（完美）：节奏大师级，每个段落都恰到好处
+**Kiểm soát nhịp độ (pacing)**:
+- 1.0-3.9 (kém): nhịp độ rối loạn, chỗ cần nhanh lại không nhanh, chỗ cần chậm lại không chậm; chuyển cảnh gượng gạo; miêu tả dài dòng vô nghĩa
+- 4.0-5.9 (dưới trung bình): nhịp độ cơ bản dễ đọc nhưng có vấn đề rõ ràng; một số cảnh quá dài hoặc quá vội
+- 6.0-7.9 (trên trung bình): nhịp độ nhìn chung trôi chảy, đôi lúc có vấn đề nhỏ; tiết tấu cân bằng nhưng chưa tinh tế
+- 8.0-9.4 (xuất sắc): kiểm soát nhịp độ chính xác, cao trào liên tiếp; chuyển cảnh tự nhiên, chi tiết vừa đủ
+- 9.5-10.0 (hoàn hảo): nhịp độ bậc thầy, mỗi đoạn đều vừa vặn
 
-**吸引力 (engagement)**：
-- 1.0-3.9（差）：内容乏味，缺乏钩子；读者难以继续阅读
-- 4.0-5.9（中下）：有基本情节但缺乏亮点；钩子设置生硬或缺失
-- 6.0-7.9（中上）：有一定吸引力，钩子有效但不够巧妙
-- 8.0-9.4（优秀）：引人入胜，钩子设置精妙；让人欲罢不能
-- 9.5-10.0（完美）：极具吸引力，每个段落都有阅读动力
+**Sức hút (engagement)**:
+- 1.0-3.9 (kém): nội dung tẻ nhạt, thiếu móc câu; người đọc khó tiếp tục
+- 4.0-5.9 (dưới trung bình): có tình tiết cơ bản nhưng thiếu điểm sáng; móc câu gượng gạo hoặc bị thiếu
+- 6.0-7.9 (trên trung bình): có sức hút nhất định, móc câu hiệu quả nhưng chưa tinh tế
+- 8.0-9.4 (xuất sắc): cuốn hút, móc câu được thiết lập khéo léo; khiến người đọc không thể dừng lại
+- 9.5-10.0 (hoàn hảo): cực kỳ cuốn hút, mỗi đoạn đều tạo động lực đọc tiếp
 
-**连贯性 (coherence)**：
-- 1.0-3.9（差）：逻辑混乱，前后矛盾；角色行为不合理
-- 4.0-5.9（中下）：基本连贯但有明显漏洞；部分情节衔接生硬
-- 6.0-7.9（中上）：整体连贯，偶有小瑕疵；角色行为基本合理
-- 8.0-9.4（优秀）：逻辑严密，衔接自然；角色行为高度一致
-- 9.5-10.0（完美）：无懈可击的连贯性
+**Tính mạch lạc (coherence)**:
+- 1.0-3.9 (kém): logic rối loạn, mâu thuẫn trước sau; hành vi nhân vật phi lý
+- 4.0-5.9 (dưới trung bình): cơ bản mạch lạc nhưng có lỗ hổng rõ; một số đoạn nối tình tiết gượng gạo
+- 6.0-7.9 (trên trung bình): nhìn chung mạch lạc, đôi lúc có khiếm khuyết nhỏ; hành vi nhân vật cơ bản hợp lý
+- 8.0-9.4 (xuất sắc): logic chặt chẽ, chuyển tiếp tự nhiên; hành vi nhân vật nhất quán cao
+- 9.5-10.0 (hoàn hảo): tính mạch lạc không thể chê
 
-**整体质量 (overall)**：
-- 计算公式：(pacing + engagement + coherence) / 3，保留一位小数
-- 可根据综合印象±0.5调整，必须与各项分数保持一致性
+**Chất lượng tổng thể (overall)**:
+- Công thức: (pacing + engagement + coherence) / 3, giữ một chữ số thập phân
+- Có thể điều chỉnh ±0.5 theo ấn tượng tổng hợp, nhưng phải nhất quán với điểm từng mục
 
-**9. 改进建议（与分数关联）**
-建议数量必须与整体质量分数关联：
-- overall < 4.0：必须提供4-5条具体改进建议，指出严重问题
-- overall 4.0-5.9：必须提供3-4条改进建议，指出主要问题
-- overall 6.0-7.9：提供1-2条优化建议，指出可提升之处
-- overall ≥ 8.0：提供0-1条锦上添花的建议
+**9. Đề xuất cải thiện (liên hệ với điểm số)**
+Số lượng đề xuất phải liên hệ với điểm chất lượng tổng thể:
+- overall < 4.0: bắt buộc đưa ra 4-5 đề xuất cụ thể, chỉ rõ vấn đề nghiêm trọng
+- overall 4.0-5.9: bắt buộc đưa ra 3-4 đề xuất, chỉ rõ vấn đề chính
+- overall 6.0-7.9: đưa ra 1-2 đề xuất tối ưu, chỉ rõ điểm có thể nâng cao
+- overall ≥ 8.0: đưa ra 0-1 đề xuất hoàn thiện thêm
 
-每条建议必须：
-- 指出具体问题位置或类型
-- 说明为什么是问题
-- 给出明确的改进方向
+Mỗi đề xuất phải:
+- Chỉ ra vị trí hoặc loại vấn đề cụ thể
+- Giải thích vì sao đó là vấn đề
+- Đưa ra hướng cải thiện rõ ràng
 </analysis_framework>
 
 <output priority="P0">
-【输出格式】
-返回纯JSON对象（无markdown标记）：
+[Định dạng đầu ra]
+Trả về object JSON thuần (không đánh dấu markdown):
 
 {{
   "hooks": [
     {{
-      "type": "悬念",
-      "content": "具体描述",
+      "type": "Hồi hộp",
+      "content": "Mô tả cụ thể",
       "strength": 8,
-      "position": "中段",
-      "keyword": "从原文逐字复制的8-25字文本"
+      "position": "Giữa chương",
+      "keyword": "Đoạn 8-25 chữ sao chép nguyên văn từ bản gốc"
     }}
   ],
   "foreshadows": [
     {{
-      "title": "伏笔简洁标题",
-      "content": "伏笔详细内容和预期作用",
+      "title": "Tiêu đề ngắn gọn của phục bút",
+      "content": "Nội dung chi tiết và tác dụng dự kiến của phục bút",
       "type": "planted",
       "strength": 7,
       "subtlety": 8,
       "reference_chapter": null,
       "reference_foreshadow_id": null,
-      "keyword": "从原文逐字复制的8-25字文本",
+      "keyword": "Đoạn 8-25 chữ sao chép nguyên văn từ bản gốc",
       "category": "mystery",
       "is_long_term": false,
-      "related_characters": ["角色A", "角色B"],
+      "related_characters": ["Nhân vật A", "Nhân vật B"],
       "estimated_resolve_chapter": 15
     }},
     {{
-      "title": "回收的伏笔标题",
-      "content": "伏笔如何被回收的描述",
+      "title": "Tiêu đề phục bút được thu hồi",
+      "content": "Mô tả cách phục bút được thu hồi",
       "type": "resolved",
       "strength": 8,
       "subtlety": 6,
       "reference_chapter": 5,
-      "reference_foreshadow_id": "abc123-已埋入伏笔的ID",
-      "keyword": "从原文逐字复制的8-25字文本",
+      "reference_foreshadow_id": "abc123-ID-phục-bút-đã-gài",
+      "keyword": "Đoạn 8-25 chữ sao chép nguyên văn từ bản gốc",
       "category": "mystery",
       "is_long_term": false,
-      "related_characters": ["角色A"],
+      "related_characters": ["Nhân vật A"],
       "estimated_resolve_chapter": 10
     }}
   ],
   "conflict": {{
-    "types": ["人与人", "人与己"],
-    "parties": ["主角-复仇", "反派-维护现状"],
+    "types": ["Người với người", "Người với chính mình"],
+    "parties": ["Nhân vật chính - báo thù", "Phản diện - duy trì hiện trạng"],
     "level": 8,
-    "description": "冲突描述",
+    "description": "Mô tả xung đột",
     "resolution_progress": 0.3
   }},
   "emotional_arc": {{
-    "primary_emotion": "紧张焦虑",
+    "primary_emotion": "Căng thẳng và lo âu",
     "intensity": 8,
-    "curve": "平静→紧张→高潮→释放",
-    "secondary_emotions": ["期待", "焦虑"]
+    "curve": "Bình lặng → căng thẳng → cao trào → giải tỏa",
+    "secondary_emotions": ["Mong đợi", "Lo âu"]
   }},
   "character_states": [
     {{
-      "character_name": "张三",
+      "character_name": "Nguyễn Văn A",
       "survival_status": null,
-      "state_before": "犹豫",
-      "state_after": "坚定",
-      "psychological_change": "心理变化描述",
-      "key_event": "触发事件",
-      "relationship_changes": {{"李四": "关系改善"}},
+      "state_before": "Do dự",
+      "state_after": "Kiên định",
+      "psychological_change": "Mô tả thay đổi tâm lý",
+      "key_event": "Sự kiện kích hoạt",
+      "relationship_changes": {{"Trần Văn B": "Quan hệ được cải thiện"}},
       "career_changes": {{
         "main_career_stage_change": 1,
-        "sub_career_changes": [{{"career_name": "炼丹", "stage_change": 1}}],
+        "sub_career_changes": [{{"career_name": "Luyện đan", "stage_change": 1}}],
         "new_careers": [],
-        "career_breakthrough": "突破描述"
+        "career_breakthrough": "Mô tả quá trình đột phá"
       }},
       "organization_changes": [
         {{
-          "organization_name": "某门派",
+          "organization_name": "Một môn phái",
           "change_type": "promoted",
-          "new_position": "长老",
-          "loyalty_change": "忠诚度提升",
-          "description": "因立下大功被提拔为长老"
+          "new_position": "Trưởng lão",
+          "loyalty_change": "Lòng trung thành tăng",
+          "description": "Được thăng chức trưởng lão nhờ lập công lớn"
         }}
       ]
     }}
   ],
   "plot_points": [
     {{
-      "content": "情节点描述",
+      "content": "Mô tả điểm tình tiết",
       "type": "revelation",
       "importance": 0.9,
-      "impact": "推动故事发展",
-      "keyword": "从原文逐字复制的8-25字文本"
+      "impact": "Thúc đẩy câu chuyện phát triển",
+      "keyword": "Đoạn 8-25 chữ sao chép nguyên văn từ bản gốc"
     }}
   ],
   "scenes": [
     {{
-      "location": "地点",
-      "atmosphere": "氛围",
-      "duration": "时长估计"
+      "location": "Địa điểm",
+      "atmosphere": "Bầu không khí",
+      "duration": "Ước tính thời lượng"
     }}
   ],
   "organization_states": [
     {{
-      "organization_name": "某门派",
+      "organization_name": "Một môn phái",
       "power_change": -10,
       "new_location": null,
       "new_purpose": null,
-      "status_description": "因内乱势力受损，但核心力量未动摇",
-      "key_event": "长老叛变导致分支瓦解",
+      "status_description": "Thế lực bị tổn hại vì nội loạn nhưng lực lượng nòng cốt chưa lay chuyển",
+      "key_event": "Trưởng lão phản bội khiến chi nhánh tan rã",
       "is_destroyed": false
     }}
   ],
@@ -1343,1267 +1365,1297 @@ class PromptService:
     "engagement": 5.8,
     "coherence": 7.2,
     "overall": 6.5,
-    "score_justification": "节奏整体流畅但中段略显拖沓；钩子设置有效但不够巧妙；逻辑连贯无明显漏洞"
+    "score_justification": "Nhịp độ nhìn chung trôi chảy nhưng giữa chương hơi dài dòng; móc câu hiệu quả nhưng chưa tinh tế; logic mạch lạc, không có lỗ hổng rõ ràng"
   }},
-  "plot_stage": "发展",
+  "plot_stage": "Phát triển",
   "suggestions": [
-    "【节奏问题】第三场景的心理描写过长（约500字），建议精简至200字以内，保留核心情感即可",
-    "【吸引力不足】章节中段缺乏有效钩子，建议在主角发现线索后增加一个小悬念"
+    "[Vấn đề nhịp độ]Miêu tả tâm lý ở cảnh thứ ba quá dài (khoảng 500 chữ), nên rút xuống dưới 200 chữ và giữ lại cảm xúc cốt lõi",
+    "[Thiếu sức hút]Giữa chương thiếu móc câu hiệu quả, nên thêm một hồi hộp nhỏ sau khi nhân vật chính phát hiện manh mối"
   ]
 }}
 </output>
 
 <constraints>
-【必须遵守】
-✅ keyword字段必填：钩子、伏笔、情节点的keyword不能为空
-✅ 逐字复制：keyword必须从原文复制，长度8-25字
-✅ 精确定位：keyword能在原文中精确找到
-✅ 职业变化可选：仅当章节明确描述时填写
-✅ 组织变化可选：仅当章节明确描述角色与组织关系变动时填写（character_states中的organization_changes）
-✅ 组织状态可选：仅当章节明确描述组织势力/据点/目标变化时填写（organization_states顶级字段）
-✅ 存活状态谨慎：survival_status仅当章节有明确死亡/失踪/退场描写时填写，默认null
-✅ 组织覆灭谨慎：is_destroyed仅当组织被彻底消灭时设true，组织受损不算覆灭
-✅ 【伏笔ID追踪】回收伏笔时，必须从【已埋入伏笔列表】中查找匹配的ID填入 reference_foreshadow_id
-✅ 【suggestions严格格式】suggestions 必须是“字符串数组”，每个元素都必须是纯字符串
-✅ suggestions 的正确格式示例："suggestions": ["【节奏问题】...", "【描写不足】..."]
-✅ suggestions 中禁止返回对象、字典、键值对或嵌套结构，例如禁止 {{"suggestion": "..."}}、{{"content": "..."}}
-✅ 如果没有改进建议，必须返回空数组 []，不要返回 null，不要省略字段
+[Bắt buộc tuân thủ]
+✅ Bắt buộc có trường keyword: keyword của móc câu, phục bút và điểm tình tiết không được để trống
+✅ Sao chép từng chữ: keyword phải được sao chép từ văn bản gốc, dài 8-25 chữ
+✅ Định vị chính xác: keyword phải tìm thấy chính xác trong văn bản gốc
+✅ Thay đổi nghề nghiệp là tuỳ chọn: chỉ điền khi chương mô tả rõ
+✅ Thay đổi tổ chức là tuỳ chọn: chỉ điền khi chương mô tả rõ biến động quan hệ giữa nhân vật và tổ chức (organization_changes trong character_states)
+✅ Trạng thái tổ chức là tuỳ chọn: chỉ điền khi chương mô tả rõ thay đổi thế lực, căn cứ hoặc mục tiêu tổ chức (trường cấp cao organization_states)
+✅ Thận trọng với trạng thái sống còn: chỉ điền survival_status khi chương mô tả rõ cái chết, mất tích hoặc rời truyện, mặc định là null
+✅ Thận trọng với tổ chức bị tiêu diệt: chỉ đặt is_destroyed là true khi tổ chức bị tiêu diệt hoàn toàn, tổ chức bị tổn hại không tính là tiêu diệt
+✅ [Theo dõi ID phục bút]Khi thu hồi phục bút, bắt buộc tìm ID tương ứng trong [danh sách phục bút đã gài] và điền vào reference_foreshadow_id
+✅ [Định dạng nghiêm ngặt của suggestions]suggestions phải là "mảng chuỗi", mỗi phần tử phải là chuỗi thuần
+✅ Ví dụ đúng của suggestions: "suggestions": ["[Vấn đề nhịp độ]...", "[Thiếu miêu tả]..."]
+✅ suggestions không được trả về object, từ điển, cặp khóa-giá trị hoặc cấu trúc lồng nhau, ví dụ cấm {{"suggestion": "..."}}, {{"content": "..."}}
+✅ Nếu không có đề xuất cải thiện, bắt buộc trả về mảng rỗng [], không trả về null và không bỏ qua trường
 
-【评分约束 - 严格执行】
-✅ 严格按评分标准打分，支持小数（如6.5、7.2、8.3）
-✅ 不要默认给7.0-8.0分，差的内容必须给低分（1.0-5.0），好的内容才给高分（8.0-10.0）
-✅ score_justification必填：简要说明各项评分的依据
-✅ 建议数量必须与overall分数关联：
-   - overall≤4.0 → 4-5条建议
-   - overall 4.0-6.0 → 3-4条建议
-   - overall 6.0-8.0 → 1-2条建议
-   - overall≥8.0 → 0-1条建议
-✅ 每条建议必须标注问题类型（如【节奏问题】【描写不足】等）
-✅ 每条建议必须直接输出完整文本，不能包裹为对象字段
+[Ràng buộc chấm điểm - thực hiện nghiêm ngặt]
+✅ Chấm điểm nghiêm ngặt theo tiêu chuẩn, hỗ trợ số thập phân (ví dụ 6.5, 7.2, 8.3)
+✅ Không mặc định chấm 7.0-8.0; nội dung kém phải điểm thấp (1.0-5.0), chỉ nội dung tốt mới được điểm cao (8.0-10.0)
+✅ Bắt buộc có score_justification: giải thích ngắn gọn căn cứ của từng điểm
+✅ Số lượng đề xuất phải liên hệ với điểm overall:
+   - overall≤4.0 → 4-5 đề xuất
+   - overall 4.0-6.0 → 3-4 đề xuất
+   - overall 6.0-8.0 → 1-2 đề xuất
+   - overall≥8.0 → 0-1 đề xuất
+✅ Mỗi đề xuất phải ghi rõ loại vấn đề (ví dụ [Vấn đề nhịp độ], [Thiếu miêu tả]...)
+✅ Mỗi đề xuất phải xuất trực tiếp toàn bộ văn bản, không bọc trong trường object
 
-【禁止事项】
-❌ keyword使用概括或改写的文字
-❌ 输出markdown标记
-❌ 遗漏必填的keyword字段
-❌ 无根据地添加职业变化
-❌ 无根据地添加组织变化或组织状态变化
-❌ 无确切剧情依据地标记角色死亡或组织覆灭
-❌ 所有章节都打7-8分的"安全分"
-❌ 高分章节给大量建议，或低分章节不给建议
-❌ suggestions 返回 {{"suggestion": "建议内容"}} 这类对象数组
-❌ suggestions 返回带编号对象、content对象、explanation对象等任何非字符串元素
+[Điều cấm]
+❌ Dùng văn bản khái quát hoặc viết lại cho keyword
+❌ Xuất đánh dấu markdown
+❌ Bỏ sót trường keyword bắt buộc
+❌ Tự ý thêm thay đổi nghề nghiệp không có căn cứ
+❌ Tự ý thêm thay đổi tổ chức hoặc trạng thái tổ chức không có căn cứ
+❌ Đánh dấu nhân vật đã chết hoặc tổ chức bị tiêu diệt khi không có căn cứ tình tiết rõ ràng
+❌ Chấm mọi chương ở mức "an toàn" 7-8
+❌ Đưa ra nhiều đề xuất cho chương điểm cao hoặc không đưa đề xuất cho chương điểm thấp
+❌ Trả về mảng object kiểu {{"suggestion": "nội dung đề xuất"}} trong suggestions
+❌ Trả về phần tử không phải chuỗi trong suggestions, như object có số thứ tự, object content hoặc object explanation
 </constraints>"""
 
     # 大纲单批次展开提示词 V2（RTCO框架）
     OUTLINE_EXPAND_SINGLE = """<system>
-你是专业的小说情节架构师，擅长将大纲节点展开为详细章节规划。
+Bạn là kiến trúc sư tình tiết tiểu thuyết chuyên nghiệp, giỏi mở rộng nút dàn ý thành kế hoạch chương chi tiết.
 </system>
 
-<task>
-【展开任务】
-将第{outline_order_index}节大纲《{outline_title}》展开为{target_chapter_count}个章节的详细规划。
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
 
-【展开策略】
+<task>
+[Nhiệm vụ mở rộng]
+Mở rộng mục dàn ý {outline_order_index} «{outline_title}» thành kế hoạch chi tiết cho {target_chapter_count} chương.
+
+[Chiến lược mở rộng]
 {strategy_instruction}
 </task>
 
 <project priority="P1">
-【项目信息】
-小说名称：{project_title}
-类型：{project_genre}
-主题：{project_theme}
-叙事视角：{project_narrative_perspective}
+[Thông tin dự án]
+Tên tiểu thuyết: {project_title}
+Thể loại: {project_genre}
+Chủ đề: {project_theme}
+Góc kể chuyện: {project_narrative_perspective}
 
-【世界观背景】
-时间背景：{project_world_time_period}
-地理位置：{project_world_location}
-氛围基调：{project_world_atmosphere}
+[Nền bối cảnh thế giới]
+Bối cảnh thời gian: {project_world_time_period}
+Vị trí địa lý: {project_world_location}
+Gam bầu không khí: {project_world_atmosphere}
 </project>
 
 <characters priority="P1">
-【角色信息】
+[Thông tin nhân vật]
 {characters_info}
 </characters>
 
 <outline_node priority="P0">
-【当前大纲节点 - 展开对象】
-序号：第 {outline_order_index} 节
-标题：{outline_title}
-内容：{outline_content}
+[Nút dàn ý hiện tại - đối tượng mở rộng]
+Số thứ tự: tiết {outline_order_index}
+Tiêu đề: {outline_title}
+Nội dung: {outline_content}
 </outline_node>
 
 <context priority="P2">
-【上下文参考】
+[Tham chiếu ngữ cảnh]
 {context_info}
 </context>
 
 <output priority="P0">
-【输出格式】
-返回{target_chapter_count}个章节规划的JSON数组：
+[Định dạng đầu ra]
+Trả về mảng JSON kế hoạch {target_chapter_count} chương:
 
 [
   {{
     "sub_index": 1,
-    "title": "章节标题（体现核心冲突或情感）",
-    "plot_summary": "剧情摘要（200-300字）：详细描述该章发生的事件，仅限当前大纲内容",
-    "key_events": ["关键事件1", "关键事件2", "关键事件3"],
-    "character_focus": ["角色A", "角色B"],
-    "emotional_tone": "情感基调（如：紧张、温馨、悲伤）",
-    "narrative_goal": "叙事目标（该章要达成的叙事效果）",
-    "conflict_type": "冲突类型（如：内心挣扎、人际冲突）",
+    "title": "Tiêu đề chương (thể hiện xung đột hoặc cảm xúc cốt lõi)",
+    "plot_summary": "Tóm tắt tình tiết (200-300 chữ): mô tả chi tiết sự kiện xảy ra trong chương, chỉ giới hạn ở nội dung dàn ý hiện tại",
+    "key_events": ["Sự kiện then chốt 1", "Sự kiện then chốt 2", "Sự kiện then chốt 3"],
+    "character_focus": ["Nhân vật A", "Nhân vật B"],
+    "emotional_tone": "Gam cảm xúc (ví dụ: căng thẳng, ấm áp, bi thương)",
+    "narrative_goal": "Mục tiêu kể chuyện (hiệu quả tự sự cần đạt trong chương)",
+    "conflict_type": "Loại xung đột (ví dụ: giằng co nội tâm, xung đột giữa người với người)",
     "estimated_words": 3000{scene_field}
   }}
 ]
 
-【格式规范】
-- 纯JSON数组输出，无其他文字
-- 内容描述中严禁使用特殊符号
+[Quy chuẩn định dạng]
+- Xuất mảng JSON thuần, không chữ khác
+- Nghiêm cấm dùng ký hiệu đặc biệt trong mô tả nội dung
 </output>
 
 <constraints>
-【⚠️ 内容边界约束 - 必须严格遵守】
-✅ 只能展开当前大纲节点的内容
-✅ 深化当前大纲，而非跨越到后续
-✅ 放慢叙事节奏，充分体验当前阶段
+[⚠️ Ràng buộc phạm vi nội dung - bắt buộc tuân thủ nghiêm ngặt]
+✅ Chỉ được mở rộng nội dung nút dàn ý hiện tại
+✅ Đào sâu dàn ý hiện tại, không nhảy sang phần sau
+✅ Làm chậm nhịp kể để trải nghiệm đầy đủ giai đoạn hiện tại
 
-❌ 绝对不能推进到后续大纲内容
-❌ 不要让剧情快速推进
-❌ 不要提前展开【后一节】的内容
+❌ Tuyệt đối không được đẩy sang nội dung dàn ý phía sau
+❌ Không để cốt truyện tiến quá nhanh
+❌ Không được mở rộng trước nội dung của [mục sau]
 
-【展开原则】
-✅ 将单一事件拆解为多个细节丰富的章节
-✅ 深入挖掘情感、心理、环境、对话
-✅ 每章是当前大纲内容的不同侧面或阶段
+[Nguyên tắc mở rộng]
+✅ Chia một sự kiện thành nhiều chương giàu chi tiết
+✅ Đào sâu cảm xúc, tâm lý, môi trường và hội thoại
+✅ Mỗi chương thể hiện một phương diện hoặc giai đoạn khác nhau của nội dung dàn ý hiện tại
 
-【🔴 相邻章节差异化约束（防止重复）】
-✅ 每章有独特的开场方式（不同场景、时间点、角色状态）
-✅ 每章有独特的结束方式（不同悬念、转折、情感收尾）
-✅ key_events在相邻章节间绝不重叠
-✅ plot_summary描述该章独特内容，不与其他章雷同
-✅ 同一事件的不同阶段要明确区分"前、中、后"
+[🔴 Ràng buộc khác biệt giữa chương kề nhau (tránh trùng)]
+✅ Mỗi chương có cách mở đầu riêng (bối cảnh, thời điểm, trạng thái nhân vật khác nhau)
+✅ Mỗi chương có cách kết thúc riêng (hồi hộp, bước ngoặt, kết thúc cảm xúc khác nhau)
+✅ key_events tuyệt đối không trùng giữa các chương kề nhau
+✅ plot_summary mô tả nội dung riêng của chương, không trùng với chương khác
+✅ Các giai đoạn khác nhau của cùng một sự kiện phải phân biệt rõ "trước, giữa, sau"
 
-【章节间要求】
-✅ 衔接自然流畅（每章从不同起点开始）
-✅ 剧情递进合理（但不超出当前大纲边界）
-✅ 节奏张弛有度
-✅ 每章有明确且独特的叙事价值
-✅ 最后一章结束时恰好完成当前大纲内容
-✅ 关键事件无重叠：检查相邻章节key_events
+[Yêu cầu giữa các chương]
+✅ Nối tiếp tự nhiên, trôi chảy (mỗi chương bắt đầu từ một điểm khác nhau)
+✅ Tình tiết phát triển hợp lý (nhưng không vượt phạm vi dàn ý hiện tại)
+✅ Nhịp điệu có lúc căng lúc chùng
+✅ Mỗi chương có giá trị kể chuyện rõ ràng và riêng biệt
+✅ Chương cuối kết thúc vừa đủ để hoàn thành nội dung dàn ý hiện tại
+✅ Sự kiện then chốt không trùng: kiểm tra key_events giữa các chương kề nhau
 
-【禁止事项】
-❌ 输出非JSON格式
-❌ 剧情越界到后续大纲
-❌ 相邻章节内容重复
-❌ 关键事件雷同
+[Điều cấm]
+❌ Xuất định dạng không phải JSON
+❌ Cốt truyện vượt sang dàn ý phía sau
+❌ Nội dung chương kề nhau bị trùng
+❌ Sự kiện then chốt trùng lặp
 </constraints>"""
 
     # 大纲分批展开提示词 V2（RTCO框架）
     OUTLINE_EXPAND_MULTI = """<system>
-你是专业的小说情节架构师，擅长分批展开大纲节点。
+Bạn là kiến trúc sư tình tiết tiểu thuyết chuyên nghiệp, giỏi mở rộng nút dàn ý theo từng lô.
 </system>
 
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
+
 <task>
-【展开任务】
-继续展开第{outline_order_index}节大纲《{outline_title}》，生成第{start_index}-{end_index}节（共{target_chapter_count}个章节）的详细规划。
+[Nhiệm vụ mở rộng]
+Tiếp tục mở rộng mục dàn ý {outline_order_index} «{outline_title}», tạo kế hoạch chi tiết cho các chương {start_index}-{end_index} (tổng cộng {target_chapter_count} chương).
 
-【分批说明】
-- 这是整个展开的一部分
-- 必须与前面已生成的章节自然衔接
-- 从第{start_index}节开始编号
-- 继续深化当前大纲内容
+[Giải thích việc chia lô]
+- Đây là một phần của toàn bộ quá trình mở rộng
+- Bắt buộc nối tự nhiên với các chương đã tạo trước đó
+- Đánh số bắt đầu từ chương {start_index}
+- Tiếp tục đào sâu nội dung dàn ý hiện tại
 
-【展开策略】
+[Chiến lược mở rộng]
 {strategy_instruction}
 </task>
 
 <project priority="P1">
-【项目信息】
-小说名称：{project_title}
-类型：{project_genre}
-主题：{project_theme}
-叙事视角：{project_narrative_perspective}
+[Thông tin dự án]
+Tên tiểu thuyết: {project_title}
+Thể loại: {project_genre}
+Chủ đề: {project_theme}
+Góc kể chuyện: {project_narrative_perspective}
 
-【世界观背景】
-时间背景：{project_world_time_period}
-地理位置：{project_world_location}
-氛围基调：{project_world_atmosphere}
+[Nền bối cảnh thế giới]
+Bối cảnh thời gian: {project_world_time_period}
+Vị trí địa lý: {project_world_location}
+Gam bầu không khí: {project_world_atmosphere}
 </project>
 
 <characters priority="P1">
-【角色信息】
+[Thông tin nhân vật]
 {characters_info}
 </characters>
 
 <outline_node priority="P0">
-【当前大纲节点 - 展开对象】
-序号：第 {outline_order_index} 节
-标题：{outline_title}
-内容：{outline_content}
+[Nút dàn ý hiện tại - đối tượng mở rộng]
+Số thứ tự: tiết {outline_order_index}
+Tiêu đề: {outline_title}
+Nội dung: {outline_content}
 </outline_node>
 
 <context priority="P2">
-【上下文参考】
+[Tham chiếu ngữ cảnh]
 {context_info}
 
-【已生成的前序章节】
+[Các chương trước đã tạo]
 {previous_context}
 </context>
 
 <output priority="P0">
-【输出格式】
-返回第{start_index}-{end_index}节章节规划的JSON数组（共{target_chapter_count}个对象）：
+[Định dạng đầu ra]
+Trả về mảng JSON kế hoạch các chương {start_index}-{end_index} (tổng cộng {target_chapter_count} object):
 
 [
   {{
     "sub_index": {start_index},
-    "title": "章节标题",
-    "plot_summary": "剧情摘要（200-300字）：详细描述该章发生的事件",
-    "key_events": ["关键事件1", "关键事件2", "关键事件3"],
-    "character_focus": ["角色A", "角色B"],
-    "emotional_tone": "情感基调",
-    "narrative_goal": "叙事目标",
-    "conflict_type": "冲突类型",
+    "title": "Tiêu đề chương",
+    "plot_summary": "Tóm tắt tình tiết (200-300 chữ): mô tả chi tiết sự kiện xảy ra trong chương",
+    "key_events": ["Sự kiện then chốt 1", "Sự kiện then chốt 2", "Sự kiện then chốt 3"],
+    "character_focus": ["Nhân vật A", "Nhân vật B"],
+    "emotional_tone": "Gam cảm xúc",
+    "narrative_goal": "Mục tiêu kể chuyện",
+    "conflict_type": "Loại xung đột",
     "estimated_words": 3000{scene_field}
   }}
 ]
 
-【格式规范】
-- 纯JSON数组输出，无其他文字
-- 内容描述中严禁使用特殊符号
-- sub_index从{start_index}开始
+[Quy chuẩn định dạng]
+- Xuất mảng JSON thuần, không chữ khác
+- Nghiêm cấm dùng ký hiệu đặc biệt trong mô tả nội dung
+- sub_index bắt đầu từ {start_index}
 </output>
 
 <constraints>
-【⚠️ 内容边界约束】
-✅ 只能展开当前大纲节点的内容
-✅ 深化当前大纲，而非跨越到后续
-✅ 放慢叙事节奏
+[⚠️ Ràng buộc phạm vi nội dung]
+✅ Chỉ được mở rộng nội dung nút dàn ý hiện tại
+✅ Đào sâu dàn ý hiện tại, không nhảy sang phần sau
+✅ Làm chậm nhịp kể
 
-❌ 绝对不能推进到后续大纲内容
-❌ 不要让剧情快速推进
+❌ Tuyệt đối không được đẩy sang nội dung dàn ý phía sau
+❌ Không để cốt truyện tiến quá nhanh
 
-【分批连续性约束】
-✅ 与前面已生成章节自然衔接
-✅ 从第{start_index}节开始编号
-✅ 保持叙事连贯性
+[Ràng buộc tính liên tục khi chia lô]
+✅ Nối tự nhiên với các chương đã tạo trước đó
+✅ Đánh số bắt đầu từ chương {start_index}
+✅ Giữ tính mạch lạc của tự sự
 
-【🔴 相邻章节差异化约束（防止重复）】
-✅ 每章有独特的开场和结束方式
-✅ key_events在相邻章节间绝不重叠
-✅ plot_summary描述该章独特内容
-✅ 特别注意与前序章节的差异化
-✅ 避免重复已有内容
+[🔴 Ràng buộc khác biệt giữa chương kề nhau (tránh trùng)]
+✅ Mỗi chương có cách mở đầu và kết thúc riêng
+✅ key_events tuyệt đối không trùng giữa các chương kề nhau
+✅ plot_summary mô tả nội dung riêng của chương
+✅ Đặc biệt chú ý tạo khác biệt với các chương trước
+✅ Tránh lặp lại nội dung đã có
 
-【章节间要求】
-✅ 与前面章节衔接自然流畅
-✅ 剧情递进合理（但不超出当前大纲边界）
-✅ 节奏张弛有度
-✅ 每章有明确且独特的叙事价值
-✅ 关键事件无重叠：检查本批次和前序章节的key_events
+[Yêu cầu giữa các chương]
+✅ Nối tự nhiên, trôi chảy với các chương trước
+✅ Tình tiết phát triển hợp lý (nhưng không vượt phạm vi dàn ý hiện tại)
+✅ Nhịp điệu có lúc căng lúc chùng
+✅ Mỗi chương có giá trị kể chuyện rõ ràng và riêng biệt
+✅ Sự kiện then chốt không trùng: kiểm tra key_events của lô này và các chương trước
 
-【禁止事项】
-❌ 输出非JSON格式
-❌ 剧情越界到后续大纲
-❌ 相邻章节内容重复
-❌ 与前序章节key_events雷同
+[Điều cấm]
+❌ Xuất định dạng không phải JSON
+❌ Cốt truyện vượt sang dàn ý phía sau
+❌ Nội dung chương kề nhau bị trùng
+❌ key_events trùng với các chương trước
 </constraints>"""
 
     # 章节重写系统提示词 V2（RTCO框架）
     CHAPTER_REGENERATION_SYSTEM = """<system>
-你是经验丰富的专业小说编辑和作家，擅长根据反馈意见重新创作章节。
-你的任务是根据修改指令，对原始章节进行深度改写和优化。
+Bạn là biên tập viên và nhà văn tiểu thuyết chuyên nghiệp dày kinh nghiệm, giỏi viết lại chương theo phản hồi.
+Nhiệm vụ của bạn là dựa trên chỉ thị chỉnh sửa để viết lại và tối ưu sâu chương gốc.
 </system>
 
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
+
 <task>
-【重写任务】
-1. 仔细理解原始章节的内容、情节走向和叙事意图
-2. 认真分析所有的修改要求，包括AI分析建议和用户自定义指令
-3. 针对每一条修改建议，在新版本中进行具体改进
-4. 在保持故事连贯性和角色一致性的前提下，创作改进后的新版本
-5. 确保新版本在艺术性、可读性和叙事质量上都有明显提升
+[Nhiệm vụ viết lại]
+1. Hiểu kỹ nội dung, hướng tình tiết và ý đồ tự sự của chương gốc
+2. Phân tích cẩn thận mọi yêu cầu chỉnh sửa, bao gồm đề xuất phân tích của AI và chỉ thị tùy chỉnh của người dùng
+3. Cải thiện cụ thể từng đề xuất chỉnh sửa trong phiên bản mới
+4. Sáng tác phiên bản mới được cải thiện, đồng thời giữ tính mạch lạc câu chuyện và sự nhất quán nhân vật
+5. Đảm bảo phiên bản mới được nâng cao rõ rệt về tính nghệ thuật, khả năng đọc và chất lượng tự sự
 </task>
 
 <guidelines>
-【改写原则】
-- **问题导向**：针对修改指令中指出的每个问题进行改进
-- **保持精华**：保留原章节中优秀的描写、对话和情节设计
-- **深化细节**：增强场景描写、情感渲染和人物刻画
-- **节奏优化**：调整叙事节奏，避免拖沓或过快
-- **风格一致**：如果提供了写作风格要求，必须严格遵循
+[Nguyên tắc viết lại]
+- **Định hướng vấn đề**: cải thiện từng vấn đề được nêu trong chỉ thị chỉnh sửa
+- **Giữ tinh hoa**: giữ lại những miêu tả, hội thoại và thiết kế tình tiết xuất sắc của chương gốc
+- **Đào sâu chi tiết**: tăng cường miêu tả bối cảnh, khắc họa cảm xúc và nhân vật
+- **Tối ưu nhịp độ**: điều chỉnh nhịp kể, tránh dài dòng hoặc quá nhanh
+- **Nhất quán phong cách**: nếu có yêu cầu về phong cách viết, phải tuân thủ nghiêm ngặt
 
-【重点关注】
-- 如果修改指令提到"节奏"问题，重点调整叙事速度和场景切换
-- 如果修改指令提到"情感"问题，重点深化人物内心戏和情感表达
-- 如果修改指令提到"描写"问题，重点丰富环境和动作细节
-- 如果修改指令提到"对话"问题，重点让对话更自然、更有个性
-- 如果修改指令提到"冲突"问题，重点强化矛盾和戏剧张力
+[Trọng tâm chú ý]
+- Nếu chỉ thị chỉnh sửa đề cập vấn đề "nhịp độ", tập trung điều chỉnh tốc độ tự sự và chuyển cảnh
+- Nếu chỉ thị chỉnh sửa đề cập vấn đề "cảm xúc", tập trung đào sâu diễn biến nội tâm và biểu đạt cảm xúc nhân vật
+- Nếu chỉ thị chỉnh sửa đề cập vấn đề "miêu tả", tập trung làm phong phú chi tiết môi trường và hành động
+- Nếu chỉ thị chỉnh sửa đề cập vấn đề "hội thoại", tập trung khiến hội thoại tự nhiên và có cá tính hơn
+- Nếu chỉ thị chỉnh sửa đề cập vấn đề "xung đột", tập trung tăng cường mâu thuẫn và sức căng kịch tính
 </guidelines>
 
 <output>
-【输出规范】
-直接输出重写后的章节正文内容。
-- 不要包含章节标题、序号或其他元信息
-- 不要输出任何解释、注释或创作说明
-- 从故事内容直接开始，保持叙事的连贯性
+[Quy chuẩn đầu ra]
+Xuất trực tiếp nội dung chính văn chương đã viết lại.
+- Không kèm tiêu đề chương, số thứ tự hay siêu thông tin khác
+- Không xuất bất kỳ giải thích, chú thích hay ghi chú sáng tác nào
+- Bắt đầu trực tiếp từ nội dung câu chuyện, giữ mạch kể liền mạch
 </output>
 """
     # MCP工具测试提示词
-    MCP_TOOL_TEST = """你是MCP插件测试助手，需要测试插件 '{plugin_name}' 的功能。
+    MCP_TOOL_TEST = """Bạn là trợ lý kiểm tra plugin MCP, cần kiểm tra chức năng của plugin '{plugin_name}'.
 
-⚠️ 重要规则：生成参数时，必须严格使用工具 schema 中定义的原始参数名称，不要转换为 snake_case 或其他格式。
-例如：如果 schema 中是 'nextThoughtNeeded'，就必须使用 'nextThoughtNeeded'，不能改成 'next_thought_needed'。
+⚠️ Quy tắc quan trọng: khi tạo tham số, phải dùng đúng tên tham số gốc trong schema công cụ, không chuyển sang snake_case hay định dạng khác.
+Ví dụ: nếu schema là 'nextThoughtNeeded' thì bắt buộc dùng 'nextThoughtNeeded', không được đổi thành 'next_thought_needed'.
 
-请选择一个合适的工具进行测试，优先选择搜索、查询类工具。
-生成真实有效的测试参数（例如搜索"人工智能最新进展"而不是"test"）。
+Hãy chọn một công cụ phù hợp để kiểm tra, ưu tiên công cụ tìm kiếm/truy vấn.
+Tạo tham số kiểm tra thật và hữu dụng (ví dụ tìm "tiến bộ AI mới nhất" thay vì "test").
 
-现在开始测试这个插件。"""
+Bắt đầu kiểm tra plugin này ngay."""
 
-    MCP_TOOL_TEST_SYSTEM = """你是专业的API测试工具。当给定工具列表时，选择一个工具并使用合适的参数调用它。
+    MCP_TOOL_TEST_SYSTEM = """Bạn là công cụ kiểm tra API chuyên nghiệp. Khi được cung cấp danh sách công cụ, hãy chọn một công cụ và gọi nó với tham số phù hợp.
 
-⚠️ 关键规则：调用工具时，必须严格使用 schema 中定义的原始参数名，不要自行转换命名风格。
-- 如果参数名是 camelCase（如 nextThoughtNeeded），就使用 camelCase
-- 如果参数名是 snake_case（如 next_thought），就使用 snake_case
-- 保持与 schema 中定义的完全一致，包括大小写和命名风格"""
+⚠️ Quy tắc then chốt: khi gọi công cụ, phải dùng đúng tên tham số gốc trong schema, không tự đổi phong cách đặt tên.
+- Nếu tên tham số là camelCase (như nextThoughtNeeded), hãy dùng camelCase
+- Nếu tên tham số là snake_case (như next_thought), hãy dùng snake_case
+- Giữ hoàn toàn khớp với định nghĩa trong schema, kể cả chữ hoa/thường và phong cách đặt tên"""
     
     # 灵感模式 - 书名生成（系统提示词）
-    INSPIRATION_TITLE_SYSTEM = """你是一位专业的小说创作顾问。
-用户的原始想法：{initial_idea}
+    INSPIRATION_TITLE_SYSTEM = """Bạn là cố vấn sáng tác tiểu thuyết chuyên nghiệp.
+Ý tưởng gốc của người dùng: {initial_idea}
 
-请根据用户的想法，生成6个吸引人的书名建议，要求：
-1. 紧扣用户的原始想法和核心故事构思
-2. 富有创意和吸引力
-3. 涵盖不同的风格倾向
-4. 书名中不要带有"《》"符号
+Hãy dựa trên ý tưởng người dùng, tạo 6 gợi ý tên sách hấp dẫn, yêu cầu:
+1. Bám sát ý tưởng gốc và ý đồ câu chuyện cốt lõi của người dùng
+2. Giàu sáng tạo và sức hút
+3. Bao quát các khuynh hướng phong cách khác nhau
+4. Tên sách không được có ký hiệu "«»"
 
-返回JSON格式：
+Trả về định dạng JSON:
 {{
-    "prompt": "根据你的想法，我为你准备了几个书名建议：",
-    "options": ["书名1", "书名2", "书名3", "书名4", "书名5", "书名6"]
+    "prompt": "Dựa trên ý tưởng của bạn, tôi đã chuẩn bị vài gợi ý tên sách:",
+    "options": ["Tên sách 1", "Tên sách 2", "Tên sách 3", "Tên sách 4", "Tên sách 5", "Tên sách 6"]
 }}
 
-只返回纯JSON，不要有其他文字。"""
+Chỉ trả về JSON thuần, không có chữ khác."""
 
     # 灵感模式 - 书名生成（用户提示词）
-    INSPIRATION_TITLE_USER = "用户的想法：{initial_idea}\n请生成6个书名建议"
+    INSPIRATION_TITLE_USER = "Ý tưởng của người dùng: {initial_idea}\nHãy tạo 6 gợi ý tên sách"
 
     # 灵感模式 - 简介生成（系统提示词）
-    INSPIRATION_DESCRIPTION_SYSTEM = """你是一位专业的小说创作顾问。
-用户的原始想法：{initial_idea}
-已确定的书名：{title}
+    INSPIRATION_DESCRIPTION_SYSTEM = """Bạn là cố vấn sáng tác tiểu thuyết chuyên nghiệp.
+Ý tưởng gốc của người dùng: {initial_idea}
+Tên sách đã xác định: {title}
 
-请生成6个精彩的小说简介，要求：
-1. 必须紧扣用户的原始想法，确保简介是原始想法的具体展开
-2. 符合已确定的书名风格
-3. 简洁有力，每个50-100字
-4. 包含核心冲突
-5. 涵盖不同的故事走向，但都基于用户的原始构思
+Hãy tạo 6 phần mô tả tiểu thuyết hấp dẫn, yêu cầu:
+1. Phải bám sát ý tưởng gốc của người dùng, đảm bảo mô tả là sự triển khai cụ thể của ý tưởng gốc
+2. Phù hợp phong cách tên sách đã xác định
+3. Ngắn gọn, mạnh mẽ, mỗi cái 50-100 chữ
+4. Có xung đột cốt lõi
+5. Bao quát các hướng câu chuyện khác nhau nhưng đều dựa trên ý đồ gốc của người dùng
 
-返回JSON格式：
-{{"prompt":"选择一个简介：","options":["简介1","简介2","简介3","简介4","简介5","简介6"]}}
+Trả về định dạng JSON:
+{{"prompt":"Chọn một phần mô tả:","options":["Mô tả 1","Mô tả 2","Mô tả 3","Mô tả 4","Mô tả 5","Mô tả 6"]}}
 
-只返回纯JSON，不要有其他文字，不要换行。"""
+Chỉ trả về JSON thuần, không chữ khác, không xuống dòng."""
 
     # 灵感模式 - 简介生成（用户提示词）
-    INSPIRATION_DESCRIPTION_USER = "原始想法：{initial_idea}\n书名：{title}\n请生成6个简介选项"
+    INSPIRATION_DESCRIPTION_USER = "Ý tưởng gốc: {initial_idea}\nTên sách: {title}\nHãy tạo 6 phương án mô tả"
 
     # 灵感模式 - 主题生成（系统提示词）
-    INSPIRATION_THEME_SYSTEM = """你是一位专业的小说创作顾问。
-用户的原始想法：{initial_idea}
-小说信息：
-- 书名：{title}
-- 简介：{description}
+    INSPIRATION_THEME_SYSTEM = """
+[Yêu cầu ngôn ngữ]Toàn bộ nội dung văn bản tạo ra (trừ key JSON/tên trường kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
+Bạn là cố vấn sáng tác tiểu thuyết chuyên nghiệp.
+Ý tưởng gốc của người dùng: {initial_idea}
+Thông tin tiểu thuyết:
+- Tên sách: {title}
+- Mô tả: {description}
 
-请生成6个深刻的主题选项，要求：
-1. 必须与用户的原始想法保持高度一致
-2. 符合书名和简介的风格
-3. 有深度和思想性
-4. 每个50-150字
-5. 涵盖不同角度（如：成长、复仇、救赎、探索等），但都围绕用户的核心构思
+Hãy tạo 6 phương án chủ đề sâu sắc, yêu cầu:
+1. Phải giữ mức nhất quán cao với ý tưởng gốc của người dùng
+2. Phù hợp phong cách tên sách và mô tả
+3. Có chiều sâu và tính tư tưởng
+4. Mỗi cái 50-150 chữ
+5. Bao quát các góc nhìn khác nhau (như trưởng thành, báo thù, cứu chuộc, khám phá...), nhưng đều xoay quanh ý tưởng cốt lõi của người dùng
 
-返回JSON格式：
-{{"prompt":"这本书的核心主题是什么？","options":["主题1","主题2","主题3","主题4","主题5","主题6"]}}
+Trả về định dạng JSON:
+{{"prompt":"Chủ đề cốt lõi của cuốn sách này là gì?","options":["Chủ đề 1","Chủ đề 2","Chủ đề 3","Chủ đề 4","Chủ đề 5","Chủ đề 6"]}}
 
-只返回纯JSON，不要有其他文字，不要换行。"""
+Chỉ trả về JSON thuần, không chữ khác, không xuống dòng."""
 
     # 灵感模式 - 主题生成（用户提示词）
-    INSPIRATION_THEME_USER = "原始想法：{initial_idea}\n书名：{title}\n简介：{description}\n请生成6个主题选项"
+    INSPIRATION_THEME_USER = "Ý tưởng gốc: {initial_idea}\nTên sách: {title}\nMô tả: {description}\nHãy tạo 6 phương án chủ đề"
 
     # 灵感模式 - 类型生成（系统提示词）
-    INSPIRATION_GENRE_SYSTEM = """你是一位专业的小说创作顾问。
-用户的原始想法：{initial_idea}
-小说信息：
-- 书名：{title}
-- 简介：{description}
-- 主题：{theme}
+    INSPIRATION_GENRE_SYSTEM = """Bạn là cố vấn sáng tác tiểu thuyết chuyên nghiệp.
+Ý tưởng gốc của người dùng: {initial_idea}
+Thông tin tiểu thuyết:
+- Tên sách: {title}
+- Mô tả: {description}
+- Chủ đề: {theme}
 
-请生成6个合适的类型标签（每个2-4字），要求：
-1. 必须符合用户原始想法中暗示的类型倾向
-2. 符合小说整体风格
-3. 可以多选组合
+Hãy tạo 6 nhãn thể loại phù hợp (mỗi nhãn 2-4 chữ), yêu cầu:
+1. Phải phù hợp khuynh hướng thể loại được ý tưởng gốc gợi ý
+2. Phù hợp phong cách tổng thể của tiểu thuyết
+3. Có thể chọn nhiều và kết hợp
 
-常见类型：玄幻、都市、科幻、武侠、仙侠、历史、言情、悬疑、奇幻、修仙等
+Thể loại thường gặp: huyền huyễn, đô thị, khoa huyễn, võ hiệp, tiên hiệp, lịch sử, ngôn tình, trinh thám, kỳ ảo, tu tiên, v.v.
 
-返回JSON格式：
-{{"prompt":"选择类型标签（可多选）：","options":["类型1","类型2","类型3","类型4","类型5","类型6"]}}
+Trả về định dạng JSON:
+{{"prompt":"Chọn nhãn thể loại (có thể chọn nhiều):","options":["Thể loại 1","Thể loại 2","Thể loại 3","Thể loại 4","Thể loại 5","Thể loại 6"]}}
 
-只返回紧凑的纯JSON，不要换行，不要有其他文字。"""
+Chỉ trả về JSON thuần dạng gọn, không xuống dòng, không chữ khác."""
 
     # 灵感模式 - 类型生成（用户提示词）
-    INSPIRATION_GENRE_USER = "原始想法：{initial_idea}\n书名：{title}\n简介：{description}\n主题：{theme}\n请生成6个类型标签"
+    INSPIRATION_GENRE_USER = "Ý tưởng gốc: {initial_idea}\nTên sách: {title}\nMô tả: {description}\nChủ đề: {theme}\nHãy tạo 6 nhãn thể loại"
 
     # 灵感模式智能补全提示词
-    INSPIRATION_QUICK_COMPLETE = """你是一位专业的小说创作顾问。用户提供了部分小说信息，请补全缺失的字段。
+    INSPIRATION_QUICK_COMPLETE = """
+[Yêu cầu ngôn ngữ]Toàn bộ nội dung văn bản tạo ra (trừ key JSON/tên trường kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
+Bạn là cố vấn sáng tác tiểu thuyết chuyên nghiệp.Người dùng đã cung cấp một phần thông tin tiểu thuyết, hãy bổ sung các trường còn thiếu.
 
-用户已提供的信息：
+Thông tin người dùng đã cung cấp:
 {existing}
 
-请生成完整的小说方案，包含：
-1. title: 书名（3-6字，如果用户已提供则保持原样）
-2. description: 简介（50-100字，必须基于用户提供的信息，不要偏离原意）
-3. theme: 核心主题（30-50字，必须与用户提供的信息保持一致）
-4. genre: 类型标签数组（2-3个）
+Hãy tạo phương án tiểu thuyết hoàn chỉnh, gồm:
+1. title: tên sách (3-6 chữ, nếu người dùng đã cung cấp thì giữ nguyên)
+2. description: mô tả (50-100 chữ, phải dựa trên thông tin người dùng cung cấp, không đi lệch ý gốc)
+3. theme: chủ đề cốt lõi (30-50 chữ, phải nhất quán với thông tin người dùng cung cấp)
+4. genre: mảng nhãn thể loại (2-3 nhãn)
 
-重要：所有补全的内容都必须与用户提供的信息保持高度关联，确保前后一致性。
+Quan trọng: mọi nội dung bổ sung đều phải liên kết chặt với thông tin người dùng cung cấp, đảm bảo nhất quán trước-sau.
 
-返回JSON格式：
+Trả về định dạng JSON:
 {{
-    "title": "书名",
-    "description": "简介内容...",
-    "theme": "主题内容...",
-    "genre": ["类型1", "类型2"]
+    "title": "Tên sách",
+    "description": "Nội dung mô tả...",
+    "theme": "Nội dung chủ đề...",
+    "genre": ["Thể loại 1", "Thể loại 2"]
 }}
 
-只返回纯JSON，不要有其他文字。"""
+Chỉ trả về JSON thuần, không có chữ khác."""
     # 世界观资料收集提示词（MCP增强用）
-    MCP_WORLD_BUILDING_PLANNING = """你正在为小说《{title}》设计世界观。
+    MCP_WORLD_BUILDING_PLANNING = """
+[Yêu cầu ngôn ngữ]Toàn bộ nội dung văn bản tạo ra (trừ key JSON/tên trường kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
+Bạn đang thiết kế bối cảnh thế giới cho tiểu thuyết «{title}».
 
-【小说信息】
-- 题材：{genre}
-- 主题：{theme}
-- 简介：{description}
+[Thông tin tiểu thuyết]
+- Đề tài: {genre}
+- Chủ đề: {theme}
+- Mô tả: {description}
 
-【任务】
-请使用可用工具搜索相关背景资料，帮助构建更真实、更有深度的世界观设定。
-你可以查询：
-1. 历史背景（如果是历史题材）
-2. 地理环境和文化特征
-3. 相关领域的专业知识
-4. 类似作品的设定参考
+[Nhiệm vụ]
+Hãy dùng công cụ sẵn có để tìm tư liệu nền liên quan, giúp dựng thiết lập bối cảnh thế giới chân thực và sâu hơn.
+Bạn có thể truy vấn:
+1. Bối cảnh lịch sử (nếu là đề tài lịch sử)
+2. Môi trường địa lý và đặc trưng văn hóa
+3. Kiến thức chuyên môn trong lĩnh vực liên quan
+4. Tham khảo thiết lập của các tác phẩm tương tự
 
-请查询最关键的1个问题（不要超过1个）。"""
+Hãy truy vấn 1 câu hỏi quan trọng nhất (không quá 1)."""
 
     # 角色资料收集提示词（MCP增强用）
-    MCP_CHARACTER_PLANNING = """你正在为小说《{title}》设计角色。
+    MCP_CHARACTER_PLANNING = """
+[Yêu cầu ngôn ngữ]Toàn bộ nội dung văn bản tạo ra (trừ key JSON/tên trường kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
+Bạn đang thiết kế nhân vật cho tiểu thuyết «{title}».
 
-【小说信息】
-- 题材：{genre}
-- 主题：{theme}
-- 时代背景：{time_period}
-- 地理位置：{location}
+[Thông tin tiểu thuyết]
+- Đề tài: {genre}
+- Chủ đề: {theme}
+- Bối cảnh thời đại: {time_period}
+- Vị trí địa lý: {location}
 
-【任务】
-请使用可用工具搜索相关参考资料，帮助设计更真实、更有深度的角色。
-你可以查询：
-1. 该时代/地域的真实历史人物特征
-2. 文化背景和社会习俗
-3. 职业特点和生活方式
-4. 相关领域的人物原型
+[Nhiệm vụ]
+Hãy dùng công cụ sẵn có để tìm tư liệu tham chiếu liên quan, giúp thiết kế nhân vật chân thực và sâu hơn.
+Bạn có thể truy vấn:
+1. Đặc điểm của nhân vật lịch sử có thật trong thời đại/khu vực đó
+2. Bối cảnh văn hóa và phong tục xã hội
+3. Đặc điểm nghề nghiệp và lối sống
+4. Hình mẫu nhân vật trong lĩnh vực liên quan
 
-请查询最关键的1个问题（不要超过1个）。"""
+Hãy truy vấn 1 câu hỏi quan trọng nhất (không quá 1)."""
 
     # 自动角色引入 - 预测性分析提示词 V2（RTCO框架）
     AUTO_CHARACTER_ANALYSIS = """<system>
-你是专业的小说角色设计顾问，擅长预测剧情发展对角色的需求。
+Bạn là cố vấn thiết kế nhân vật tiểu thuyết, giỏi dự đoán nhu cầu nhân vật theo diễn biến cốt truyện.
 </system>
 
-<task>
-【分析任务】
-预测在接下来的{chapter_count}章续写中，根据剧情发展方向和阶段，是否需要引入新角色。
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
 
-【重要说明】
-这是预测性分析，而非基于已生成内容的事后分析。
+<task>
+[Nhiệm vụ phân tích]
+Dự đoán trong {chapter_count} chương viết tiếp tới, theo hướng và giai đoạn diễn biến cốt truyện, có cần đưa nhân vật mới vào không.
+
+[Lưu ý quan trọng]
+Đây là phân tích dự đoán, không phải phân tích sau khi đã có nội dung.
 </task>
 
 <project priority="P1">
-【项目信息】
-书名：{title}
-类型：{genre}
-主题：{theme}
+[Thông tin dự án]
+Tên sách: {title}
+Thể loại: {genre}
+Chủ đề: {theme}
 
-【世界观】
-时间背景：{time_period}
-地理位置：{location}
-氛围基调：{atmosphere}
+[Bối cảnh thế giới]
+Bối cảnh thời gian: {time_period}
+Vị trí địa lý: {location}
+Gam bầu không khí: {atmosphere}
 </project>
 
 <context priority="P0">
-【已有角色】
+[Nhân vật hiện có]
 {existing_characters}
 
-【已有章节概览】
+[Tổng quan chương hiện có]
 {all_chapters_brief}
 
-【续写计划】
-- 起始章节：第{start_chapter}章
-- 续写数量：{chapter_count}章
-- 剧情阶段：{plot_stage}
-- 发展方向：{story_direction}
+[Kế hoạch viết tiếp]
+- Chương bắt đầu: chương {start_chapter}
+- Số chương viết tiếp: {chapter_count}
+- Giai đoạn cốt truyện: {plot_stage}
+- Hướng phát triển: {story_direction}
 </context>
 
 <analysis_framework priority="P0">
-【预测分析维度】
+[Chiều phân tích dự đoán]
 
-**1. 剧情需求预测**
-根据发展方向，哪些场景、冲突需要新角色参与？
+**1. Dự đoán nhu cầu tình tiết**
+Theo hướng phát triển, những bối cảnh và xung đột nào cần nhân vật mới tham gia?
 
-**2. 角色充分性**
-现有角色是否足以支撑即将发生的剧情？
+**2. Mức độ đầy đủ của nhân vật**
+Các nhân vật hiện có đã đủ để nâng đỡ tình tiết sắp diễn ra chưa?
 
-**3. 引入时机**
-新角色应该在哪个章节登场最合适？
+**3. Thời điểm đưa vào**
+Nhân vật mới nên xuất hiện ở chương nào là phù hợp nhất?
 
-**4. 重要性判断**
-新角色对后续剧情的影响程度如何？
+**4. Đánh giá tầm quan trọng**
+Nhân vật mới sẽ ảnh hưởng đến các tình tiết tiếp theo ở mức nào?
 
-【预测依据】
-- 剧情阶段的典型角色需求（如：高潮阶段可能需要强力对手）
-- 故事发展方向的逻辑需要（如：进入新地点需要当地角色）
-- 冲突升级的角色需求（如：更强的反派、意外的盟友）
-- 世界观扩展的需要（如：新组织、新势力的代表）
+[Căn cứ dự đoán]
+- Nhu cầu nhân vật điển hình của giai đoạn tình tiết (ví dụ: cao trào có thể cần đối thủ mạnh)
+- Nhu cầu logic của hướng phát triển câu chuyện (ví dụ: bước vào địa điểm mới cần nhân vật địa phương)
+- Nhu cầu nhân vật khi xung đột leo thang (ví dụ: phản diện mạnh hơn, đồng minh bất ngờ)
+- Nhu cầu mở rộng bối cảnh thế giới (ví dụ: đại diện của tổ chức hoặc thế lực mới)
 </analysis_framework>
 
 <output priority="P0">
-【输出格式】
-返回纯JSON对象（两种情况之一）：
+[Định dạng đầu ra]
+Trả về object JSON thuần (một trong hai trường hợp):
 
-**情况A：需要新角色**
+**Trường hợp A: cần nhân vật mới**
 {{
   "needs_new_characters": true,
-  "reason": "预测分析原因（150-200字），说明为什么即将的剧情需要新角色",
+  "reason": "Lý do phân tích dự đoán (150-200 chữ), giải thích vì sao tình tiết sắp tới cần nhân vật mới",
   "character_count": 2,
   "character_specifications": [
     {{
-      "name": "建议的角色名字（可选）",
-      "role_description": "角色在剧情中的定位和作用（100-150字）",
+      "name": "Tên nhân vật được đề xuất (tuỳ chọn)",
+      "role_description": "Định vị và vai trò của nhân vật trong tình tiết (100-150 chữ)",
       "suggested_role_type": "supporting/antagonist/protagonist",
       "importance": "high/medium/low",
       "appearance_chapter": {start_chapter},
-      "key_abilities": ["能力1", "能力2"],
-      "plot_function": "在剧情中的具体功能",
+      "key_abilities": ["Năng lực 1", "Năng lực 2"],
+      "plot_function": "Chức năng cụ thể trong tình tiết",
       "relationship_suggestions": [
         {{
-          "target_character": "现有角色名",
-          "relationship_type": "建议的关系类型",
-          "reason": "为什么建立这种关系"
+          "target_character": "Tên nhân vật hiện có",
+          "relationship_type": "Loại quan hệ được đề xuất",
+          "reason": "Vì sao thiết lập quan hệ này"
         }}
       ]
     }}
   ]
 }}
 
-**情况B：不需要新角色**
+**Trường hợp B: không cần nhân vật mới**
 {{
   "needs_new_characters": false,
-  "reason": "现有角色足以支撑即将的剧情发展，说明理由"
+  "reason": "Các nhân vật hiện có đã đủ để nâng đỡ tình tiết sắp tới, nêu rõ lý do"
 }}
 </output>
 
 <constraints>
-【必须遵守】
-✅ 这是预测性分析，面向未来剧情
-✅ 考虑剧情的自然发展和节奏
-✅ 确保引入必要性，不为引入而引入
-✅ 优先考虑角色的长期作用
+[Bắt buộc tuân thủ]
+✅ Đây là phân tích dự đoán, hướng tới cốt truyện tương lai
+✅ Cân nhắc sự phát triển và nhịp độ tự nhiên của tình tiết
+✅ Đảm bảo sự cần thiết khi đưa vào, không đưa vào vì đưa vào
+✅ Ưu tiên vai trò lâu dài của nhân vật
 
-【禁止事项】
-❌ 输出markdown标记
-❌ 基于已生成内容做事后分析
-❌ 为了引入角色而强行引入
-❌ 设计一次性功能角色
+[Điều cấm]
+❌ Xuất đánh dấu markdown
+❌ Phân tích sau việc dựa trên nội dung đã tạo
+❌ Cưỡng ép đưa nhân vật vào chỉ để đưa vào
+❌ Thiết kế nhân vật chức năng chỉ xuất hiện một lần
 </constraints>"""
 
     # 自动角色引入 - 生成提示词 V2（RTCO框架）
     AUTO_CHARACTER_GENERATION = """<system>
-你是专业的角色设定师，擅长根据剧情需求创建完整的角色设定。
+Bạn là chuyên gia thiết lập nhân vật, giỏi tạo thiết lập nhân vật hoàn chỉnh theo nhu cầu cốt truyện.
 </system>
 
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
+
 <task>
-【生成任务】
-为小说生成新角色的完整设定，包括基本信息、性格背景、关系网络和职业信息。
+[Nhiệm vụ tạo]
+Tạo thiết lập hoàn chỉnh cho nhân vật mới của tiểu thuyết, gồm thông tin cơ bản, tính cách, bối cảnh, mạng lưới quan hệ và thông tin nghề nghiệp.
 </task>
 
 <project priority="P1">
-【项目信息】
-书名：{title}
-类型：{genre}
-主题：{theme}
+[Thông tin dự án]
+Tên sách: {title}
+Thể loại: {genre}
+Chủ đề: {theme}
 
-【世界观】
-时间背景：{time_period}
-地理位置：{location}
-氛围基调：{atmosphere}
-世界规则：{rules}
+[Bối cảnh thế giới]
+Bối cảnh thời gian: {time_period}
+Vị trí địa lý: {location}
+Gam bầu không khí: {atmosphere}
+Quy tắc thế giới: {rules}
 </project>
 
 <context priority="P0">
-【已有角色】
+[Nhân vật hiện có]
 {existing_characters}
 
-【剧情上下文】
+[Ngữ cảnh cốt truyện]
 {plot_context}
 
-【角色规格要求】
+[Yêu cầu đặc tả nhân vật]
 {character_specification}
 </context>
 
 <mcp_context priority="P2">
-【MCP工具参考】
+[Tham chiếu công cụ MCP]
 {mcp_references}
 </mcp_context>
 
 <requirements priority="P0">
-【核心要求】
-1. 角色必须符合剧情需求和世界观设定
-2. **必须分析新角色与已有角色的关系**，至少建立1-3个有意义的关系
-3. 性格、背景要有深度和独特性
-4. 外貌描写要具体生动
-5. 特长和能力要符合角色定位
-6. **如果【已有角色】中包含职业列表，必须为角色设定职业**
+[Yêu cầu cốt lõi]
+1. Nhân vật phải phù hợp với nhu cầu tình tiết và thiết lập bối cảnh thế giới
+2. **Bắt buộc phân tích quan hệ giữa nhân vật mới và nhân vật hiện có**, thiết lập ít nhất 1-3 quan hệ có ý nghĩa
+3. Tính cách và bối cảnh phải có chiều sâu và nét riêng
+4. Miêu tả ngoại hình phải cụ thể, sinh động
+5. Sở trường và năng lực phải phù hợp với định vị nhân vật
+6. **Nếu [Nhân vật hiện có] chứa danh sách nghề, bắt buộc thiết lập nghề cho nhân vật**
 
-【关系建立指导】
-- 仔细审视【已有角色】列表，思考新角色与哪些现有角色有联系
-- 根据剧情需求，建立合理的角色关系
-- 每个关系都要有明确的类型、亲密度和描述
-- 关系应该服务于剧情发展
-- 如果新角色是组织成员，记得填写organization_memberships
+[Hướng dẫn thiết lập quan hệ]
+- Xem xét kỹ danh sách [Nhân vật hiện có], suy nghĩ nhân vật mới có liên hệ với những nhân vật hiện tại nào
+- Dựa trên nhu cầu tình tiết để thiết lập quan hệ nhân vật hợp lý
+- Mỗi quan hệ phải có loại, mức độ thân mật và mô tả rõ ràng
+- Quan hệ phải phục vụ diễn biến tình tiết
+- Nếu nhân vật mới là thành viên tổ chức, nhớ điền organization_memberships
 
-【职业信息要求】
-如果【已有角色】部分包含"可用主职业列表"或"可用副职业列表"：
-- 仔细查看可用的主职业和副职业列表
-- 根据角色的背景、能力、故事定位，选择最合适的职业
-- 主职业：从"可用主职业列表"中选择一个，填写职业名称
-- 主职业阶段：根据职业的阶段信息和角色实力，设定合理的当前阶段
-- 副职业：可选择0-2个副职业
-- ⚠️ 重要：必须填写职业的名称而非ID
+[Yêu cầu thông tin nghề nghiệp]
+Nếu phần [Nhân vật hiện có] chứa "danh sách nghề chính khả dụng" hoặc "danh sách nghề phụ khả dụng":
+- Xem kỹ danh sách nghề chính và nghề phụ khả dụng
+- Dựa trên bối cảnh, năng lực và định vị câu chuyện của nhân vật để chọn nghề phù hợp nhất
+- Nghề chính: chọn một nghề từ "danh sách nghề chính khả dụng", điền Tên nghề
+- Giai đoạn nghề chính: dựa trên thông tin giai đoạn nghề và thực lực nhân vật để thiết lập giai đoạn hiện tại hợp lý
+- Nghề phụ: có thể chọn 0-2 nghề phụ
+- ⚠️ Quan trọng: bắt buộc điền tên nghề thay vì ID
 </requirements>
 
 <output priority="P0">
-【输出格式】
-返回纯JSON对象：
+[Định dạng đầu ra]
+Trả về object JSON thuần:
 
 {{
-  "name": "角色姓名",
+  "name": "Họ tên nhân vật",
   "age": 25,
-  "gender": "男/女/其他",
+  "gender": "nam/nữ/khác",
   "role_type": "supporting",
-  "personality": "性格特点的详细描述（100-200字）",
-  "background": "背景故事的详细描述（100-200字）",
-  "appearance": "外貌描述（50-100字）",
-  "traits": ["特长1", "特长2", "特长3"],
-  "relationships_text": "用自然语言描述该角色与其他角色的关系网络",
+  "personality": "Mô tả chi tiết đặc điểm tính cách (100-200 chữ)",
+  "background": "Mô tả chi tiết câu chuyện nền (100-200 chữ)",
+  "appearance": "Mô tả ngoại hình (50-100 chữ)",
+  "traits": ["Đặc điểm 1", "Đặc điểm 2", "Đặc điểm 3"],
+  "relationships_text": "Dùng ngôn ngữ tự nhiên mô tả mạng lưới quan hệ giữa nhân vật này và các nhân vật khác",
   
   "relationships": [
     {{
-      "target_character_name": "已存在的角色名称",
-      "relationship_type": "关系类型",
+      "target_character_name": "Tên nhân vật đã tồn tại",
+      "relationship_type": "Loại quan hệ",
       "intimacy_level": 75,
-      "description": "关系的具体描述",
+      "description": "Mô tả cụ thể quan hệ",
       "status": "active"
     }}
   ],
   "organization_memberships": [
     {{
-      "organization_name": "已存在的组织名称",
-      "position": "职位",
+      "organization_name": "Tên tổ chức đã tồn tại",
+      "position": "Chức vụ",
       "rank": 5,
       "loyalty": 80
     }}
   ],
   
   "career_info": {{
-    "main_career_name": "从可用主职业列表中选择的职业名称",
+    "main_career_name": "Tên nghề chọn từ danh sách nghề chính khả dụng",
     "main_career_stage": 5,
     "sub_careers": [
       {{
-        "career_name": "从可用副职业列表中选择的职业名称",
+        "career_name": "Tên nghề chọn từ danh sách nghề phụ khả dụng",
         "stage": 3
       }}
     ]
   }}
 }}
 
-【关系类型参考】
-家族、社交、职业、敌对等各类关系
+[Tham chiếu loại quan hệ]
+Các loại quan hệ như gia tộc, xã giao, nghề nghiệp, đối địch
 
-【数值范围】
-- intimacy_level：-100到100（负值表示敌对）
-- loyalty：0到100
-- rank：0到10
+[Phạm vi số]
+- intimacy_level: -100 đến 100 (âm nghĩa là đối địch)
+- loyalty: 0 đến 100
+- rank: 0 đến 10
 </output>
 
 <constraints>
-【必须遵守】
-✅ 符合剧情需求和世界观设定
-✅ relationships数组必填：至少1-3个关系
-✅ target_character_name必须精确匹配【已有角色】
-✅ organization_memberships只能引用已存在的组织
-✅ 职业选择必须从可用列表中选择
+[Bắt buộc tuân thủ]
+✅ Khớp nhu cầu cốt truyện và thiết lập bối cảnh thế giới
+✅ Bắt buộc có mảng relationships: ít nhất 1-3 quan hệ
+✅ target_character_name phải khớp chính xác với [Nhân vật hiện có]
+✅ organization_memberships chỉ được tham chiếu tổ chức đã tồn tại
+✅ Lựa chọn nghề phải lấy từ danh sách khả dụng
 
-【禁止事项】
-❌ 输出markdown标记
-❌ 在描述中使用特殊符号
-❌ 引用不存在的角色或组织
-❌ 使用职业ID而非职业名称
+[Điều cấm]
+❌ Xuất đánh dấu markdown
+❌ Dùng ký hiệu đặc biệt trong mô tả
+❌ Trích dẫn nhân vật hoặc tổ chức không tồn tại
+❌ Dùng ID nghề thay vì Tên nghề
 </constraints>"""
 
     # 自动组织引入 - 预测性分析提示词（RTCO框架）
     AUTO_ORGANIZATION_ANALYSIS = """<system>
-你是专业的小说世界构建顾问，擅长预测剧情发展对组织/势力的需求。
+Bạn là cố vấn dựng thế giới tiểu thuyết, giỏi dự đoán nhu cầu tổ chức/thế lực theo diễn biến cốt truyện.
 </system>
 
-<task>
-【分析任务】
-预测在接下来的{chapter_count}章续写中，根据剧情发展方向和阶段，是否需要引入新的组织或势力。
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
 
-【重要说明】
-这是预测性分析，而非基于已生成内容的事后分析。
-组织包括：帮派、门派、公司、政府机构、神秘组织、家族等。
+<task>
+[Nhiệm vụ phân tích]
+Dự đoán trong {chapter_count} chương viết tiếp tới, dựa trên hướng và giai đoạn phát triển tình tiết, có cần đưa tổ chức hoặc thế lực mới vào hay không.
+
+[Lưu ý quan trọng]
+Đây là phân tích dự đoán, không phải phân tích sau khi đã có nội dung.
+Tổ chức bao gồm: bang phái, môn phái, công ty, cơ quan chính phủ, tổ chức thần bí, gia tộc...
 </task>
 
 <project priority="P1">
-【项目信息】
-书名：{title}
-类型：{genre}
-主题：{theme}
+[Thông tin dự án]
+Tên sách: {title}
+Thể loại: {genre}
+Chủ đề: {theme}
 
-【世界观】
-时间背景：{time_period}
-地理位置：{location}
-氛围基调：{atmosphere}
+[Bối cảnh thế giới]
+Bối cảnh thời gian: {time_period}
+Vị trí địa lý: {location}
+Gam bầu không khí: {atmosphere}
 </project>
 
 <context priority="P0">
-【已有组织】
+[Tổ chức hiện có]
 {existing_organizations}
 
-【已有角色】
+[Nhân vật hiện có]
 {existing_characters}
 
-【已有章节概览】
+[Tổng quan chương hiện có]
 {all_chapters_brief}
 
-【续写计划】
-- 起始章节：第{start_chapter}章
-- 续写数量：{chapter_count}章
-- 剧情阶段：{plot_stage}
-- 发展方向：{story_direction}
+[Kế hoạch viết tiếp]
+- Chương bắt đầu: chương {start_chapter}
+- Số chương viết tiếp: {chapter_count}
+- Giai đoạn cốt truyện: {plot_stage}
+- Hướng phát triển: {story_direction}
 </context>
 
 <analysis_framework priority="P0">
-【预测分析维度】
+[Chiều phân tích dự đoán]
 
-**1. 世界观扩展需求**
-根据发展方向，是否需要新的势力或组织来丰富世界观？
+**1. Nhu cầu mở rộng bối cảnh thế giới**
+Theo hướng phát triển, có cần thế lực hoặc tổ chức mới để làm phong phú bối cảnh thế giới không?
 
-**2. 冲突升级需求**
-剧情是否需要新的对立势力、竞争组织或神秘集团？
+**2. Nhu cầu leo thang xung đột**
+Tình tiết có cần thế lực đối lập, tổ chức cạnh tranh hoặc tập đoàn thần bí mới không?
 
-**3. 角色归属需求**
-现有角色是否需要加入或对抗某个新组织？
+**3. Nhu cầu quy thuộc nhân vật**
+Các nhân vật hiện có có cần gia nhập hoặc đối đầu với tổ chức mới nào không?
 
-**4. 剧情推动需求**
-新组织能否成为推动剧情的关键力量？
+**4. Nhu cầu thúc đẩy tình tiết**
+Tổ chức mới có thể trở thành lực lượng then chốt thúc đẩy tình tiết không?
 
-**5. 引入时机**
-新组织应该在哪个章节出现最合适？
+**5. Thời điểm đưa vào**
+Tổ chức mới nên xuất hiện ở chương nào là phù hợp nhất?
 
-【预测依据】
-- 剧情阶段的典型组织需求（如：高潮阶段可能需要强大的敌对势力）
-- 故事发展方向的逻辑需要（如：进入新地点需要当地势力）
-- 世界观完整性需要（如：权力格局需要多方势力）
-- 角色成长需要（如：主角需要加入或创建组织）
+[Căn cứ dự đoán]
+- Nhu cầu tổ chức điển hình của giai đoạn tình tiết (ví dụ: cao trào có thể cần thế lực thù địch mạnh)
+- Nhu cầu logic của hướng phát triển câu chuyện (ví dụ: bước vào địa điểm mới cần thế lực địa phương)
+- Nhu cầu hoàn chỉnh bối cảnh thế giới (ví dụ: cục diện quyền lực cần nhiều thế lực)
+- Nhu cầu trưởng thành của nhân vật (ví dụ: nhân vật chính cần gia nhập hoặc thành lập tổ chức)
 </analysis_framework>
 
 <output priority="P0">
-【输出格式】
-返回纯JSON对象（两种情况之一）：
+[Định dạng đầu ra]
+Trả về object JSON thuần (một trong hai trường hợp):
 
-**情况A：需要新组织**
+**Trường hợp A: cần tổ chức mới**
 {{
 "needs_new_organizations": true,
-"reason": "预测分析原因（150-200字），说明为什么即将的剧情需要新组织",
+"reason": "Lý do phân tích dự đoán (150-200 chữ), giải thích vì sao tình tiết sắp tới cần tổ chức mới",
 "organization_count": 1,
 "organization_specifications": [
 {{
-  "name": "建议的组织名字（可选）",
-  "organization_description": "组织在剧情中的定位和作用（100-150字）",
-  "organization_type": "帮派/门派/公司/政府/家族/神秘组织等",
+  "name": "Tên tổ chức được đề xuất (tuỳ chọn)",
+  "organization_description": "Định vị và vai trò của tổ chức trong tình tiết (100-150 chữ)",
+  "organization_type": "bang phái/môn phái/công ty/chính phủ/gia tộc/tổ chức thần bí...",
   "importance": "high/medium/low",
   "appearance_chapter": {start_chapter},
   "power_level": 70,
-  "plot_function": "在剧情中的具体功能",
-  "location": "组织所在地或活动区域",
-  "motto": "组织口号或宗旨（可选）",
+  "plot_function": "Chức năng cụ thể trong tình tiết",
+  "location": "Nơi tổ chức đặt trụ sở hoặc khu vực hoạt động",
+  "motto": "Khẩu hiệu hoặc tôn chỉ tổ chức (tuỳ chọn)",
   "initial_members": [
     {{
-      "character_name": "现有角色名（如需加入）",
-      "position": "职位",
-      "reason": "为什么加入"
+      "character_name": "Tên nhân vật hiện có (nếu cần gia nhập)",
+      "position": "Chức vụ",
+      "reason": "Vì sao gia nhập"
     }}
   ],
   "relationship_suggestions": [
     {{
-      "target_organization": "已有组织名",
-      "relationship_type": "建议的关系类型（盟友/敌对/竞争/合作等）",
-      "reason": "为什么建立这种关系"
+      "target_organization": "Tên tổ chức đã có",
+      "relationship_type": "Loại quan hệ được đề xuất (ví dụ: Bạn bè, Đồng nghiệp, Kẻ thù...)",
+      "reason": "Vì sao thiết lập quan hệ này"
     }}
   ]
 }}
 ]
 }}
 
-**情况B：不需要新组织**
+**Trường hợp B: không cần tổ chức mới**
 {{
 "needs_new_organizations": false,
-"reason": "现有组织足以支撑即将的剧情发展，说明理由"
+"reason": "Các tổ chức hiện có đã đủ để nâng đỡ tình tiết sắp tới, nêu rõ lý do"
 }}
 </output>
 
 <constraints>
-【必须遵守】
-✅ 这是预测性分析，面向未来剧情
-✅ 考虑世界观的丰富性和完整性
-✅ 确保引入必要性，不为引入而引入
-✅ 优先考虑组织的长期作用
-✅ 组织应该是推动剧情的关键力量
+[Bắt buộc tuân thủ]
+✅ Đây là phân tích dự đoán, hướng tới cốt truyện tương lai
+✅ Cân nhắc sự phong phú và hoàn chỉnh của bối cảnh thế giới
+✅ Đảm bảo sự cần thiết khi đưa vào, không đưa vào vì đưa vào
+✅ Ưu tiên vai trò lâu dài của tổ chức
+✅ Tổ chức phải là lực lượng then chốt thúc đẩy tình tiết
 
-【禁止事项】
-❌ 输出markdown标记
-❌ 基于已生成内容做事后分析
-❌ 为了引入组织而强行引入
-❌ 设计一次性功能组织
-❌ 创建与现有组织功能重复的组织
+[Điều cấm]
+❌ Xuất đánh dấu markdown
+❌ Phân tích sau việc dựa trên nội dung đã tạo
+❌ Cưỡng ép đưa tổ chức vào chỉ để đưa vào
+❌ Thiết kế tổ chức chức năng chỉ tồn tại một lần
+❌ Tạo tổ chức trùng chức năng với tổ chức hiện có
 </constraints>"""
 
     # 自动组织引入 - 生成提示词（RTCO框架）
     AUTO_ORGANIZATION_GENERATION = """<system>
-你是专业的世界构建师，擅长根据剧情需求创建完整的组织/势力设定。
+Bạn là chuyên gia dựng thế giới, giỏi tạo thiết lập tổ chức/thế lực hoàn chỉnh theo nhu cầu cốt truyện.
 </system>
 
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
+
 <task>
-【生成任务】
-为小说生成新组织的完整设定，包括基本信息、组织特性、背景历史和成员结构。
+[Nhiệm vụ tạo]
+Tạo thiết lập hoàn chỉnh cho tổ chức mới của tiểu thuyết, gồm thông tin cơ bản, đặc tính tổ chức, lịch sử bối cảnh và cơ cấu thành viên.
 </task>
 
 <project priority="P1">
-【项目信息】
-书名：{title}
-类型：{genre}
-主题：{theme}
+[Thông tin dự án]
+Tên sách: {title}
+Thể loại: {genre}
+Chủ đề: {theme}
 
-【世界观】
-时间背景：{time_period}
-地理位置：{location}
-氛围基调：{atmosphere}
-世界规则：{rules}
+[Bối cảnh thế giới]
+Bối cảnh thời gian: {time_period}
+Vị trí địa lý: {location}
+Gam bầu không khí: {atmosphere}
+Quy tắc thế giới: {rules}
 </project>
 
 <context priority="P0">
-【已有组织】
+[Tổ chức hiện có]
 {existing_organizations}
 
-【已有角色】
+[Nhân vật hiện có]
 {existing_characters}
 
-【剧情上下文】
+[Ngữ cảnh cốt truyện]
 {plot_context}
 
-【组织规格要求】
+[Yêu cầu đặc tả tổ chức]
 {organization_specification}
 </context>
 
 <mcp_context priority="P2">
-【MCP工具参考】
+[Tham chiếu công cụ MCP]
 {mcp_references}
 </mcp_context>
 
 <requirements priority="P0">
-【核心要求】
-1. 组织必须符合剧情需求和世界观设定
-2. 组织要有明确的目的、结构和特色
-3. 组织特性、背景要有深度和独特性
-4. 外在表现要具体生动
-5. 考虑与已有组织的关系和互动
-6. 如果需要，可以建议将现有角色加入组织
+[Yêu cầu cốt lõi]
+1. Tổ chức phải phù hợp với nhu cầu tình tiết và thiết lập bối cảnh thế giới
+2. Tổ chức phải có mục đích, cơ cấu và đặc trưng rõ ràng
+3. Đặc tính và bối cảnh tổ chức phải có chiều sâu và nét riêng
+4. Biểu hiện bên ngoài phải cụ thể, sinh động
+5. Cân nhắc quan hệ và tương tác với tổ chức hiện có
+6. Nếu cần, có thể đề xuất để nhân vật hiện có gia nhập tổ chức
 </requirements>
 
 <output priority="P0">
-【输出格式】
-返回纯JSON对象：
+[Định dạng đầu ra]
+Trả về object JSON thuần:
 
 {{
-"name": "组织名称",
+"name": "Tên tổ chức",
 "is_organization": true,
 "role_type": "supporting",
-"organization_type": "组织类型（帮派/门派/公司/政府/家族/神秘组织等）",
-"personality": "组织特性的详细描述（150-200字）：运作方式、核心理念、行事风格、文化价值观",
-"background": "组织背景故事（200-300字）：建立历史、发展历程、重要事件、当前地位",
-"appearance": "外在表现（100-150字）：总部位置、标志性建筑、组织标志、成员着装",
-"organization_purpose": "组织目的和宗旨：明确目标、长期愿景、行动准则",
+"organization_type": "Loại tổ chức (bang phái/môn phái/công ty/chính phủ/gia tộc/tổ chức thần bí...)",
+"personality": "Mô tả chi tiết đặc tính tổ chức (150-200 chữ): cách vận hành, ý niệm cốt lõi, phong cách hành sự, giá trị văn hóa",
+"background": "Câu chuyện nền của tổ chức (200-300 chữ): lịch sử thành lập, quá trình phát triển, sự kiện quan trọng, địa vị hiện tại",
+"appearance": "Biểu hiện bên ngoài (100-150 chữ): vị trí trụ sở, công trình biểu tượng, biểu trưng tổ chức, trang phục thành viên",
+"organization_purpose": "Mục đích và tôn chỉ tổ chức: mục tiêu rõ ràng, tầm nhìn dài hạn, nguyên tắc hành động",
 "power_level": 75,
-"location": "所在地点：主要活动区域、势力范围",
-"motto": "组织格言或口号",
-"color": "组织代表颜色",
-"traits": ["特征1", "特征2", "特征3"],
+"location": "Địa điểm: khu vực hoạt động chính, phạm vi thế lực",
+"motto": "Châm ngôn hoặc khẩu hiệu tổ chức",
+"color": "Màu đại diện tổ chức",
+"traits": ["Đặc trưng 1", "Đặc trưng 2", "Đặc trưng 3"],
 
 "initial_members": [
 {{
-  "character_name": "已存在的角色名称",
-  "position": "职位名称",
+  "character_name": "Tên nhân vật đã tồn tại",
+  "position": "Tên chức vụ",
   "rank": 8,
   "loyalty": 80,
-  "joined_at": "加入时间（可选）",
+  "joined_at": "Thời điểm gia nhập (tuỳ chọn)",
   "status": "active"
 }}
 ],
 
 "organization_relationships": [
 {{
-  "target_organization_name": "已存在的组织名称",
-  "relationship_type": "盟友/敌对/竞争/合作/从属等",
-  "description": "关系的具体描述"
+  "target_organization_name": "Tên tổ chức đã tồn tại",
+  "relationship_type": "Loại quan hệ (ví dụ: Bạn bè, Đồng nghiệp, Đối tác, Kẻ thù...)",
+  "description": "Mô tả cụ thể quan hệ"
 }}
 ]
 }}
 
-【数值范围】
-- power_level：0-100的整数，表示在世界中的影响力
-- rank：0到10（职位等级）
-- loyalty：0到100（成员忠诚度）
+[Phạm vi số]
+- power_level: số nguyên 0-100, thể hiện ảnh hưởng trong thế giới
+- rank: 0 đến 10 (cấp chức vụ)
+- loyalty: 0 đến 100 (lòng trung thành của thành viên)
 </output>
 
 <constraints>
-【必须遵守】
-✅ 符合剧情需求和世界观设定
-✅ 组织要有独特的定位和价值
-✅ character_name必须精确匹配【已有角色】
-✅ target_organization_name必须精确匹配【已有组织】
-✅ 组织能够推动剧情发展
+[Bắt buộc tuân thủ]
+✅ Khớp nhu cầu cốt truyện và thiết lập bối cảnh thế giới
+✅ Tổ chức phải có định vị và giá trị riêng
+✅ character_name phải khớp chính xác với [Nhân vật hiện có]
+✅ target_organization_name phải khớp chính xác với [Tổ chức hiện có]
+✅ Tổ chức có thể thúc đẩy diễn biến tình tiết
 
-【禁止事项】
-❌ 输出markdown标记
-❌ 在描述中使用特殊符号
-❌ 引用不存在的角色或组织
-❌ 创建功能与现有组织重复的组织
-❌ 创建对剧情没有实际作用的组织
+[Điều cấm]
+❌ Xuất đánh dấu markdown
+❌ Dùng ký hiệu đặc biệt trong mô tả
+❌ Trích dẫn nhân vật hoặc tổ chức không tồn tại
+❌ Tạo tổ chức trùng chức năng với tổ chức hiện có
+❌ Tạo tổ chức không có tác dụng thực tế đối với tình tiết
 </constraints>"""
 
     # 职业体系生成提示词 V2（RTCO框架）
     CAREER_SYSTEM_GENERATION = """<system>
-你是专业的职业体系设计师，擅长为不同世界观设计完整的职业体系。
+Bạn là nhà thiết kế hệ nghề chuyên nghiệp, giỏi thiết kế hệ nghề hoàn chỉnh cho các bối cảnh thế giới khác nhau.
 </system>
 
-<task>
-【设计任务】
-根据世界观信息和项目简介，设计一个完整且合理的职业体系。
-职业体系必须与项目简介中的故事背景和角色设定高度契合。
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
 
-【数量要求】
-- 主职业：精确生成1个
-- 副职业：精确生成1个
+<task>
+[Nhiệm vụ thiết kế]
+Dựa trên thông tin bối cảnh thế giới và phần giới thiệu dự án, thiết kế một hệ nghề hoàn chỉnh và hợp lý.
+Hệ nghề phải rất phù hợp với bối cảnh câu chuyện và thiết lập nhân vật trong phần giới thiệu dự án.
+
+[Yêu cầu số lượng]
+- Nghề chính: tạo chính xác 1 nghề
+- Nghề phụ: tạo chính xác 1 nghề
 </task>
 
 <worldview priority="P0">
-【项目信息】
-书名：{title}
-类型：{genre}
-主题：{theme}
-简介：{description}
+[Thông tin dự án]
+Tên sách: {title}
+Thể loại: {genre}
+Chủ đề: {theme}
+Mô tả: {description}
 
-【世界观设定】
-时间背景：{time_period}
-地理位置：{location}
-氛围基调：{atmosphere}
-世界规则：{rules}
+[Thiết lập bối cảnh thế giới]
+Bối cảnh thời gian: {time_period}
+Vị trí địa lý: {location}
+Gam bầu không khí: {atmosphere}
+Quy tắc thế giới: {rules}
 </worldview>
 
 <design_requirements priority="P0">
-【设计要求】
+[Yêu cầu thiết kế]
 
-**1. 主职业（main_careers）- 必须精确生成1个**
-- 主职业是角色的核心发展方向
-- 必须严格符合世界观规则和简介中的故事背景
-- 每个主职业的阶段数量可以不同（体现职业复杂度差异）
-- 职业设计要能支撑简介中描述的故事情节
+**1. Nghề chính (main_careers) - bắt buộc tạo chính xác 1 nghề**
+- Nghề chính là hướng phát triển cốt lõi của nhân vật
+- Phải tuyệt đối phù hợp với quy tắc bối cảnh thế giới và bối cảnh câu chuyện trong phần giới thiệu
+- Số giai đoạn của mỗi nghề chính có thể khác nhau (thể hiện độ phức tạp nghề nghiệp)
+- Thiết kế nghề phải nâng đỡ tình tiết được mô tả trong phần giới thiệu
 
-**2. 副职业（sub_careers）- 必须精确生成1个**
-- 副职业包含生产、辅助、特殊技能类
-- 每个副职业的阶段数量可以不同
-- 不要让所有副职业都是相同的阶段数
-- 副职业要能为主职业提供辅助或增益
+**2. Nghề phụ (sub_careers) - bắt buộc tạo chính xác 1 nghề**
+- Nghề phụ bao gồm nhóm sản xuất, hỗ trợ và kỹ năng đặc biệt
+- Số giai đoạn của mỗi nghề phụ có thể khác nhau
+- Không để mọi nghề phụ có cùng số giai đoạn
+- Nghề phụ phải hỗ trợ hoặc tăng cường cho nghề chính
 
-**3. 阶段设计（stages）**
-- 每个职业的stages数组长度必须等于max_stage
-- 阶段名称要符合世界观文化背景
-- 阶段描述要体现明确的能力提升路径
-- 确保职业间的阶段数量有差异
-- 主职业阶段数建议：8-12个
-- 副职业阶段数建议：5-8个
+**3. Thiết kế giai đoạn (stages)**
+- Độ dài mảng stages của mỗi nghề phải bằng max_stage
+- Tên giai đoạn phải phù hợp với bối cảnh văn hóa của thế giới
+- Mô tả giai đoạn phải thể hiện lộ trình nâng cao năng lực rõ ràng
+- Đảm bảo số giai đoạn giữa các nghề có sự khác biệt
+- Số giai đoạn nghề chính đề xuất: 8-12
+- Số giai đoạn nghề phụ đề xuất: 5-8
 
-**4. 简介契合度**
-- 职业体系必须与项目简介中的故事设定相匹配
-- 如果简介中提到特定职业或能力，优先设计相关职业
-- 职业的能力和特点要能支撑简介中的情节发展
+**4. Mức độ phù hợp với phần giới thiệu**
+- Hệ nghề phải phù hợp với thiết lập câu chuyện trong phần giới thiệu dự án
+- Nếu phần giới thiệu nhắc đến nghề hoặc năng lực cụ thể, ưu tiên thiết kế nghề liên quan
+- Năng lực và đặc điểm nghề phải nâng đỡ diễn biến tình tiết trong phần giới thiệu
 </design_requirements>
 
 <output priority="P0">
-【输出格式】
-返回纯JSON对象：
+[Định dạng đầu ra]
+Trả về object JSON thuần:
 
 {{
 "main_careers": [
 {{
-  "name": "职业名称",
-  "description": "职业描述（100-150字）",
-  "category": "职业分类",
+  "name": "Tên nghề",
+  "description": "Mô tả nghề (100-150 chữ)",
+  "category": "Phân loại nghề",
   "stages": [
-    {{"level": 1, "name": "阶段1名称", "description": "阶段描述"}},
-    {{"level": 2, "name": "阶段2名称", "description": "阶段描述"}}
+    {{"level": 1, "name": "Tên giai đoạn 1", "description": "Mô tả giai đoạn"}},
+    {{"level": 2, "name": "Tên giai đoạn 2", "description": "Mô tả giai đoạn"}}
   ],
-  "max_stage": 整数,
-  "requirements": "职业要求和前置条件",
-  "special_abilities": "职业特殊能力",
-  "worldview_rules": "与世界观规则的关联",
+  "max_stage": số nguyên,
+  "requirements": "Yêu cầu nghề và điều kiện tiên quyết",
+  "special_abilities": "Năng lực đặc biệt của nghề",
+  "worldview_rules": "Mối liên hệ với quy tắc bối cảnh thế giới",
   "attribute_bonuses": {{"strength": "+10%"}}
 }}
 ],
 "sub_careers": [
 {{
-  "name": "副职业名称",
-  "description": "职业描述（80-120字）",
-  "category": "生产系/辅助系/特殊系",
+  "name": "Tên nghề phụ",
+  "description": "Mô tả nghề (80-120 chữ)",
+  "category": "Hệ sản xuất/hệ hỗ trợ/hệ đặc biệt",
   "stages": [
-    {{"level": 1, "name": "阶段1名称", "description": "阶段描述"}}
+    {{"level": 1, "name": "Tên giai đoạn 1", "description": "Mô tả giai đoạn"}}
   ],
-  "max_stage": 整数,
-  "requirements": "职业要求",
-  "special_abilities": "特殊能力"
+  "max_stage": số nguyên,
+  "requirements": "Yêu cầu nghề",
+  "special_abilities": "Năng lực đặc biệt"
 }}
 ]
 }}
 </output>
 
 <constraints>
-【必须遵守】
-✅ 主职业数量：必须精确生成1个，不多不少
-✅ 副职业数量：必须精确生成1个，不多不少
-✅ 主职业阶段数建议：8-12个
-✅ 副职业阶段数建议：5-8个
-✅ stages数组长度必须等于max_stage
-✅ 确保职业体系与世界观高度契合
-✅ 职业设计必须支撑项目简介中的故事情节
+[Bắt buộc tuân thủ]
+✅ Số nghề chính: bắt buộc tạo chính xác 1 nghề, không hơn không kém
+✅ Số nghề phụ: bắt buộc tạo chính xác 1 nghề, không hơn không kém
+✅ Số giai đoạn nghề chính đề xuất: 8-12
+✅ Số giai đoạn nghề phụ đề xuất: 5-8
+✅ Độ dài mảng stages phải bằng max_stage
+✅ Đảm bảo hệ nghề rất phù hợp với bối cảnh thế giới
+✅ Thiết kế nghề phải nâng đỡ tình tiết trong phần giới thiệu dự án
 
-【禁止事项】
-❌ 所有职业使用相同的阶段数
-❌ 输出markdown标记
-❌ 职业设计与世界观或简介脱节
-❌ 忽略简介中提到的职业或能力设定
+[Điều cấm]
+❌ Mọi nghề đều dùng cùng số giai đoạn
+❌ Xuất đánh dấu markdown
+❌ Thiết kế nghề tách rời bối cảnh thế giới hoặc phần giới thiệu
+❌ Bỏ qua thiết lập nghề hoặc năng lực được nhắc trong phần giới thiệu
 </constraints>"""
 
     # 局部重写提示词（RTCO框架）
     PARTIAL_REGENERATE = """<system>
-你是一位专业的小说改写助手，擅长根据用户的修改要求精准改写指定段落，同时确保与前后文无缝衔接。
+Bạn là trợ lý viết lại tiểu thuyết chuyên nghiệp, giỏi viết lại chính xác đoạn chỉ định theo yêu cầu người dùng, đồng thời đảm bảo nối mượt với ngữ cảnh trước/sau.
 </system>
 
-<task>
-【改写任务】
-根据用户的修改要求，重写下面选中的文本段落。
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
 
-【重要要求】
-1. 只输出重写后的内容，不要包含任何解释、前缀或后缀
-2. 保持与前后文的自然衔接和语气连贯
-3. 严格遵循用户的修改要求
-4. 保持整体叙事风格的一致性
+<task>
+[Nhiệm vụ viết lại]
+Dựa trên yêu cầu chỉnh sửa của người dùng, viết lại đoạn văn được chọn dưới đây.
+
+[Yêu cầu quan trọng]
+1. Chỉ xuất nội dung đã viết lại, không kèm bất kỳ giải thích, tiền tố hay hậu tố nào
+2. Giữ sự nối tiếp tự nhiên và giọng văn mạch lạc với phần trước và sau
+3. Tuân thủ nghiêm ngặt yêu cầu chỉnh sửa của người dùng
+4. Giữ tính nhất quán của phong cách tự sự tổng thể
 </task>
 
 <context priority="P0">
-【前文参考】（用于衔接，勿重复）
+[Tham chiếu phần trước] (dùng để nối tiếp, không lặp lại)
 {context_before}
 
-【需要重写的原文】（共{original_word_count}字）
+[Văn bản gốc cần viết lại] (tổng cộng {original_word_count} chữ)
 {selected_text}
 
-【后文参考】（用于衔接，勿重复）
+[Tham chiếu phần sau] (dùng để nối tiếp, không lặp lại)
 {context_after}
 </context>
 
 <user_requirements priority="P0">
-【用户修改要求】
+[Yêu cầu chỉnh sửa của người dùng]
 {user_instructions}
 
-【字数要求】
+[Yêu cầu số chữ]
 {length_requirement}
 </user_requirements>
 
 <style priority="P1">
-【写作风格】
+[Phong cách viết]
 {style_content}
 </style>
 
 <output>
-【输出规范】
-直接输出重写后的内容，从故事内容开始写。
-- 不要输出任何解释或说明文字
-- 不要输出"重写后："等前缀
-- 不要输出引号包裹内容
-- 确保输出内容可以直接替换原文
+[Quy chuẩn đầu ra]
+Xuất trực tiếp nội dung đã viết lại, bắt đầu từ nội dung câu chuyện.
+- Không xuất bất kỳ chữ giải thích hay thuyết minh nào
+- Không xuất tiền tố như "Sau khi viết lại:"
+- Không bọc nội dung trong dấu ngoặc kép
+- Đảm bảo nội dung xuất ra có thể thay thế trực tiếp văn bản gốc
 
-请直接输出重写后的内容：
+Hãy trực tiếp xuất nội dung đã viết lại:
 </output>
 
 <constraints>
-【必须遵守】
-✅ 前后衔接：输出内容必须与前文自然衔接，与后文平滑过渡
-✅ 风格一致：保持与原文相同的叙事风格、语气和人称
-✅ 要求优先：严格执行用户的修改要求
-✅ 字数控制：遵循字数要求
+[Bắt buộc tuân thủ]
+✅ Nối trước sau: nội dung xuất ra phải nối tự nhiên với phần trước và chuyển tiếp mượt mà sang phần sau
+✅ Nhất quán phong cách: giữ phong cách tự sự, giọng văn và ngôi kể giống văn bản gốc
+✅ Ưu tiên yêu cầu: thực hiện nghiêm ngặt yêu cầu chỉnh sửa của người dùng
+✅ Kiểm soát số chữ: tuân thủ yêu cầu số chữ
 
-【禁止事项】
-❌ 重复前文内容
-❌ 重复后文内容
-❌ 添加任何元信息或说明
-❌ 改变叙事人称或视角
-❌ 偏离用户的修改要求
+[Điều cấm]
+❌ Lặp nội dung phần trước
+❌ Lặp nội dung phần sau
+❌ Thêm bất kỳ siêu thông tin hoặc lời thuyết minh nào
+❌ Thay đổi ngôi kể hoặc góc nhìn tự sự
+❌ Đi lệch yêu cầu chỉnh sửa của người dùng
 </constraints>"""
 
     # 拆书导入-反向项目提炼提示词
     BOOK_IMPORT_REVERSE_PROJECT_SUGGESTION = """<system>
-你是资深网文策划编辑，擅长从小说正文中反向提炼项目立项信息。
+Bạn là biên tập hoạch định tiểu thuyết mạng dày dạn, giỏi suy ngược thông tin khởi tạo dự án từ chính văn tiểu thuyết.
 </system>
 
-<task>
-【任务】
-基于提供的前3章内容，提炼该小说的核心立项信息，用于创建新项目。
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
 
-【目标】
-在不偏离原文的前提下，输出可直接用于项目初始化的结构化信息。
+<task>
+[Nhiệm vụ]
+Dựa trên nội dung 3 chương đầu được cung cấp, chắt lọc thông tin khởi tạo cốt lõi của tiểu thuyết để tạo dự án mới.
+
+[Mục tiêu]
+Không đi lệch văn bản gốc, xuất thông tin có cấu trúc có thể dùng trực tiếp để khởi tạo dự án.
 </task>
 
 <input priority="P0">
-【输入信息】
-书名：{title}
-前3章内容：
+[Thông tin đầu vào]
+Tên sách: {title}
+Nội dung 3 chương đầu:
 {sampled_text}
 </input>
 
 <output priority="P0">
-【输出格式】
-仅输出一个纯JSON对象（不要markdown、不要代码块、不要解释）：
+[Định dạng đầu ra]
+Chỉ xuất một object JSON thuần (không markdown, không khối mã, không giải thích):
 
 {{
-  "description": "小说简介",
-  "theme": "核心主题",
-  "genre": "小说类型",
-  "narrative_perspective": "第一人称/第三人称/全知视角",
+  "description": "Giới thiệu tiểu thuyết",
+  "theme": "Chủ đề cốt lõi",
+  "genre": "Thể loại tiểu thuyết",
+  "narrative_perspective": "第一人称 (ngôi thứ nhất) / 第三人称 (ngôi thứ ba) / 全知视角 (toàn tri)",
   "target_words": 100000
 }}
 
-【字段要求】
-1) description：120-260字，聚焦主角、核心冲突、主线目标与故事张力。
-2) theme：120-260字，提炼作品想表达的核心命题。
-3) genre：2-12字，如都市、玄幻、悬疑、科幻、言情等。
-4) narrative_perspective：只能是“第一人称”或“第三人称”或“全知视角”。
-5) target_words：整数。按网文体量合理预估；无法判断时返回100000。
+[Yêu cầu trường]
+1) description: 120-260 chữ, tập trung vào nhân vật chính, xung đột cốt lõi, mục tiêu tuyến chính và sức căng câu chuyện.
+2) theme: 120-260 chữ, chắt lọc mệnh đề cốt lõi mà tác phẩm muốn thể hiện.
+3) genre: 2-12 chữ, ví dụ đô thị, huyền huyễn, trinh thám, khoa huyễn, ngôn tình...
+4) narrative_perspective: chỉ được là "第一人称" (ngôi thứ nhất), "第三人称" (ngôi thứ ba) hoặc "全知视角" (góc nhìn toàn tri).
+5) target_words: số nguyên. Ước tính hợp lý theo quy mô tiểu thuyết mạng; nếu không thể phán đoán thì trả về 100000.
 </output>
 
 <constraints>
-【必须遵守】
-✅ 严格基于已给正文内容，不凭空添加关键设定
-✅ 保持信息自洽，避免互相矛盾
-✅ 输出必须是可解析JSON对象
-✅ 小说的genre可以由多个类型组成
+[Bắt buộc tuân thủ]
+✅ Tuyệt đối dựa trên nội dung chính văn đã cung cấp, không tự ý thêm thiết lập then chốt
+✅ Giữ thông tin nhất quán, tránh mâu thuẫn lẫn nhau
+✅ Đầu ra phải là object JSON có thể phân tích
+✅ genre của tiểu thuyết có thể gồm nhiều thể loại
 
-【禁止事项】
-❌ 输出JSON以外的任何文字
-❌ 使用markdown标记或代码块包裹
-❌ narrative_perspective输出枚举值之外的内容
-❌ target_words输出非整数
+[Điều cấm]
+❌ Xuất bất kỳ chữ nào ngoài JSON
+❌ Dùng markdown hoặc khối mã để bọc
+❌ Để narrative_perspective xuất nội dung ngoài các giá trị enum
+❌ Để target_words xuất giá trị không phải số nguyên
 </constraints>"""
 
     # 拆书导入-反向生成章节大纲（严格对齐 OUTLINE_CREATE 结构）
     BOOK_IMPORT_REVERSE_OUTLINES = """<system>
-你是资深网文总编与剧情策划，擅长基于已完成章节反向提炼标准化章节大纲。
+Bạn là tổng biên tập tiểu thuyết mạng và hoạch định cốt truyện dày dạn, giỏi suy ngược dàn ý chương chuẩn hóa từ các chương đã hoàn thành.
 </system>
 
-<task>
-【任务】
-基于给定的章节正文（每批最多5章），为每章反向生成对应大纲结构。
+[Yêu cầu ngôn ngữ]Mọi nội dung văn bản tạo ra (trừ tên trường JSON/key kỹ thuật) phải viết bằng tiếng Việt tự nhiên.
 
-【核心目标】
-输出结构必须与系统现有大纲生成结构严格一致（与 OUTLINE_CREATE 字段一致），用于直接入库。
+<task>
+[Nhiệm vụ]
+Dựa trên chính văn chương được cung cấp (mỗi lô tối đa 5 chương), tạo ngược cấu trúc dàn ý tương ứng cho từng chương.
+
+[Mục tiêu cốt lõi]
+Cấu trúc đầu ra phải hoàn toàn nhất quán với cấu trúc tạo dàn ý hiện có của hệ thống (khớp các trường của OUTLINE_CREATE), để dùng trực tiếp khi lưu vào cơ sở dữ liệu.
 </task>
 
 <project priority="P0">
-【项目信息】
-书名：{title}
-类型：{genre}
-主题：{theme}
-叙事视角：{narrative_perspective}
+[Thông tin dự án]
+Tên sách: {title}
+Thể loại: {genre}
+Chủ đề: {theme}
+Góc kể chuyện: {narrative_perspective}
 </project>
 
 <input priority="P0">
-【批次范围】
-第{start_chapter}章 - 第{end_chapter}章（共{expected_count}章）
+[Phạm vi lô]
+Chương {start_chapter} - chương {end_chapter} (tổng cộng {expected_count} chương)
 
-【章节内容】
+[Nội dung chương]
 {chapters_text}
 </input>
 
 <output priority="P0">
-【输出格式】
-仅输出纯JSON数组（不要markdown、不要代码块、不要解释）。
-数组长度必须严格等于 {expected_count}。
+[Định dạng đầu ra]
+Chỉ xuất mảng JSON thuần (không markdown, không khối mã, không giải thích).
+Độ dài mảng phải chính xác bằng {expected_count}.
 
-每个对象字段必须严格为：
+Các trường của mỗi object phải chính xác là:
 [
   {{
     "chapter_number": 1,
-    "title": "章节标题",
-    "summary": "章节概要（200-600字）：主要情节、角色互动、关键事件、冲突与转折",
-    "scenes": ["场景1描述", "场景2描述"],
+    "title": "Tiêu đề chương",
+    "summary": "Tóm tắt chương (200-600 chữ): tình tiết chính, tương tác nhân vật, sự kiện then chốt, xung đột và bước ngoặt",
+    "scenes": ["Mô tả cảnh 1", "Mô tả cảnh 2"],
     "characters": [
-      {{"name": "角色名1", "type": "character"}},
-      {{"name": "组织/势力名1", "type": "organization"}}
+      {{"name": "Tên nhân vật 1", "type": "character"}},
+      {{"name": "Tên tổ chức/thế lực 1", "type": "organization"}}
     ],
-    "key_points": ["情节要点1", "情节要点2"],
-    "emotion": "本章情感基调",
-    "goal": "本章叙事目标"
+    "key_points": ["Điểm tình tiết 1", "Điểm tình tiết 2"],
+    "emotion": "Gam cảm xúc chương này",
+    "goal": "Mục tiêu kể chuyện chương này"
   }}
 ]
 
-【字段约束】
-- chapter_number：必须与输入章节号一致
-- title：必须与输入章节标题一致
-- summary：根据本章正文反向提炼，不得臆造未出现关键事件
-- scenes：2-6条
-- characters：可为空；type 仅允许 character 或 organization
-- key_points：2-6条
-- emotion：一句话
-- goal：一句话
+[Ràng buộc trường]
+- chapter_number: phải nhất quán với số chương đầu vào
+- title: phải nhất quán với tiêu đề chương đầu vào
+- summary: chắt lọc ngược từ chính văn chương này, không được bịa sự kiện then chốt chưa xuất hiện
+- scenes: 2-6 mục
+- characters: có thể rỗng; type chỉ cho phép character hoặc organization
+- key_points: 2-6 mục
+- emotion: một câu
+- goal: một câu
 </output>
 
 <constraints>
-【必须遵守】
-✅ 严格一章对应一个对象，数量与顺序完全一致
-✅ 字段名、字段层级、字段类型严格一致
-✅ 仅基于输入正文提炼，不擅自扩展设定
-✅ 输出必须可被JSON直接解析
+[Bắt buộc tuân thủ]
+✅ Mỗi chương tương ứng chính xác một object, số lượng và thứ tự hoàn toàn nhất quán
+✅ Tên trường, cấp trường và kiểu trường phải hoàn toàn nhất quán
+✅ Chỉ chắt lọc dựa trên chính văn đầu vào, không tự ý mở rộng thiết lập
+✅ Đầu ra phải được JSON phân tích trực tiếp
 
-【禁止事项】
-❌ 输出JSON之外任何文本
-❌ 缺失字段或新增字段
-❌ chapter_number/title 与输入不一致
-❌ 使用 markdown 或代码块
+[Điều cấm]
+❌ Xuất bất kỳ văn bản nào ngoài JSON
+❌ Thiếu trường hoặc thêm trường mới
+❌ chapter_number/title không nhất quán với đầu vào
+❌ Dùng markdown hoặc khối mã
 </constraints>"""
 
     @staticmethod
@@ -2621,7 +2673,7 @@ class PromptService:
         try:
             return template.format(**kwargs)
         except KeyError as e:
-            raise ValueError(f"缺少必需的参数: {e}")
+            raise ValueError(f"Thiếu tham số bắt buộc: {e}")
     
 
     @classmethod
@@ -2656,13 +2708,13 @@ class PromptService:
         prompt_parts = [system_template]
         
         # 原始章节信息
-        prompt_parts.append(f"""## 📖 原始章节信息
+        prompt_parts.append(f"""## 📖 Thông tin chương gốc
 
-**章节**：第{chapter_number}章
-**标题**：{title}
-**字数**：{word_count}字
+**Chương**: chương {chapter_number}
+**Tiêu đề**: {title}
+**Số chữ**: {word_count} chữ
 
-**原始内容**：
+**Nội dung gốc**:
 {content}
 
 ---
@@ -2673,23 +2725,23 @@ class PromptService:
         prompt_parts.append("\n---\n")
         
         # 项目背景信息
-        prompt_parts.append(f"""## 🌍 项目背景信息
+        prompt_parts.append(f"""## 🌍 Thông tin bối cảnh dự án
 
-**小说标题**：{project_context.get('project_title', '未知')}
-**题材**：{project_context.get('genre', '未设定')}
-**主题**：{project_context.get('theme', '未设定')}
-**叙事视角**：{project_context.get('narrative_perspective', '第三人称')}
-**世界观设定**：
-- 时代背景：{project_context.get('time_period', '未设定')}
-- 地理位置：{project_context.get('location', '未设定')}
-- 氛围基调：{project_context.get('atmosphere', '未设定')}
+**Tên tiểu thuyết**: {project_context.get('project_title', 'Chưa đặt tên')}
+**Đề tài**: {project_context.get('genre', 'Chưa thiết lập')}
+**Chủ đề**: {project_context.get('theme', 'Chưa thiết lập')}
+**Góc kể chuyện**: {project_context.get('narrative_perspective', '第三人称')}
+**Thiết lập bối cảnh thế giới**:
+- Bối cảnh thời đại: {project_context.get('time_period', 'Chưa thiết lập')}
+- Vị trí địa lý: {project_context.get('location', 'Chưa thiết lập')}
+- Gam bầu không khí: {project_context.get('atmosphere', 'Chưa thiết lập')}
 
 ---
 """)
         
         # 角色信息
         if project_context.get('characters_info'):
-            prompt_parts.append(f"""## 👥 角色信息
+            prompt_parts.append(f"""## 👥 Thông tin nhân vật
 
 {project_context['characters_info']}
 
@@ -2698,7 +2750,7 @@ class PromptService:
         
         # 章节大纲
         if project_context.get('chapter_outline'):
-            prompt_parts.append(f"""## 📝 本章大纲
+            prompt_parts.append(f"""## 📝 Dàn ý chương này
 
 {project_context['chapter_outline']}
 
@@ -2707,7 +2759,7 @@ class PromptService:
         
         # 前置章节上下文
         if project_context.get('previous_context'):
-            prompt_parts.append(f"""## 📚 前置章节上下文
+            prompt_parts.append(f"""## 📚 Ngữ cảnh các chương trước
 
 {project_context['previous_context']}
 
@@ -2716,38 +2768,38 @@ class PromptService:
         
         # 写作风格要求
         if style_content:
-            prompt_parts.append(f"""## 🎨 写作风格要求
+            prompt_parts.append(f"""## 🎨 Yêu cầu phong cách viết
 
 {style_content}
 
-请在重新创作时严格遵循上述写作风格。
+Khi sáng tác lại, hãy tuân thủ nghiêm ngặt phong cách viết trên.
 
 ---
 """)
         
         # 创作要求
-        prompt_parts.append(f"""## ✨ 创作要求
+        prompt_parts.append(f"""## ✨ Yêu cầu sáng tác
 
-1. **解决问题**：针对上述修改指令中提到的所有问题进行改进
-2. **保持连贯**：确保与前后章节的情节、人物、风格保持一致
-3. **提升质量**：在节奏、情感、描写等方面明显优于原版
-4. **保留精华**：保持原章节中优秀的部分和关键情节
-5. **字数控制**：目标字数约{target_word_count}字（可适当浮动±20%）
-{f'6. **风格一致**：严格按照上述写作风格进行创作' if style_content else ''}
+1. **Giải quyết vấn đề**: cải thiện mọi vấn đề được nêu trong chỉ thị chỉnh sửa ở trên
+2. **Giữ tính mạch lạc**: đảm bảo tình tiết, nhân vật và phong cách nhất quán với các chương trước sau
+3. **Nâng cao chất lượng**: tốt hơn rõ rệt so với bản gốc về nhịp độ, cảm xúc và miêu tả
+4. **Giữ tinh hoa**: giữ lại những phần xuất sắc và tình tiết then chốt của chương gốc
+5. **Kiểm soát số chữ**: mục tiêu khoảng {target_word_count} chữ (có thể dao động ±20% phù hợp)
+{f'6. **Nhất quán phong cách**: sáng tác nghiêm ngặt theo phong cách viết trên' if style_content else ''}
 
 ---
 
-## 🎬 开始创作
+## 🎬 Bắt đầu sáng tác
 
-请现在开始创作改进后的新版本章节内容。
+Hãy bắt đầu sáng tác nội dung chương mới được cải thiện ngay bây giờ.
 
-**重要提示**：
-- 直接输出章节正文内容，从故事内容开始写
-- **不要**输出章节标题（如"第X章"、"第X章：XXX"等）
-- **不要**输出任何额外的说明、注释或元数据
-- 只需要纯粹的故事正文内容
+**Lưu ý quan trọng**:
+- Trực tiếp xuất nội dung chính văn chương, bắt đầu từ nội dung câu chuyện
+- **Không** xuất tiêu đề chương (như "Chương X", "Chương X: XXX")
+- **Không** xuất bất kỳ lời thuyết minh, chú thích hay siêu dữ liệu nào
+- Chỉ cần nội dung chính văn câu chuyện thuần túy
 
-现在开始：
+Bắt đầu ngay:
 """)
         
         return "\n".join(prompt_parts)
@@ -2798,7 +2850,7 @@ class PromptService:
         获取提示词模板（优先用户自定义，支持降级）
         
         Args:
-            template_key: 模板键名
+            template_key: khóa mẫu
             user_id: 用户ID（可选，如果不提供则直接返回系统默认）
             db: 数据库会话（可选）
             
@@ -2821,7 +2873,7 @@ class PromptService:
         获取提示词模板（优先用户自定义）
         
         Args:
-            template_key: 模板键名
+            template_key: khóa mẫu
             user_id: 用户ID
             db: 数据库会话
             
@@ -2872,129 +2924,129 @@ class PromptService:
         # 定义所有模板及其元信息
         template_definitions = {
             "NOVEL_COVER_PROMPT_TEMPLATE": {
-                "name": "小说封面生成",
-                "category": "封面生成",
-                "description": "根据项目基础信息生成小说封面绘制提示词，适用于竖版书籍封面",
+                "name": "Tạo bìa tiểu thuyết",
+                "category": "Tạo bìa",
+                "description": "Tạo prompt vẽ bìa tiểu thuyết dựa trên thông tin cơ bản của dự án, phù hợp bìa sách khổ dọc",
                 "parameters": ["title", "genre", "theme", "description"]
             },
             "WORLD_BUILDING": {
-                "name": "世界构建",
-                "category": "世界构建",
-                "description": "用于生成小说世界观设定，包括时间背景、地理位置、氛围基调和世界规则",
+                "name": "Dựng bối cảnh thế giới",
+                "category": "Bối cảnh thế giới",
+                "description": "Dùng để tạo thiết lập bối cảnh thế giới của tiểu thuyết, gồm bối cảnh thời gian, vị trí địa lý, gam bầu không khí và quy tắc thế giới",
                 "parameters": ["title", "theme", "genre", "description"]
             },
             "BOOK_IMPORT_REVERSE_PROJECT_SUGGESTION": {
-                "name": "拆书导入-反向项目提炼",
-                "category": "拆书导入",
-                "description": "基于前3章内容反向提炼简介、主题、类型、叙事视角与目标字数",
+                "name": "Nhập phân tích sách - Chắt lọc dự án ngược",
+                "category": "Nhập phân tích sách",
+                "description": "Dựa trên nội dung 3 chương đầu, chắt lọc ngược phần giới thiệu, chủ đề, thể loại, góc kể chuyện và số chữ mục tiêu",
                 "parameters": ["title", "sampled_text"]
             },
             "BOOK_IMPORT_REVERSE_OUTLINES": {
-                "name": "拆书导入-反向章节大纲",
-                "category": "拆书导入",
-                "description": "基于章节正文反向生成与OUTLINE_CREATE一致结构的大纲（单批次5章）",
+                "name": "Nhập phân tích sách - Dàn ý chương ngược",
+                "category": "Nhập phân tích sách",
+                "description": "Dựa trên chính văn chương, tạo ngược dàn ý có cấu trúc khớp OUTLINE_CREATE (một lô 5 chương)",
                 "parameters": [
                     "title", "genre", "theme", "narrative_perspective",
                     "start_chapter", "end_chapter", "expected_count", "chapters_text"
                 ]
             },
             "CHARACTERS_BATCH_GENERATION": {
-                "name": "批量角色生成",
-                "category": "角色生成",
-                "description": "批量生成多个角色和组织，建立角色关系网络",
+                "name": "Tạo nhân vật hàng loạt",
+                "category": "Tạo nhân vật",
+                "description": "Tạo hàng loạt nhiều nhân vật và tổ chức, dựng mạng quan hệ nhân vật",
                 "parameters": ["count", "time_period", "location", "atmosphere", "rules", "theme", "genre", "requirements"]
             },
             "SINGLE_CHARACTER_GENERATION": {
-                "name": "单个角色生成",
-                "category": "角色生成",
-                "description": "生成单个角色的详细设定",
+                "name": "Tạo nhân vật đơn lẻ",
+                "category": "Tạo nhân vật",
+                "description": "Tạo thiết lập chi tiết cho một nhân vật",
                 "parameters": ["project_context", "user_input"]
             },
             "SINGLE_ORGANIZATION_GENERATION": {
-                "name": "组织生成",
-                "category": "角色生成",
-                "description": "生成组织/势力的详细设定",
+                "name": "Tạo tổ chức",
+                "category": "Tạo nhân vật",
+                "description": "Tạo thiết lập chi tiết cho tổ chức/thế lực",
                 "parameters": ["project_context", "user_input"]
             },
             "OUTLINE_CREATE": {
-                "name": "大纲生成",
-                "category": "大纲生成",
-                "description": "根据项目信息生成完整的章节大纲",
+                "name": "Tạo dàn ý",
+                "category": "Tạo dàn ý",
+                "description": "Tạo dàn ý chương hoàn chỉnh dựa trên thông tin dự án",
                 "parameters": ["title", "theme", "genre", "chapter_count", "narrative_perspective", "target_words", 
                              "time_period", "location", "atmosphere", "rules", "characters_info", "requirements", "mcp_references"]
             },
             "OUTLINE_CONTINUE": {
-                "name": "大纲续写",
-                "category": "大纲生成",
-                "description": "基于已有章节续写大纲",
+                "name": "Viết tiếp dàn ý",
+                "category": "Tạo dàn ý",
+                "description": "Viết tiếp dàn ý dựa trên các chương hiện có",
                 "parameters": ["title", "theme", "genre", "narrative_perspective", "chapter_count", "time_period", 
                              "location", "atmosphere", "rules", "characters_info", "current_chapter_count", 
                              "all_chapters_brief", "recent_plot", "memory_context", "mcp_references", 
                              "plot_stage_instruction", "start_chapter", "end_chapter", "story_direction", "requirements"]
             },
             "CHAPTER_GENERATION_ONE_TO_MANY": {
-                "name": "章节创作-1-N模式（第1章）",
-                "category": "章节创作",
-                "description": "1-N模式：根据大纲创作章节内容（用于第1章，无前置章节）",
+                "name": "Sáng tác chương - chế độ 1-N (chương 1)",
+                "category": "Sáng tác chương",
+                "description": "Chế độ 1-N: sáng tác nội dung chương theo dàn ý (dùng cho chương 1, không có chương trước)",
                 "parameters": ["project_title", "genre", "chapter_number", "chapter_title", "chapter_outline",
                              "target_word_count", "narrative_perspective", "characters_info"]
             },
             "CHAPTER_GENERATION_ONE_TO_MANY_NEXT": {
-                "name": "章节创作-1-N模式（第2章及以后）",
-                "category": "章节创作",
-                "description": "1-N模式：基于前置章节内容创作新章节（用于第2章及以后）",
+                "name": "Sáng tác chương - chế độ 1-N (từ chương 2 trở đi)",
+                "category": "Sáng tác chương",
+                "description": "Chế độ 1-N: sáng tác chương mới dựa trên nội dung chương trước (dùng từ chương 2 trở đi)",
                 "parameters": ["project_title", "genre", "chapter_number", "chapter_title", "chapter_outline",
                              "target_word_count", "narrative_perspective", "characters_info", "continuation_point",
                              "foreshadow_reminders", "relevant_memories", "story_skeleton", "previous_chapter_summary"]
             },
             "CHAPTER_GENERATION_ONE_TO_ONE": {
-                "name": "章节创作-1-1模式（第1章）",
-                "category": "章节创作",
-                "description": "1-1模式：章节创作（用于第1章，无前置章节）",
+                "name": "Sáng tác chương - chế độ 1-1 (chương 1)",
+                "category": "Sáng tác chương",
+                "description": "Chế độ 1-1: sáng tác chương (dùng cho chương 1, không có chương trước)",
                 "parameters": ["project_title", "genre", "chapter_number", "chapter_title", "chapter_outline",
                              "target_word_count", "narrative_perspective", "characters_info", "chapter_careers"]
             },
             "CHAPTER_GENERATION_ONE_TO_ONE_NEXT": {
-                "name": "章节创作-1-1模式（第2章及以后）",
-                "category": "章节创作",
-                "description": "1-1模式：基于上一章内容创作新章节（用于第2章及以后）",
+                "name": "Sáng tác chương - chế độ 1-1 (từ chương 2 trở đi)",
+                "category": "Sáng tác chương",
+                "description": "Chế độ 1-1: sáng tác chương mới dựa trên nội dung chương trước (dùng từ chương 2 trở đi)",
                 "parameters": ["project_title", "genre", "chapter_number", "chapter_title", "chapter_outline",
                              "target_word_count", "narrative_perspective", "previous_chapter_content",
                              "characters_info", "chapter_careers", "foreshadow_reminders", "relevant_memories"]
             },
             "CHAPTER_REGENERATION_SYSTEM": {
-                "name": "章节重写系统提示",
-                "category": "章节重写",
-                "description": "用于章节重写的系统提示词",
+                "name": "Prompt hệ thống viết lại chương",
+                "category": "Viết lại chương",
+                "description": "Prompt hệ thống dùng để viết lại chương",
                 "parameters": ["chapter_number", "title", "word_count", "content", "modification_instructions",
                              "project_context", "style_content", "target_word_count"]
             },
             "PARTIAL_REGENERATE": {
-                "name": "局部重写",
-                "category": "章节重写",
-                "description": "根据用户修改要求重写选中的段落内容",
+                "name": "Viết lại cục bộ",
+                "category": "Viết lại chương",
+                "description": "Viết lại đoạn đã chọn theo yêu cầu chỉnh sửa của người dùng",
                 "parameters": ["context_before", "original_word_count", "selected_text", "context_after",
                              "user_instructions", "length_requirement", "style_content"]
             },
             "PLOT_ANALYSIS": {
-                "name": "情节分析",
-                "category": "情节分析",
-                "description": "深度分析章节的剧情、钩子、伏笔等",
+                "name": "Phân tích tình tiết",
+                "category": "Phân tích tình tiết",
+                "description": "Phân tích sâu tình tiết, móc câu, phục bút... của chương",
                 "parameters": ["chapter_number", "title", "content", "word_count"]
             },
             "OUTLINE_EXPAND_SINGLE": {
-                "name": "大纲单批次展开",
-                "category": "情节展开",
-                "description": "将大纲节点展开为详细章节规划（单批次）",
+                "name": "Mở rộng dàn ý một lô",
+                "category": "Mở rộng tình tiết",
+                "description": "Mở rộng nút dàn ý thành kế hoạch chương chi tiết (một lô)",
                 "parameters": ["project_title", "project_genre", "project_theme", "project_narrative_perspective", 
                              "project_world_time_period", "project_world_location", "project_world_atmosphere", 
                              "characters_info", "outline_order_index", "outline_title", "outline_content", 
                              "context_info", "strategy_instruction", "target_chapter_count", "scene_instruction", "scene_field"]
             },
             "OUTLINE_EXPAND_MULTI": {
-                "name": "大纲分批展开",
-                "category": "情节展开",
-                "description": "将大纲节点展开为详细章节规划（分批）",
+                "name": "Mở rộng dàn ý theo lô",
+                "category": "Mở rộng tình tiết",
+                "description": "Mở rộng nút dàn ý thành kế hoạch chương chi tiết (theo từng lô)",
                 "parameters": ["project_title", "project_genre", "project_theme", "project_narrative_perspective", 
                              "project_world_time_period", "project_world_location", "project_world_atmosphere", 
                              "characters_info", "outline_order_index", "outline_title", "outline_content", 
@@ -3002,115 +3054,115 @@ class PromptService:
                              "end_index", "target_chapter_count", "scene_instruction", "scene_field"]
             },
             "MCP_TOOL_TEST": {
-                "name": "MCP工具测试(用户提示词)",
-                "category": "MCP测试",
-                "description": "用于测试MCP插件功能的用户提示词",
+                "name": "Kiểm thử công cụ MCP (prompt người dùng)",
+                "category": "Kiểm thử MCP",
+                "description": "Prompt người dùng dùng để kiểm thử chức năng plugin MCP",
                 "parameters": ["plugin_name"]
             },
             "MCP_TOOL_TEST_SYSTEM": {
-                "name": "MCP工具测试(系统提示词)",
-                "category": "MCP测试",
-                "description": "用于测试MCP插件功能的系统提示词",
+                "name": "Kiểm thử công cụ MCP (prompt hệ thống)",
+                "category": "Kiểm thử MCP",
+                "description": "Prompt hệ thống dùng để kiểm thử chức năng plugin MCP",
                 "parameters": []
             },
             "MCP_WORLD_BUILDING_PLANNING": {
-                "name": "MCP世界观规划",
-                "category": "MCP增强",
-                "description": "使用MCP工具搜索资料辅助世界观设计",
+                "name": "Lập kế hoạch bối cảnh thế giới MCP",
+                "category": "Tăng cường MCP",
+                "description": "Dùng công cụ MCP tìm tài liệu hỗ trợ thiết kế bối cảnh thế giới",
                 "parameters": ["title", "genre", "theme", "description"]
             },
             "MCP_CHARACTER_PLANNING": {
-                "name": "MCP角色规划",
-                "category": "MCP增强",
-                "description": "使用MCP工具搜索资料辅助角色设计",
+                "name": "Lập kế hoạch nhân vật MCP",
+                "category": "Tăng cường MCP",
+                "description": "Dùng công cụ MCP tìm tài liệu hỗ trợ thiết kế nhân vật",
                 "parameters": ["title", "genre", "theme", "time_period", "location"]
             },
             "AUTO_CHARACTER_ANALYSIS": {
-                "name": "自动角色分析",
-                "category": "自动角色引入",
-                "description": "分析新生成的大纲，判断是否需要引入新角色",
+                "name": "Phân tích nhân vật tự động",
+                "category": "Tự động đưa nhân vật vào",
+                "description": "Phân tích dàn ý mới tạo, đánh giá có cần đưa nhân vật mới vào hay không",
                 "parameters": ["title", "genre", "theme", "time_period", "location", "atmosphere",
                              "existing_characters", "new_outlines", "start_chapter", "end_chapter"]
             },
             "AUTO_CHARACTER_GENERATION": {
-                "name": "自动角色生成",
-                "category": "自动角色引入",
-                "description": "根据剧情需求自动生成新角色的完整设定",
+                "name": "Tạo nhân vật tự động",
+                "category": "Tự động đưa nhân vật vào",
+                "description": "Tự động tạo thiết lập đầy đủ cho nhân vật mới theo nhu cầu tình tiết",
                 "parameters": ["title", "genre", "theme", "time_period", "location", "atmosphere", "rules",
                              "existing_characters", "plot_context", "character_specification", "mcp_references"]
             },
             "AUTO_ORGANIZATION_ANALYSIS": {
-                "name": "自动组织分析",
-                "category": "自动组织引入",
-                "description": "分析新生成的大纲，判断是否需要引入新组织",
+                "name": "Phân tích tổ chức tự động",
+                "category": "Tự động đưa tổ chức vào",
+                "description": "Phân tích dàn ý mới tạo, đánh giá có cần đưa tổ chức mới vào hay không",
                 "parameters": ["title", "genre", "theme", "time_period", "location", "atmosphere",
                              "existing_organizations", "existing_characters", "all_chapters_brief", "start_chapter", "chapter_count", "plot_stage", "story_direction"]
             },
             "AUTO_ORGANIZATION_GENERATION": {
-                "name": "自动组织生成",
-                "category": "自动组织引入",
-                "description": "根据剧情需求自动生成新组织的完整设定",
+                "name": "Tạo tổ chức tự động",
+                "category": "Tự động đưa tổ chức vào",
+                "description": "Tự động tạo thiết lập đầy đủ cho tổ chức mới theo nhu cầu tình tiết",
                 "parameters": ["title", "genre", "theme", "time_period", "location", "atmosphere", "rules",
                              "existing_organizations", "existing_characters", "plot_context", "organization_specification", "mcp_references"]
             },
             "CAREER_SYSTEM_GENERATION": {
-                "name": "职业体系生成",
-                "category": "世界构建",
-                "description": "根据世界观和项目简介自动生成完整的职业体系，包括主职业和副职业",
+                "name": "Tạo hệ thống nghề nghiệp",
+                "category": "Bối cảnh thế giới",
+                "description": "Tự động tạo hệ thống nghề nghiệp hoàn chỉnh dựa trên bối cảnh thế giới và phần giới thiệu dự án, gồm nghề chính và nghề phụ",
                 "parameters": ["title", "genre", "theme", "description", "time_period", "location", "atmosphere", "rules"]
             },
             "INSPIRATION_TITLE_SYSTEM": {
-                "name": "灵感模式-书名生成(系统提示词)",
-                "category": "灵感模式",
-                "description": "根据用户的原始想法生成6个书名建议的系统提示词",
+                "name": "Chế độ cảm hứng - Tạo tên sách (prompt hệ thống)",
+                "category": "Chế độ cảm hứng",
+                "description": "Prompt hệ thống tạo 6 gợi ý tên sách dựa trên ý tưởng gốc của người dùng",
                 "parameters": ["initial_idea"]
             },
             "INSPIRATION_TITLE_USER": {
-                "name": "灵感模式-书名生成(用户提示词)",
-                "category": "灵感模式",
-                "description": "根据用户的原始想法生成6个书名建议的用户提示词",
+                "name": "Chế độ cảm hứng - Tạo tên sách (prompt người dùng)",
+                "category": "Chế độ cảm hứng",
+                "description": "Prompt người dùng tạo 6 gợi ý tên sách dựa trên ý tưởng gốc của người dùng",
                 "parameters": ["initial_idea"]
             },
             "INSPIRATION_DESCRIPTION_SYSTEM": {
-                "name": "灵感模式-简介生成(系统提示词)",
-                "category": "灵感模式",
-                "description": "根据用户想法和书名生成6个简介选项的系统提示词",
+                "name": "Chế độ cảm hứng - Tạo giới thiệu (prompt hệ thống)",
+                "category": "Chế độ cảm hứng",
+                "description": "Prompt hệ thống tạo 6 lựa chọn giới thiệu dựa trên ý tưởng người dùng và tên sách",
                 "parameters": ["initial_idea", "title"]
             },
             "INSPIRATION_DESCRIPTION_USER": {
-                "name": "灵感模式-简介生成(用户提示词)",
-                "category": "灵感模式",
-                "description": "根据用户想法和书名生成6个简介选项的用户提示词",
+                "name": "Chế độ cảm hứng - Tạo giới thiệu (prompt người dùng)",
+                "category": "Chế độ cảm hứng",
+                "description": "Prompt người dùng tạo 6 lựa chọn giới thiệu dựa trên ý tưởng người dùng và tên sách",
                 "parameters": ["initial_idea", "title"]
             },
             "INSPIRATION_THEME_SYSTEM": {
-                "name": "灵感模式-主题生成(系统提示词)",
-                "category": "灵感模式",
-                "description": "根据书名和简介生成6个深刻的主题选项的系统提示词",
+                "name": "Chế độ cảm hứng - Tạo chủ đề (prompt hệ thống)",
+                "category": "Chế độ cảm hứng",
+                "description": "Prompt hệ thống tạo 6 lựa chọn chủ đề sâu sắc dựa trên tên sách và phần giới thiệu",
                 "parameters": ["initial_idea", "title", "description"]
             },
             "INSPIRATION_THEME_USER": {
-                "name": "灵感模式-主题生成(用户提示词)",
-                "category": "灵感模式",
-                "description": "根据书名和简介生成6个深刻的主题选项的用户提示词",
+                "name": "Chế độ cảm hứng - Tạo chủ đề (prompt người dùng)",
+                "category": "Chế độ cảm hứng",
+                "description": "Prompt người dùng tạo 6 lựa chọn chủ đề sâu sắc dựa trên tên sách và phần giới thiệu",
                 "parameters": ["initial_idea", "title", "description"]
             },
             "INSPIRATION_GENRE_SYSTEM": {
-                "name": "灵感模式-类型生成(系统提示词)",
-                "category": "灵感模式",
-                "description": "根据小说信息生成6个合适的类型标签的系统提示词",
+                "name": "Chế độ cảm hứng - Tạo thể loại (prompt hệ thống)",
+                "category": "Chế độ cảm hứng",
+                "description": "Prompt hệ thống tạo 6 nhãn thể loại phù hợp dựa trên thông tin tiểu thuyết",
                 "parameters": ["initial_idea", "title", "description", "theme"]
             },
             "INSPIRATION_GENRE_USER": {
-                "name": "灵感模式-类型生成(用户提示词)",
-                "category": "灵感模式",
-                "description": "根据小说信息生成6个合适的类型标签的用户提示词",
+                "name": "Chế độ cảm hứng - Tạo thể loại (prompt người dùng)",
+                "category": "Chế độ cảm hứng",
+                "description": "Prompt người dùng tạo 6 nhãn thể loại phù hợp dựa trên thông tin tiểu thuyết",
                 "parameters": ["initial_idea", "title", "description", "theme"]
             },
             "INSPIRATION_QUICK_COMPLETE": {
-                "name": "灵感模式-智能补全",
-                "category": "灵感模式",
-                "description": "根据用户提供的部分信息智能补全完整的小说方案",
+                "name": "Chế độ cảm hứng - Bổ sung thông minh",
+                "category": "Chế độ cảm hứng",
+                "description": "Bổ sung thông minh phương án tiểu thuyết hoàn chỉnh dựa trên thông tin một phần do người dùng cung cấp",
                 "parameters": ["existing"]
             }
         }
@@ -3133,7 +3185,7 @@ class PromptService:
             templates.extend(skill_templates)
         except Exception as e:
             from app.logger import get_logger
-            get_logger(__name__).warning(f"加载 Skill 模板失败: {e}")
+            get_logger(__name__).warning(f"Tải mẫu Skill thất bại: {e}")
         
         return templates
     
@@ -3143,7 +3195,7 @@ class PromptService:
         获取指定系统模板的信息
         
         Args:
-            template_key: 模板键名
+            template_key: khóa mẫu
             
         Returns:
             模板信息字典

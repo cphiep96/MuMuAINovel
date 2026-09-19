@@ -111,28 +111,28 @@ def validate_public_http_url(
     MCP plugins or other callers.
     """
     if not raw_url or not isinstance(raw_url, str):
-        raise HTTPException(status_code=400, detail="URL不能为空")
+        raise HTTPException(status_code=400, detail="URL không được để trống")
 
     parsed = urlparse(raw_url.strip())
     if parsed.scheme not in set(allowed_schemes):
-        raise HTTPException(status_code=400, detail="仅支持 HTTP/HTTPS URL")
+        raise HTTPException(status_code=400, detail="Chỉ hỗ trợ URL HTTP/HTTPS")
     if not parsed.hostname:
-        raise HTTPException(status_code=400, detail="URL缺少主机名")
+        raise HTTPException(status_code=400, detail="URL thiếu tên máy chủ")
     if parsed.username or parsed.password:
-        raise HTTPException(status_code=400, detail="URL不允许包含认证信息")
+        raise HTTPException(status_code=400, detail="URL không được chứa thông tin xác thực")
 
     host = _normalize_hostname(parsed.hostname)
     host_allowed = allow_private or host in _parse_allowed_hosts(allowed_hosts)
 
     if host in {"localhost", "localhost.localdomain"} and not host_allowed:
-        raise HTTPException(status_code=400, detail="URL不允许指向本机地址")
+        raise HTTPException(status_code=400, detail="URL không được trỏ tới địa chỉ máy cục bộ")
 
     try:
         ip = ipaddress.ip_address(host)
         if _is_always_blocked_ip(ip):
-            raise HTTPException(status_code=400, detail="URL不允许指向链路本地、组播或未指定地址")
+            raise HTTPException(status_code=400, detail="URL không được trỏ tới địa chỉ link-local, multicast hoặc chưa chỉ định")
         if _is_forbidden_ip(ip) and not host_allowed:
-            raise HTTPException(status_code=400, detail="URL不允许指向内网或保留地址")
+            raise HTTPException(status_code=400, detail="URL không được trỏ tới địa chỉ nội bộ hoặc dành riêng")
     except ValueError:
         try:
             infos = socket.getaddrinfo(
@@ -141,13 +141,13 @@ def validate_public_http_url(
                 type=socket.SOCK_STREAM,
             )
         except socket.gaierror:
-            raise HTTPException(status_code=400, detail="URL主机名无法解析")
+            raise HTTPException(status_code=400, detail="Không thể phân giải tên máy chủ của URL")
         for info in infos:
             resolved_ip = ipaddress.ip_address(info[4][0])
             if _is_always_blocked_ip(resolved_ip):
-                raise HTTPException(status_code=400, detail="URL解析到链路本地、组播或未指定地址")
+                raise HTTPException(status_code=400, detail="URL phân giải thành địa chỉ link-local, multicast hoặc chưa chỉ định")
             if _is_forbidden_ip(resolved_ip) and not host_allowed:
-                raise HTTPException(status_code=400, detail="URL解析到内网或保留地址")
+                raise HTTPException(status_code=400, detail="URL phân giải thành địa chỉ nội bộ hoặc dành riêng")
 
     return raw_url.strip().rstrip("/")
 
@@ -169,14 +169,14 @@ def validate_ai_http_url(raw_url: str) -> str:
     except HTTPException as exc:
         detail = str(exc.detail or "")
         if exc.status_code == 400 and any(
-            token in detail for token in ("本机", "内网", "链路本地")
+            token in detail for token in ("máy cục bộ", "nội bộ", "link-local")
         ):
             raise HTTPException(
                 status_code=400,
                 detail=(
-                    f"{detail}。如需连接本地或 Docker 内网 LLM，"
-                    "请设置 ALLOW_PRIVATE_AI_ENDPOINTS=true，"
-                    "或把主机名加入 ALLOWED_AI_HOSTS（例如 host.docker.internal,127.0.0.1）。"
+                    f"{detail}. Nếu cần kết nối LLM cục bộ hoặc Docker nội bộ, "
+                    "hãy đặt ALLOW_PRIVATE_AI_ENDPOINTS=true, "
+                    "hoặc thêm hostname vào ALLOWED_AI_HOSTS (ví dụ host.docker.internal,127.0.0.1)."
                 ),
             ) from exc
         raise

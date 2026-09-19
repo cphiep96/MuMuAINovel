@@ -41,17 +41,17 @@ from app.services.outline_transfer_service import OutlineTransferService
 from app.utils.sse_response import SSEResponse
 
 
-router = APIRouter(prefix="/projects/{project_id}/agent", tags=["木木创作助手"])
+router = APIRouter(prefix="/projects/{project_id}/agent", tags=["Trợ lý sáng tác MuMu"])
 
 
 def _user_id(request: Request) -> str:
     user_id = getattr(request.state, "user_id", None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
     return user_id
 
 
-@router.get("/exports/{export_type}", summary="下载木木创作助手导出的项目数据")
+@router.get("/exports/{export_type}", summary="Tải dữ liệu dự án do trợ lý sáng tác MuMu xuất")
 async def download_agent_export(
     project_id: str,
     export_type: str,
@@ -111,7 +111,7 @@ async def download_agent_export(
         filename = f"characters_{safe_title}.json"
         media_type = "application/json; charset=utf-8"
     else:
-        raise HTTPException(status_code=404, detail="不支持的导出类型")
+        raise HTTPException(status_code=404, detail="Loại xuất không được hỗ trợ")
 
     return Response(
         content=content,
@@ -136,7 +136,7 @@ async def _get_conversation(
     )
     conversation = result.scalar_one_or_none()
     if conversation is None:
-        raise HTTPException(status_code=404, detail="对话不存在")
+        raise HTTPException(status_code=404, detail="Cuộc hội thoại không tồn tại")
     return conversation
 
 
@@ -173,7 +173,7 @@ async def create_conversation(
     conversation = AgentConversation(
         user_id=user_id,
         project_id=project_id,
-        title=(payload.title or "新对话").strip()[:200] or "新对话",
+        title=(payload.title or "Hội thoại mới").strip()[:200] or "Hội thoại mới",
     )
     db.add(conversation)
     await db.commit()
@@ -271,7 +271,7 @@ async def chat_stream(
                 yield SSEResponse.format_sse(event)
             yield await SSEResponse.send_done()
         except (asyncio.CancelledError, GeneratorExit):
-            await service.finalize_interrupted_turn("连接已中断", cancelled=True)
+            await service.finalize_interrupted_turn("Kết nối đã bị ngắt", cancelled=True)
             raise
         except ValueError as exc:
             await service.finalize_interrupted_turn(str(exc), cancelled=False)
@@ -279,7 +279,7 @@ async def chat_stream(
             yield await SSEResponse.send_done()
         except Exception as exc:
             await service.finalize_interrupted_turn(str(exc), cancelled=False)
-            yield await SSEResponse.send_error(f"木木创作助手执行失败：{exc}", 500)
+            yield await SSEResponse.send_error(f"Trợ lý sáng tác MuMu thực thi thất bại: {exc}", 500)
             yield await SSEResponse.send_done()
 
     return StreamingResponse(
@@ -321,8 +321,8 @@ async def _claim_tool_call(
             AgentToolCall.user_id == user_id,
         ))).scalar_one_or_none()
         if existing is None:
-            raise HTTPException(status_code=404, detail="工具调用不存在")
-        raise HTTPException(status_code=409, detail="该修改已处理或正在执行")
+            raise HTTPException(status_code=404, detail="Lời gọi công cụ không tồn tại")
+        raise HTTPException(status_code=409, detail="Thay đổi này đã được xử lý hoặc đang thực thi")
     await db.commit()
     tool_call = (await db.execute(select(AgentToolCall).where(
         AgentToolCall.id == tool_call_id,
@@ -369,8 +369,8 @@ async def confirm_tool_call(
             and tool_call.preview.get("entity_type") == "mcp_tool"
         )
         if not is_mcp:
-            await _restore_waiting_tool_call(db, tool_call, error="工具已不再可用")
-            raise HTTPException(status_code=409, detail="工具已不再可用")
+            await _restore_waiting_tool_call(db, tool_call, error="Công cụ không còn khả dụng")
+            raise HTTPException(status_code=409, detail="Công cụ không còn khả dụng")
         from app.services.mcp_tools_loader import mcp_tools_loader
 
         available_mcp_tools = await mcp_tools_loader.get_user_tools(
@@ -380,8 +380,8 @@ async def confirm_tool_call(
             item.get("function", {}).get("name") for item in (available_mcp_tools or [])
         }
         if tool_call.tool_name not in available_names:
-            await _restore_waiting_tool_call(db, tool_call, error="MCP 工具已禁用或不可用")
-            raise HTTPException(status_code=409, detail="MCP 工具已禁用或不可用")
+            await _restore_waiting_tool_call(db, tool_call, error="Công cụ MCP đã bị tắt hoặc không khả dụng")
+            raise HTTPException(status_code=409, detail="Công cụ MCP đã bị tắt hoặc không khả dụng")
 
     try:
         current_preview = (
@@ -391,13 +391,13 @@ async def confirm_tool_call(
         )
     except ValueError as exc:
         await _restore_waiting_tool_call(db, tool_call, error=str(exc))
-        raise HTTPException(status_code=409, detail=f"修改目标已变化：{exc}") from exc
+        raise HTTPException(status_code=409, detail=f"Mục tiêu sửa đổi đã thay đổi: {exc}") from exc
 
     stored_preview = normalize_tool_preview(tool_call.preview, tool_call.arguments)
     if current_preview != stored_preview:
         tool_call.preview = current_preview
-        await _restore_waiting_tool_call(db, tool_call, error="数据已发生变化")
-        raise HTTPException(status_code=409, detail="数据已发生变化，差异预览已刷新，请重新确认")
+        await _restore_waiting_tool_call(db, tool_call, error="Dữ liệu đã thay đổi")
+        raise HTTPException(status_code=409, detail="Dữ liệu đã thay đổi, bản xem trước khác biệt đã được làm mới, vui lòng xác nhận lại")
     if tool_call.preview != current_preview:
         tool_call.preview = current_preview
 
@@ -407,7 +407,7 @@ async def confirm_tool_call(
                 user_id, tool_call.tool_name, tool_call.arguments, tool_call.id
             )
             if not result.get("success"):
-                raise RuntimeError(result.get("error") or "MCP 工具调用失败")
+                raise RuntimeError(result.get("error") or "Gọi công cụ MCP thất bại")
         else:
             result = await registry.execute(tool_call.tool_name, tool_call.arguments)
         tool_call.status = "executed"
@@ -421,7 +421,7 @@ async def confirm_tool_call(
             .where(AgentExecutionStep.tool_call_id == tool_call.id)
             .values(
                 status="completed",
-                content="修改已由用户确认并执行。",
+                content="Sửa đổi đã được người dùng xác nhận và thực thi.",
                 updated_at=datetime.now(),
             )
         )
@@ -431,7 +431,7 @@ async def confirm_tool_call(
             .values(last_message_at=datetime.now())
         )
         result_message = result.get("message") or (
-            "MCP 工具已确认并执行。" if is_mcp else "修改已确认并执行。"
+            "Công cụ MCP đã được xác nhận và thực thi." if is_mcp else "Sửa đổi đã được xác nhận và thực thi."
         )
         message = AgentMessage(
             conversation_id=tool_call.conversation_id,
@@ -456,7 +456,7 @@ async def confirm_tool_call(
         ))).scalar_one_or_none()
         if refreshed is not None and refreshed.status == "executing":
             await _restore_waiting_tool_call(db, refreshed, error=str(exc))
-        raise HTTPException(status_code=400, detail=f"执行修改失败：{exc}") from exc
+        raise HTTPException(status_code=400, detail=f"Thực thi sửa đổi thất bại: {exc}") from exc
 
 
 @router.post("/tool-calls/{tool_call_id}/reject", response_model=AgentToolDecisionResponse)
@@ -478,7 +478,7 @@ async def reject_tool_call(
         .where(AgentExecutionStep.tool_call_id == tool_call.id)
         .values(
             status="rejected",
-            content="用户已取消本次修改，项目数据没有变化。",
+            content="Người dùng đã hủy sửa đổi lần này, dữ liệu dự án không thay đổi.",
             updated_at=datetime.now(),
         )
     )
@@ -490,14 +490,14 @@ async def reject_tool_call(
     message = AgentMessage(
         conversation_id=tool_call.conversation_id,
         role="assistant",
-        content="已取消这次修改，项目数据没有变化。",
+        content="Đã hủy sửa đổi lần này, dữ liệu dự án không thay đổi.",
     )
     db.add(message)
     await db.commit()
     await db.refresh(tool_call)
     return {
         "success": True,
-        "message": "已取消修改",
+        "message": "Đã hủy sửa đổi",
         "tool_call": tool_call,
         "resources": [],
     }

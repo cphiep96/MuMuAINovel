@@ -559,7 +559,7 @@ def parse_json(text: str) -> Union[Dict, List]:
     logger.error(f"   原始文本长度: {len(text) if text else 0}")
     logger.error(f"   清洗后文本长度: {len(cleaned) if cleaned else 0}")
     logger.debug(f"   清洗后文本预览: {safe_preview(cleaned, 500)}")
-    raise json.JSONDecodeError("JSON解析失败（标准和json5均失败）", cleaned, 0)
+    raise json.JSONDecodeError("Phân tích JSON thất bại (cả chuẩn và json5 đều thất bại)", cleaned, 0)
 
 
 def loads_json(text: str) -> Any:
@@ -603,4 +603,4 @@ def loads_json(text: str) -> Any:
             logger.error(f"❌ json5容错解析也失败: {e5}")
     
     # 最终失败，抛出标准异常
-    raise json.JSONDecodeError("JSON解析失败（标准和json5均失败）", text, 0)
+    raise json.JSONDecodeError("Phân tích JSON thất bại (cả chuẩn và json5 đều thất bại)", text, 0)

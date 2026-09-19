@@ -38,8 +38,8 @@ export function useProjectSync() {
       setProjects(projects);
       return projects;
     } catch (error) {
-      console.error('刷新项目列表失败:', error);
-      message.error('刷新项目列表失败');
+      console.error('Làm mới danh sách dự án thất bại:', error);
+      message.error('Làm mới danh sách dự án thất bại');
       return [];
     } finally {
       setLoading(false);
@@ -53,7 +53,7 @@ export function useProjectSync() {
       addProject(created);
       return created;
     } catch (error) {
-      console.error('创建项目失败:', error);
+      console.error('Tạo dự án thất bại:', error);
       throw error;
     }
   }, [addProject]);
@@ -65,7 +65,7 @@ export function useProjectSync() {
       updateProject(id, updated);
       return updated;
     } catch (error) {
-      console.error('更新项目失败:', error);
+      console.error('Cập nhật dự án thất bại:', error);
       throw error;
     }
   }, [updateProject]);
@@ -76,7 +76,7 @@ export function useProjectSync() {
       await projectApi.deleteProject(id);
       removeProject(id);
     } catch (error) {
-      console.error('删除项目失败:', error);
+      console.error('Xóa dự án thất bại:', error);
       throw error;
     }
   }, [removeProject]);
@@ -106,8 +106,8 @@ export function useCharacterSync() {
       setCharacters(characters);
       return characters;
     } catch (error) {
-      console.error('刷新角色列表失败:', error);
-      message.error('刷新角色列表失败');
+      console.error('Làm mới danh sách nhân vật thất bại:', error);
+      message.error('Làm mới danh sách nhân vật thất bại');
       return [];
     }
   }, [currentProject?.id, setCharacters]);
@@ -118,7 +118,7 @@ export function useCharacterSync() {
       await characterApi.deleteCharacter(id);
       removeCharacter(id);
     } catch (error) {
-      console.error('删除角色失败:', error);
+      console.error('Xóa nhân vật thất bại:', error);
       throw error;
     }
   }, [removeCharacter]);
@@ -130,7 +130,7 @@ export function useCharacterSync() {
       addCharacter(generated);
       return generated;
     } catch (error) {
-      console.error('AI生成角色失败:', error);
+      console.error('Tạo nhân vật bằng AI thất bại:', error);
       throw error;
     }
   }, [addCharacter]);
@@ -159,8 +159,8 @@ export function useOutlineSync() {
       setOutlines(outlines);
       return outlines;
     } catch (error) {
-      console.error('刷新大纲列表失败:', error);
-      message.error('刷新大纲列表失败');
+      console.error('Làm mới danh sách dàn ý thất bại:', error);
+      message.error('Làm mới danh sách dàn ý thất bại');
       return [];
     }
   }, [currentProject?.id, setOutlines]); // 添加 currentProject?.id 到依赖数组
@@ -172,7 +172,7 @@ export function useOutlineSync() {
       addOutline(created);
       return created;
     } catch (error) {
-      console.error('创建大纲失败:', error);
+      console.error('Tạo dàn ý thất bại:', error);
       throw error;
     }
   }, [addOutline]);
@@ -184,7 +184,7 @@ export function useOutlineSync() {
       updateOutline(id, updated);
       return updated;
     } catch (error) {
-      console.error('更新大纲失败:', error);
+      console.error('Cập nhật dàn ý thất bại:', error);
       throw error;
     }
   }, [updateOutline]);
@@ -195,7 +195,7 @@ export function useOutlineSync() {
       await outlineApi.deleteOutline(id);
       removeOutline(id);
     } catch (error) {
-      console.error('删除大纲失败:', error);
+      console.error('Xóa dàn ý thất bại:', error);
       throw error;
     }
   }, [removeOutline]);
@@ -208,7 +208,7 @@ export function useOutlineSync() {
       outlines.forEach((outline: Outline) => addOutline(outline));
       return outlines;
     } catch (error) {
-      console.error('AI生成大纲失败:', error);
+      console.error('Tạo dàn ý bằng AI thất bại:', error);
       throw error;
     }
   }, [addOutline]);
@@ -239,8 +239,8 @@ export function useChapterSync() {
       setChapters(chapters);
       return chapters;
     } catch (error) {
-      console.error('刷新章节列表失败:', error);
-      message.error('刷新章节列表失败');
+      console.error('Làm mới danh sách chương thất bại:', error);
+      message.error('Làm mới danh sách chương thất bại');
       return [];
     }
   }, [currentProject?.id, setChapters]); // 添加 currentProject?.id 到依赖数组
@@ -252,7 +252,7 @@ export function useChapterSync() {
       addChapter(created);
       return created;
     } catch (error) {
-      console.error('创建章节失败:', error);
+      console.error('Tạo chương thất bại:', error);
       throw error;
     }
   }, [addChapter]);
@@ -264,7 +264,7 @@ export function useChapterSync() {
       updateChapter(id, updated);
       return updated;
     } catch (error) {
-      console.error('更新章节失败:', error);
+      console.error('Cập nhật chương thất bại:', error);
       throw error;
     }
   }, [updateChapter]);
@@ -275,7 +275,7 @@ export function useChapterSync() {
       await chapterApi.deleteChapter(id);
       removeChapter(id);
     } catch (error) {
-      console.error('删除章节失败:', error);
+      console.error('Xóa chương thất bại:', error);
       throw error;
     }
   }, [removeChapter]);
@@ -315,7 +315,7 @@ export function useChapterSync() {
       const decoder = new TextDecoder();
 
       if (!reader) {
-        throw new Error('无法获取响应流');
+        throw new Error('Không thể lấy luồng phản hồi');
       }
 
       let buffer = '';
@@ -348,13 +348,13 @@ export function useChapterSync() {
               if (message.type === 'start') {
                 // 开始生成
                 if (onProgressUpdate) {
-                  onProgressUpdate(message.message || '开始生成...', 0);
+                  onProgressUpdate(message.message || 'Bắt đầu tạo...', 0);
                 }
               } else if (message.type === 'progress') {
                 // 进度更新
                 if (onProgressUpdate) {
                   onProgressUpdate(
-                    message.message || '生成中...',
+                    message.message || 'Đang tạo...',
                     message.progress || 0
                   );
                 }
@@ -364,14 +364,14 @@ export function useChapterSync() {
                   onProgress(fullContent);
                 }
               } else if (message.type === 'error') {
-                throw new Error(message.error || '生成失败');
+                throw new Error(message.error || 'Tạo thất bại');
               } else if (message.type === 'result') {
                 // 结果消息，包含分析任务ID
                 if (message.data?.analysis_task_id) {
                   analysisTaskId = message.data.analysis_task_id;
                 }
                 if (onProgressUpdate) {
-                  onProgressUpdate('生成完成', 100);
+                  onProgressUpdate('Tạo hoàn tất', 100);
                 }
               } else if (message.type === 'done') {
                 // 生成完成，刷新章节数据
@@ -380,7 +380,7 @@ export function useChapterSync() {
                 // 分析已开始
                 analysisTaskId = message.task_id;
                 if (onProgressUpdate) {
-                  onProgressUpdate('章节分析已开始...', 100);
+                  onProgressUpdate('Đã bắt đầu phân tích chương...', 100);
                 }
               } else if (message.type === 'analysis_queued') {
                 // 分析任务已加入队列
@@ -388,7 +388,7 @@ export function useChapterSync() {
               }
             }
           } catch (error) {
-            console.error('解析SSE消息失败:', error);
+            console.error('Phân tích thông điệp SSE thất bại:', error);
           }
         }
       }
@@ -398,7 +398,7 @@ export function useChapterSync() {
         analysis_task_id: analysisTaskId
       };
     } catch (error) {
-      console.error('AI流式生成章节内容失败:', error);
+      console.error('Tạo nội dung chương theo luồng bằng AI thất bại:', error);
       throw error;
     }
   }, [refreshChapters]);

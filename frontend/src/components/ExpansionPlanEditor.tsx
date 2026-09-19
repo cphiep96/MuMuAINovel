@@ -41,7 +41,7 @@ export default function ExpansionPlanEditor({
       setLoadingCharacters(true);
       setAvailableCharacters([]); // 重置为空数组
       const response = await characterApi.getCharacters(projectId);
-      console.log('加载到的角色数据:', response);
+      console.log('Dữ liệu nhân vật đã tải:', response);
       
       // API返回的是 {total, items} 格式,需要提取items
       let chars: Character[] = [];
@@ -53,17 +53,17 @@ export default function ExpansionPlanEditor({
           chars = responseObj.items;
         }
       } else {
-        console.error('角色API返回格式异常:', response);
-        message.warning('角色数据格式异常');
+        console.error('Định dạng API nhân vật trả về không hợp lệ:', response);
+        message.warning('Định dạng dữ liệu nhân vật bất thường');
       }
       
       setAvailableCharacters(chars);
-      console.log('设置的角色列表:', chars);
+      console.log('Danh sách nhân vật đã đặt:', chars);
     } catch (error: unknown) {
-      console.error('加载角色列表失败:', error);
+      console.error('Tải danh sách nhân vật thất bại:', error);
       setAvailableCharacters([]);
       const err = error as Error;
-      message.error('加载角色列表失败: ' + (err?.message || '未知错误'));
+      message.error('Tải danh sách nhân vật thất bại: ' + (err?.message || 'Lỗi không xác định'));
     } finally {
       setLoadingCharacters(false);
     }
@@ -119,14 +119,14 @@ export default function ExpansionPlanEditor({
       
       // 验证至少有一个关键事件
       if (keyEvents.length === 0) {
-        message.warning('请至少添加一个关键事件');
+        message.warning('Vui lòng thêm ít nhất một sự kiện then chốt');
         setLoading(false);
         return;
       }
       
       // 验证至少有一个角色
       if (characters.length === 0) {
-        message.warning('请至少添加一个涉及角色');
+        message.warning('Vui lòng thêm ít nhất một nhân vật liên quan');
         setLoading(false);
         return;
       }
@@ -145,8 +145,8 @@ export default function ExpansionPlanEditor({
       await onSave(updatedPlan);
       // message.success('规划信息保存成功');
     } catch (error) {
-      console.error('保存失败:', error);
-      message.error('保存失败，请重试');
+      console.error('Lưu thất bại:', error);
+      message.error('Lưu thất bại, vui lòng thử lại');
     } finally {
       setLoading(false);
     }
@@ -162,17 +162,17 @@ export default function ExpansionPlanEditor({
 
   return (
     <Modal
-      title="编辑章节规划"
+      title="Chỉnh sửa kế hoạch chương"
       open={visible}
       onCancel={handleCancel}
       width={700}
       centered
       footer={[
         <Button key="cancel" onClick={handleCancel} disabled={loading}>
-          取消
+          Hủy
         </Button>,
         <Button key="submit" type="primary" loading={loading} onClick={handleSubmit}>
-          保存
+          Lưu
         </Button>
       ]}
     >
@@ -180,37 +180,37 @@ export default function ExpansionPlanEditor({
         form={form}
         layout="vertical"
         initialValues={{
-          emotional_tone: '紧张激烈',
-          conflict_type: '人物冲突',
+          emotional_tone: 'Căng thẳng dữ dội',
+          conflict_type: 'Xung đột nhân vật',
           estimated_words: 3000
         }}
       >
         {/* 情节概要 */}
         <Form.Item
-          label="情节概要"
+          label="Tóm tắt tình tiết"
           name="summary"
-          tooltip="简要描述本章的主要情节和故事走向"
+          tooltip="Tóm tắt tình tiết chính và hướng câu chuyện của chương"
         >
           <TextArea
             rows={3}
-            placeholder="简要描述本章的主要情节，例如：主角遇到意外事件，开始了一段新的冒险..."
+            placeholder="Tóm tắt tình tiết chính của chương, ví dụ: nhân vật chính gặp sự cố, bắt đầu cuộc phiêu lưu mới..."
             maxLength={500}
             showCount
           />
         </Form.Item>
 
-        <Divider orientation="left">详细规划</Divider>
+        <Divider orientation="left">Kế hoạch chi tiết</Divider>
 
         {/* 关键事件 */}
         <Form.Item
-          label="关键事件"
-          tooltip="至少添加一个关键事件"
+          label="Sự kiện then chốt"
+          tooltip="Thêm ít nhất một sự kiện then chốt"
           required
         >
           <Space direction="vertical" style={{ width: '100%' }}>
             <Space.Compact style={{ width: '100%' }}>
               <Input
-                placeholder="输入关键事件后按回车或点击添加"
+                placeholder="Nhập sự kiện then chốt rồi Enter hoặc nhấn thêm"
                 value={keyEventInput}
                 onChange={(e) => setKeyEventInput(e.target.value)}
                 onPressEnter={handleAddKeyEvent}
@@ -220,7 +220,7 @@ export default function ExpansionPlanEditor({
                 icon={<PlusOutlined />}
                 onClick={handleAddKeyEvent}
               >
-                添加
+                Thêm
               </Button>
             </Space.Compact>
             <Space wrap>
@@ -245,13 +245,13 @@ export default function ExpansionPlanEditor({
 
         {/* 涉及角色 */}
         <Form.Item
-          label="涉及角色"
-          tooltip="从项目现有角色中选择"
+          label="Nhân vật liên quan"
+          tooltip="Chọn từ nhân vật hiện có của dự án"
           required
         >
           <Space direction="vertical" style={{ width: '100%' }}>
             <Select
-              placeholder="选择角色"
+              placeholder="Chọn nhân vật"
               style={{ width: '100%' }}
               loading={loadingCharacters}
               onChange={handleAddCharacter}
@@ -270,10 +270,10 @@ export default function ExpansionPlanEditor({
                     }))
                 : []}
               notFoundContent={
-                loadingCharacters ? '加载中...' :
-                !Array.isArray(availableCharacters) ? '加载角色失败' :
-                availableCharacters.length === 0 ? '暂无角色，请先在角色管理中创建' :
-                '所有角色已添加'
+                loadingCharacters ? 'Đang tải...' :
+                !Array.isArray(availableCharacters) ? 'Tải nhân vật thất bại' :
+                availableCharacters.length === 0 ? 'Chưa có nhân vật, hãy tạo trong quản lý nhân vật trước' :
+                'Đã thêm mọi nhân vật'
               }
             />
             <Space wrap>
@@ -293,55 +293,55 @@ export default function ExpansionPlanEditor({
 
         {/* 情感基调 */}
         <Form.Item
-          label="情感基调"
+          label="Sắc thái cảm xúc"
           name="emotional_tone"
-          rules={[{ required: true, message: '请输入情感基调' }]}
-          tooltip="例如：紧张激烈、温馨感人、悬疑惊悚等"
+          rules={[{ required: true, message: 'Vui lòng nhập sắc thái cảm xúc' }]}
+          tooltip="Ví dụ: căng thẳng dữ dội, ấm áp cảm động, hồi hộp kinh dị..."
         >
           <Input
-            placeholder="输入情感基调，例如：紧张激烈、温馨感人等"
+            placeholder="Nhập sắc thái cảm xúc, ví dụ: căng thẳng dữ dội, ấm áp cảm động..."
             maxLength={20}
           />
         </Form.Item>
 
         {/* 冲突类型 */}
         <Form.Item
-          label="冲突类型"
+          label="Loại xung đột"
           name="conflict_type"
-          rules={[{ required: true, message: '请输入冲突类型' }]}
-          tooltip="例如：人物冲突、内心冲突、环境冲突等"
+          rules={[{ required: true, message: 'Vui lòng nhập loại xung đột' }]}
+          tooltip="Ví dụ: xung đột nhân vật, xung đột nội tâm, xung đột môi trường..."
         >
           <Input
-            placeholder="输入冲突类型，例如：人物冲突、内心冲突等"
+            placeholder="Nhập loại xung đột, ví dụ: xung đột nhân vật, xung đột nội tâm..."
             maxLength={20}
           />
         </Form.Item>
 
         {/* 预估字数 */}
         <Form.Item
-          label="预估字数"
+          label="Số chữ ước tính"
           name="estimated_words"
-          rules={[{ required: true, message: '请输入预估字数' }]}
+          rules={[{ required: true, message: 'Vui lòng nhập số chữ ước tính' }]}
         >
           <InputNumber
             min={500}
             max={10000}
             step={100}
             style={{ width: '100%' }}
-            formatter={(value) => `${value} 字`}
-            parser={(value) => Number(value?.replace(' 字', '')) as 500 | 10000}
+            formatter={(value) => `${value} chữ`}
+            parser={(value) => Number(value?.replace(' chữ', '')) as 500 | 10000}
           />
         </Form.Item>
 
         {/* 叙事目标 */}
         <Form.Item
-          label="叙事目标"
+          label="Mục tiêu kể chuyện"
           name="narrative_goal"
-          rules={[{ required: true, message: '请输入叙事目标' }]}
+          rules={[{ required: true, message: 'Vui lòng nhập mục tiêu kể chuyện' }]}
         >
           <TextArea
             rows={3}
-            placeholder="描述本章要达成的叙事目标，例如：推进主线剧情、深化角色关系、揭示重要信息等..."
+            placeholder="Mô tả mục tiêu kể chuyện của chương, ví dụ: đẩy tuyến chính, đào sâu quan hệ nhân vật, tiết lộ thông tin quan trọng..."
             maxLength={500}
             showCount
           />

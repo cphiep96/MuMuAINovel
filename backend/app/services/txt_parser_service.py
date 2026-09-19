@@ -20,7 +20,7 @@ class TxtParserService:
 
     def decode_bytes(self, content: bytes) -> tuple[str, str]:
         """
-        尝试解码 TXT 字节流
+        Thử giải mã luồng byte TXT
 
         Returns:
             (text, encoding)
@@ -46,7 +46,7 @@ class TxtParserService:
 
     def split_chapters(self, text: str) -> list[dict]:
         """
-        章节切分（规则优先，失败兜底）
+        Tách chương (ưu tiên quy tắc, thất bại thì fallback)
 
         Returns:
             [{title, content, chapter_number}]
@@ -81,7 +81,7 @@ class TxtParserService:
             if len(preface) >= 200:
                 chapters.append(
                     {
-                        "title": "前言",
+                        "title": "Lời mở đầu",
                         "content": preface,
                         "chapter_number": chapter_no,
                     }
@@ -90,7 +90,7 @@ class TxtParserService:
 
         for i, start_idx in enumerate(heading_indexes):
             end_idx = heading_indexes[i + 1] if i + 1 < len(heading_indexes) else len(lines)
-            title = lines[start_idx].strip()[:200] or f"第{chapter_no}章"
+            title = lines[start_idx].strip()[:200] or f"Chương {chapter_no}"
             body = "\n".join(lines[start_idx + 1 : end_idx]).strip()
             # 防止空标题/空正文完全丢失
             if not body and i + 1 < len(heading_indexes):
@@ -118,7 +118,7 @@ class TxtParserService:
 
     def _is_weak_heading(self, lines: list[str], idx: int) -> bool:
         """
-        弱模式：短行 + 前后空行 + 避免普通句子误判
+        Chế độ yếu: dòng ngắn + dòng trống trước/sau + tránh nhận nhầm câu thường
         """
         line = lines[idx].strip()
         if not line:
@@ -134,7 +134,7 @@ class TxtParserService:
 
     def _fallback_split(self, text: str, min_window: int = 3000, max_window: int = 5000) -> list[dict]:
         """
-        固定窗口 + 标点边界切分
+        Cửa sổ cố định + tách theo biên dấu câu
         """
         chapters: list[dict] = []
         n = len(text)
@@ -156,7 +156,7 @@ class TxtParserService:
             if chunk:
                 chapters.append(
                     {
-                        "title": f"第{chapter_no}章",
+                        "title": f"Chương {chapter_no}",
                         "content": chunk,
                         "chapter_number": chapter_no,
                     }

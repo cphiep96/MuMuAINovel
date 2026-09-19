@@ -186,7 +186,7 @@ class AIService:
             return self._anthropic_provider
         if p == "gemini" and self._gemini_provider:
             return self._gemini_provider
-        raise ValueError(f"Provider {p} 未初始化")
+        raise ValueError(f"Provider {p} chưa được khởi tạo")
 
     def _build_call_metrics(
         self,
@@ -211,7 +211,7 @@ class AIService:
         )
 
     def _log_call_metrics(self, metrics: AICallMetrics, title: Optional[str] = None):
-        log_title = title or ("AI调用完成" if metrics.success else "AI调用失败")
+        log_title = title or ("AI gọi hoàn tất" if metrics.success else "AI gọi thất bại")
         message = metrics.to_log_message(log_title)
         if metrics.success:
             logger.info(message)
@@ -351,10 +351,10 @@ class AIService:
                 # 更新提示词
                 if round_num == max_rounds - 1:
                     # 最后一轮，强制要求回答
-                    prompt = f"{original_prompt}\n\n{tool_context}\n\n⚠️ 重要：请基于以上工具查询结果，给出完整详细的最终答案。不要再调用工具。"
+                    prompt = f"{original_prompt}\n\n{tool_context}\n\n⚠️ Quan trọng: hãy dựa trên kết quả truy vấn công cụ ở trên để đưa ra câu trả lời cuối cùng đầy đủ chi tiết. Không gọi thêm công cụ."
                     tool_choice = "none"
                 else:
-                    prompt = f"{original_prompt}\n\n{tool_context}\n\n请基于以上工具查询结果，继续完成任务。"
+                    prompt = f"{original_prompt}\n\n{tool_context}\n\nHãy dựa trên kết quả truy vấn công cụ ở trên để tiếp tục hoàn thành nhiệm vụ."
                     tool_choice = kwargs.get("tool_choice", "auto")
                 
                 # 继续调用AI
@@ -441,7 +441,7 @@ class AIService:
             tools = await self._prepare_mcp_tools(auto_mcp=auto_mcp)
 
         metrics = self._build_call_metrics(
-            request_mode="文本",
+            request_mode="Văn bản",
             provider=provider,
             model=model,
             prompt=prompt,
@@ -536,7 +536,7 @@ class AIService:
                 logger.info(f"🔧 已获取 {len(tools_to_use)} 个MCP工具")
 
         metrics = self._build_call_metrics(
-            request_mode="流式文本",
+            request_mode="Văn bản streaming",
             provider=provider,
             model=model,
             prompt=prompt,
@@ -625,7 +625,7 @@ class AIService:
         last_response = ""
         aggregate_usage = TokenUsage()
         metrics = self._build_call_metrics(
-            request_mode="JSON重试",
+            request_mode="JSON thử lại",
             provider=provider,
             model=model,
             prompt=prompt,
@@ -657,9 +657,9 @@ class AIService:
                 try:
                     data = parse_json(last_response)
                     if expected_type == "object" and not isinstance(data, dict):
-                        raise ValueError("期望对象")
+                        raise ValueError("Kỳ vọng object")
                     if expected_type == "array" and not isinstance(data, list):
-                        raise ValueError("期望数组")
+                        raise ValueError("Kỳ vọng array")
                     metrics.json_parse_success = True
                     metrics.finish(
                         success=True,
@@ -667,14 +667,14 @@ class AIService:
                         finish_reason=result.get("finish_reason"),
                         usage=aggregate_usage,
                     )
-                    self._log_call_metrics(metrics, title="AI调用汇总")
+                    self._log_call_metrics(metrics, title="AI gọi tổng hợp")
                     return data
                 except Exception as e:
                     metrics.json_parse_success = False
                     if attempt == max_retries:
-                        raise ValueError(f"JSON 解析失败: {e}")
+                        raise ValueError(f"Phân tích JSON thất bại: {e}")
             
-            raise ValueError("JSON 调用失败")
+            raise ValueError("Gọi JSON thất bại")
         except Exception as e:
             metrics.finish(
                 success=False,
@@ -682,12 +682,12 @@ class AIService:
                 usage=aggregate_usage,
                 error=e,
             )
-            self._log_call_metrics(metrics, title="AI调用汇总")
+            self._log_call_metrics(metrics, title="AI gọi tổng hợp")
             raise
 
     @staticmethod
     def _add_json_hint(prompt: str, failed: str, attempt: int) -> str:
-        return f"{prompt}\n\n⚠️ 第{attempt}次重试，请返回纯JSON，不要markdown包裹。上次错误: {failed[:200]}..."
+        return f"{prompt}\n\n⚠️ Lần thử lại thứ {attempt}, hãy trả về JSON thuần, không bọc markdown. Lỗi trước: {failed[:200]}..."
 
     @staticmethod
     def _clean_json_response(text: str) -> str:

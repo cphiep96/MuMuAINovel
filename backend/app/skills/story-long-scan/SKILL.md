@@ -1,9 +1,18 @@
 ---
 name: story-long-scan
+display_name: Quét bảng xếp hạng truyện dài
+category: Skill·Dài
 description: |
-  长篇网文扫榜。分析起点、番茄、晋江等平台排行榜数据，提炼市场趋势与热门题材。
-  触发方式：/story-long-scan、/长篇扫榜、「长篇什么火」「起点排行」
+  Quét bảng xếp hạng tiểu thuyết mạng dài. Phân tích dữ liệu bảng xếp hạng của Qidian, Fanqie, Jinjiang..., đúc rút xu hướng thị trường và đề tài đang hot.
+  Kích hoạt: /story-long-scan, «truyện dài đang hot gì», «bảng xếp hạng Qidian».
+triggers:
+  - /story-long-scan
+  - truyện dài đang hot gì
+  - bảng xếp hạng Qidian
 ---
+
+> **Yêu cầu ngôn ngữ**: nội dung tạo cho người dùng phải viết bằng tiếng Việt tự nhiên.
+
 
 # story-long-scan：长篇网文扫榜
 
@@ -206,7 +215,7 @@ description: |
 
 ---
 
-## 语言
-
-- 用户用中文就用中文回复，用英文就用英文回复
-- 中文回复遵循《中文文案排版指北》
+## Ngôn ngữ đầu ra
+- Ưu tiên trả lời và viết nội dung bằng **tiếng Việt** tự nhiên.
+- Nếu người dùng dùng tiếng Anh thì có thể trả lời bằng tiếng Anh; mặc định dùng tiếng Việt.
+- Không đổi tên kỹ thuật, đường dẫn lệnh slash (`/story-...`) hay tên file tham chiếu.

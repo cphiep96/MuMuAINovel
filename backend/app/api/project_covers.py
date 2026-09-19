@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.services.cover_generation_service import cover_generation_service
 
-router = APIRouter(prefix="/projects", tags=["项目封面"])
+router = APIRouter(prefix="/projects", tags=["Ảnh bìa dự án"])
 
 
 class CoverGenerateRequest(BaseModel):
@@ -26,7 +26,7 @@ class CoverGenerateResponse(BaseModel):
     message: str
 
 
-@router.post("/{project_id}/cover/generate", response_model=CoverGenerateResponse, summary="生成项目封面")
+@router.post("/{project_id}/cover/generate", response_model=CoverGenerateResponse, summary="Tạo ảnh bìa dự án")
 async def generate_project_cover(
     project_id: str,
     payload: CoverGenerateRequest,
@@ -35,7 +35,7 @@ async def generate_project_cover(
 ):
     user_id = getattr(request.state, "user_id", None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
 
     result = await cover_generation_service.generate_cover(
         db=db,
@@ -46,7 +46,7 @@ async def generate_project_cover(
     return CoverGenerateResponse(**result)
 
 
-@router.get("/{project_id}/cover/download", summary="下载项目封面")
+@router.get("/{project_id}/cover/download", summary="Tải ảnh bìa dự án")
 async def download_project_cover(
     project_id: str,
     request: Request,
@@ -54,7 +54,7 @@ async def download_project_cover(
 ):
     user_id = getattr(request.state, "user_id", None)
     if not user_id:
-        raise HTTPException(status_code=401, detail="未登录")
+        raise HTTPException(status_code=401, detail="Chưa đăng nhập")
 
     project, file_path = await cover_generation_service.get_cover_download_path(
         db=db,

@@ -1,6 +1,6 @@
 """
-认证中间件 - 从 Cookie 中提取用户信息并注入到 request.state
-支持来自其他实例的代理请求（提示词工坊功能）
+Middleware xác thực - lấy thông tin người dùng từ Cookie và gắn vào request.state
+Hỗ trợ yêu cầu proxy từ instance khác (tính năng xưởng prompt)
 """
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -16,10 +16,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
     
     async def dispatch(self, request: Request, call_next):
         """
-        处理请求，从 Cookie 或 Header 中提取用户 ID 并注入到 request.state
+        Xử lý yêu cầu, lấy user ID từ Cookie hoặc Header và gắn vào request.state
         
-        对于提示词工坊相关的代理请求（带有 X-Instance-ID Header），
-        从 Header 中读取用户标识而不是 Cookie。
+        Với yêu cầu proxy liên quan xưởng prompt (có Header X-Instance-ID),
+        đọc định danh người dùng từ Header thay vì Cookie.
         """
         # 检查是否为来自其他实例的代理请求（提示词工坊）
         instance_id = request.headers.get("X-Instance-ID")

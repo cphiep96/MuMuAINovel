@@ -93,29 +93,29 @@ const ChapterReader: React.FC = () => {
       setError(null);
 
       // 并行加载章节内容、标注数据和导航信息
-      // 注意：api拦截器已经解析了response.data，所以直接返回数据对象
+      // 注意：api拦截器已经解析了response.data，所以直接Quay lại数据对象
       const [chapterData, annotationsData, navigationData] = await Promise.all([
         api.get<unknown, ChapterData>(`/chapters/${chapterId}`).catch(err => {
-          console.error('加载章节失败:', err);
+          console.error('Tải chương thất bại:', err);
           throw err;
         }),
         api.get<unknown, AnnotationsData>(`/chapters/${chapterId}/annotations`).catch(err => {
-          console.warn('加载标注失败:', err);
+          console.warn('Tải chú thích thất bại:', err);
           return null;
-        }), // 如果没有分析数据也不报错
+        }), // 如果没有Phân tích数据也不报错
         api.get<unknown, NavigationData>(`/chapters/${chapterId}/navigation`).catch(err => {
-          console.warn('加载导航信息失败:', err);
+          console.warn('Tải thông tin điều hướng thất bại:', err);
           return null;
         }),
       ]);
 
-      console.log('章节数据:', chapterData);
-      console.log('标注数据:', annotationsData);
-      console.log('导航数据:', navigationData);
+      console.log('Dữ liệu chương:', chapterData);
+      console.log('Dữ liệu chú thích:', annotationsData);
+      console.log('Dữ liệu điều hướng:', navigationData);
 
       // 验证数据
       if (!chapterData || !chapterData.content) {
-        throw new Error('章节数据无效：缺少内容');
+        throw new Error('Dữ liệu chương không hợp lệ: thiếu nội dung');
       }
 
       setChapter(chapterData);
@@ -129,7 +129,7 @@ const ChapterReader: React.FC = () => {
         const invalidCount = annotationsData.annotations.length - validAnnotations.length;
         
         if (invalidCount > 0) {
-          console.warn(`${invalidCount}个标注位置无效，将仅显示${validAnnotations.length}个有效标注`);
+          console.warn(`${invalidCount} chú thích có vị trí không hợp lệ, chỉ hiển thị ${validAnnotations.length} chú thích hợp lệ`);
         }
         
         setAnnotationsData(annotationsData);
@@ -137,9 +137,9 @@ const ChapterReader: React.FC = () => {
         setAnnotationsData(null);
       }
     } catch (err: unknown) {
-      console.error('加载章节数据失败:', err);
+      console.error('Tải dữ liệu chương thất bại:', err);
       const error = err as { response?: { data?: { detail?: string } }; message?: string };
-      setError(error.response?.data?.detail || error.message || '加载失败');
+      setError(error.response?.data?.detail || error.message || 'Tải thất bại');
     } finally {
       setLoading(false);
     }
@@ -201,9 +201,9 @@ const ChapterReader: React.FC = () => {
     try {
       setAnalyzing(true);
       setAnalysisProgress(0);
-      message.loading({ content: '开始分析章节...', key: 'analyze', duration: 0 });
+      message.loading({ content: 'Bắt đầu phân tích chương...', key: 'analyze', duration: 0 });
 
-      // 触发分析
+      // 触发Phân tích
       await api.post(`/chapters/${requestedChapterId}/analyze`);
 
       const pollStatus = async (): Promise<void> => {
@@ -211,7 +211,7 @@ const ChapterReader: React.FC = () => {
 
         if (Date.now() >= deadline) {
           setAnalyzing(false);
-          message.warning({ content: '分析超时，请稍后刷新查看结果', key: 'analyze' });
+          message.warning({ content: 'Phân tích hết thời gian, vui lòng làm mới sau để xem kết quả', key: 'analyze' });
           return;
         }
 
@@ -227,7 +227,7 @@ const ChapterReader: React.FC = () => {
 
           if (status === 'completed') {
             setAnalyzing(false);
-            message.success({ content: '分析完成！', key: 'analyze' });
+            message.success({ content: 'Phân tích hoàn tất!', key: 'analyze' });
             const annotationsRes = await api.get<unknown, AnnotationsData>(
               `/chapters/${requestedChapterId}/annotations`
             );
@@ -238,13 +238,13 @@ const ChapterReader: React.FC = () => {
           } else if (status === 'failed') {
             setAnalyzing(false);
             message.error({
-              content: `分析失败：${error_message || '未知错误'}`,
+              content: `Phân tích thất bại: ${error_message || 'Lỗi không xác định'}`,
               key: 'analyze'
             });
             return;
           }
         } catch (err) {
-          console.error('轮询分析状态失败:', err);
+          console.error('Thăm dò trạng thái phân tích thất bại:', err);
         }
 
         if (analysisRunIdRef.current === runId) {
@@ -261,7 +261,7 @@ const ChapterReader: React.FC = () => {
       }
       const error = err as { response?: { data?: { detail?: string } } };
       message.error({
-        content: error.response?.data?.detail || '触发分析失败',
+        content: error.response?.data?.detail || 'Kích hoạt phân tích thất bại',
         key: 'analyze'
       });
     }
@@ -270,7 +270,7 @@ const ChapterReader: React.FC = () => {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '100px 0' }}>
-        <Spin size="large" tip="加载章节中..." />
+        <Spin size="large" tip="Đang tải chương..." />
       </div>
     );
   }
@@ -279,13 +279,13 @@ const ChapterReader: React.FC = () => {
     return (
       <div style={{ padding: 24 }}>
         <Alert
-          message="加载失败"
-          description={error || '章节不存在'}
+          message="Tải thất bại"
+          description={error || 'Chương không tồn tại'}
           type="error"
           showIcon
         />
         <Button onClick={handleBackClick} style={{ marginTop: 16 }}>
-          返回
+          Quay lại
         </Button>
       </div>
     );
@@ -308,26 +308,26 @@ const ChapterReader: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space>
             <Button icon={<ArrowLeftOutlined />} onClick={handleBackClick}>
-              返回
+              Quay lại
             </Button>
             <Button
               icon={<LeftOutlined />}
               onClick={handlePreviousChapter}
               disabled={!navigation?.previous}
-              title={navigation?.previous ? `上一章: ${navigation.previous.title}` : '已是第一章'}
+              title={navigation?.previous ? `Chương trước: ${navigation.previous.title}` : 'Đã là chương đầu'}
             >
-              上一章
+              Chương trước
             </Button>
             <span style={{ fontSize: 16, fontWeight: 600 }}>
-              第{chapter.chapter_number}章: {chapter.title}
+              Chương {chapter.chapter_number}: {chapter.title}
             </span>
             <Button
               icon={<RightOutlined />}
               onClick={handleNextChapter}
               disabled={!navigation?.next}
-              title={navigation?.next ? `下一章: ${navigation.next.title}` : '已是最后一章'}
+              title={navigation?.next ? `Chương sau: ${navigation.next.title}` : 'Đã là chương cuối'}
             >
-              下一章
+              Chương sau
             </Button>
           </Space>
 
@@ -338,7 +338,7 @@ const ChapterReader: React.FC = () => {
               loading={analyzing}
               disabled={analyzing}
             >
-              {analyzing ? '分析中...' : '重新分析'}
+              {analyzing ? 'Đang phân tích...' : 'Phân tích lại'}
             </Button>
             {hasAnnotations && (
               <>
@@ -348,13 +348,13 @@ const ChapterReader: React.FC = () => {
                   checkedChildren={<EyeOutlined />}
                   unCheckedChildren={<EyeInvisibleOutlined />}
                 />
-                <span style={{ fontSize: 13, color: token.colorTextSecondary }}>显示标注</span>
+                <span style={{ fontSize: 13, color: token.colorTextSecondary }}>Hiện chú thích</span>
                 <Button
                   icon={<MenuOutlined />}
                   onClick={() => setSidebarVisible(true)}
                   style={{ display: window.innerWidth < 768 ? 'inline-block' : 'none' }}
                 >
-                  分析
+                  Phân tích
                 </Button>
               </>
             )}
@@ -365,21 +365,21 @@ const ChapterReader: React.FC = () => {
           <div style={{ marginTop: 12 }}>
             <Progress percent={analysisProgress} size="small" status="active" />
             <span style={{ fontSize: 12, color: token.colorTextSecondary, marginLeft: 8 }}>
-              正在分析章节...
+              Đang phân tích chương...
             </span>
           </div>
         )}
 
         {!analyzing && hasAnnotations && annotationsData && (
           <div style={{ marginTop: 12, fontSize: 12, color: token.colorTextTertiary }}>
-            共有 {annotationsData.summary.total_annotations} 个标注：
-            {annotationsData.summary.hooks > 0 && ` 🎣${annotationsData.summary.hooks}个钩子`}
+            Tổng {annotationsData.summary.total_annotations} chú thích:
+            {annotationsData.summary.hooks > 0 && ` 🎣${annotationsData.summary.hooks} móc`}
             {annotationsData.summary.foreshadows > 0 &&
-              ` 🌟${annotationsData.summary.foreshadows}个伏笔`}
+              ` 🌟${annotationsData.summary.foreshadows} phục bút`}
             {annotationsData.summary.plot_points > 0 &&
-              ` 💎${annotationsData.summary.plot_points}个情节点`}
+              ` 💎${annotationsData.summary.plot_points} điểm tình tiết`}
             {annotationsData.summary.character_events > 0 &&
-              ` 👤${annotationsData.summary.character_events}个角色事件`}
+              ` 👤${annotationsData.summary.character_events} sự kiện nhân vật`}
           </div>
         )}
       </Card>
@@ -399,8 +399,8 @@ const ChapterReader: React.FC = () => {
             <div style={{ maxWidth: 800, margin: '0 auto' }}>
               {!hasAnnotations && (
                 <Alert
-                  message="暂无分析数据"
-                  description="该章节尚未进行AI分析，无法显示记忆标注。"
+                  message="Chưa có dữ liệu phân tích"
+                  description="Chương này chưa được AI phân tích, không thể hiện chú thích ghi nhớ."
                   type="info"
                   showIcon
                   style={{ marginBottom: 24 }}
@@ -437,8 +437,8 @@ const ChapterReader: React.FC = () => {
                     disabled={!navigation?.previous}
                   >
                     {navigation?.previous
-                      ? `上一章: 第${navigation.previous.chapter_number}章 ${navigation.previous.title}`
-                      : '已是第一章'}
+                      ? `Chương trước: Chương ${navigation.previous.chapter_number} - ${navigation.previous.title}`
+                      : 'Đã là chương đầu'}
                   </Button>
                   <Button
                     size="large"
@@ -449,8 +449,8 @@ const ChapterReader: React.FC = () => {
                     iconPosition="end"
                   >
                     {navigation?.next
-                      ? `下一章: 第${navigation.next.chapter_number}章 ${navigation.next.title}`
-                      : '已是最后一章'}
+                      ? `Chương sau: Chương ${navigation.next.chapter_number} - ${navigation.next.title}`
+                      : 'Đã là chương cuối'}
                   </Button>
                 </Space>
               </div>
@@ -480,7 +480,7 @@ const ChapterReader: React.FC = () => {
       {/* 移动端抽屉 */}
       {hasAnnotations && annotationsData && (
         <Drawer
-          title="章节分析"
+          title="Phân tích chương"
           placement="right"
           onClose={() => setSidebarVisible(false)}
           open={sidebarVisible}

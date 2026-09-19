@@ -1,16 +1,16 @@
 """提示词工坊分类常量"""
 
 PROMPT_CATEGORIES = {
-    "general": "通用",
-    "fantasy": "玄幻/仙侠",
-    "martial": "武侠",
-    "romance": "言情",
-    "scifi": "科幻",
-    "horror": "悬疑/惊悚",
-    "history": "历史",
-    "urban": "都市",
-    "game": "游戏/电竞",
-    "other": "其他",
+    "general": "Chung",
+    "fantasy": "Huyền huyễn / Tiên hiệp",
+    "martial": "Võ hiệp",
+    "romance": "Ngôn tình",
+    "scifi": "Khoa học viễn tưởng",
+    "horror": "Huyền nghi / Kinh dị",
+    "history": "Lịch sử",
+    "urban": "Đô thị",
+    "game": "Game / Thể thao điện tử",
+    "other": "Khác",
 }
 
 CATEGORY_LIST = [
@@ -19,10 +19,10 @@ CATEGORY_LIST = [
 
 # 热门标签（建议）
 POPULAR_TAGS = [
-    "玄幻", "仙侠", "修真", "升级流", "热血",
-    "武侠", "古风", "言情", "甜宠", "虐恋",
-    "科幻", "星际", "末日", "悬疑", "推理",
-    "惊悚", "历史", "架空", "都市", "职场",
-    "游戏", "电竞", "二次元", "轻小说", "系统流",
-    "无敌流", "慢热", "日常", "治愈"
+    "Huyền huyễn", "Tiên hiệp", "Tu chân", "Dòng thăng cấp", "Nhiệt huyết",
+    "Võ hiệp", "Cổ phong", "Ngôn tình", "Ngọt sủng", "Ngược luyến",
+    "Khoa học viễn tưởng", "Liên sao", "Tận thế", "Huyền nghi", "Suy luận",
+    "Kinh dị", "Lịch sử", "Giả tưởng", "Đô thị", "Công sở",
+    "Game", "Thể thao điện tử", "Nhị thứ nguyên", "Light novel", "Dòng hệ thống",
+    "Dòng vô địch", "Chậm nóng", "Thường nhật", "Chữa lành"
 ]

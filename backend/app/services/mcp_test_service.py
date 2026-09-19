@@ -63,9 +63,9 @@ class MCPTestService:
             if not self._check_plugin_registered(plugin, user_id):
                 return MCPTestResult(
                     success=False,
-                    message="插件未注册",
-                    error="MCP会话不存在，请先启用插件",
-                    suggestions=["请先启用插件", "如果已启用，请稍等片刻后重试"]
+                    message="Plugin chưa được đăng ký",
+                    error="Phiên MCP không tồn tại, vui lòng bật plugin trước",
+                    suggestions=["Vui lòng bật plugin trước", "Nếu đã bật, hãy đợi một chút rồi thử lại"]
                 )
 
             # 使用统一门面测试连接
@@ -77,25 +77,25 @@ class MCPTestService:
             if test_result["success"]:
                 return MCPTestResult(
                     success=True,
-                    message=f"✅ 连接测试成功",
+                    message=f"✅ Kiểm tra kết nối thành công",
                     response_time_ms=response_time,
                     tools_count=test_result.get("tools_count", 0),
                     suggestions=[
-                        f"响应时间: {response_time}ms",
-                        f"可用工具数: {test_result.get('tools_count', 0)}"
+                        f"Thời gian phản hồi: {response_time}ms",
+                        f"Số công cụ khả dụng: {test_result.get('tools_count', 0)}"
                     ]
                 )
             else:
                 return MCPTestResult(
                     success=False,
-                    message="❌ 连接测试失败",
+                    message="❌ Kiểm tra kết nối thất bại",
                     response_time_ms=response_time,
-                    error=test_result.get("message", "未知错误"),
+                    error=test_result.get("message", "Lỗi không xác định"),
                     error_type=test_result.get("error_type"),
                     suggestions=[
-                        "请检查服务器是否在线",
-                        "请确认配置正确",
-                        "请检查API Key是否有效"
+                        "Vui lòng kiểm tra máy chủ có đang trực tuyến",
+                        "Vui lòng xác nhận cấu hình đúng",
+                        "Vui lòng kiểm tra API Key có hợp lệ"
                     ]
                 )
                 
@@ -107,14 +107,14 @@ class MCPTestService:
             
             return MCPTestResult(
                 success=False,
-                message="❌ 测试失败",
+                message="❌ Kiểm tra thất bại",
                 response_time_ms=response_time,
                 error=str(e),
                 error_type=type(e).__name__,
                 suggestions=[
-                    "请检查服务器是否在线",
-                    "请确认配置正确",
-                    "请检查API Key是否有效"
+                    "Vui lòng kiểm tra máy chủ có đang trực tuyến",
+                    "Vui lòng xác nhận cấu hình đúng",
+                    "Vui lòng kiểm tra API Key có hợp lệ"
                 ]
             )
     
@@ -150,10 +150,10 @@ class MCPTestService:
             if not tools:
                 return MCPTestResult(
                     success=False,
-                    message="插件没有提供任何工具",
-                    error="工具列表为空",
+                    message="Plugin không cung cấp công cụ nào",
+                    error="Danh sách công cụ trống",
                     response_time_ms=connection_result.response_time_ms,
-                    suggestions=["请检查插件配置", "请确认MCP服务器正常运行"]
+                    suggestions=["Vui lòng kiểm tra cấu hình plugin", "Vui lòng xác nhận máy chủ MCP đang chạy bình thường"]
                 )
             
             # 3. 获取用户的AI设置
@@ -167,13 +167,13 @@ class MCPTestService:
                 logger.warning("用户未配置AI服务，跳过智能测试")
                 return MCPTestResult(
                     success=True,
-                    message=f"✅ 连接测试成功（未配置AI，跳过工具调用测试）",
+                    message=f"✅ Kiểm tra kết nối thành công (chưa cấu hình AI, bỏ qua kiểm tra gọi công cụ)",
                     response_time_ms=connection_result.response_time_ms,
                     tools_count=len(tools),
                     suggestions=[
-                        f"连接测试: 成功",
-                        f"可用工具数: {len(tools)}",
-                        "提示: 配置AI服务后可进行智能工具调用测试"
+                        f"Kiểm tra kết nối: thành công",
+                        f"Số công cụ khả dụng: {len(tools)}",
+                        "Gợi ý: cấu hình dịch vụ AI để kiểm tra gọi công cụ thông minh"
                     ]
                 )
             
@@ -218,13 +218,13 @@ class MCPTestService:
                 logger.error(f"❌ AI未返回工具调用")
                 return MCPTestResult(
                     success=False,
-                    message="❌ AI Function Calling失败",
-                    error=f"AI未返回工具调用请求。响应: {accumulated_text[:200] if accumulated_text else 'N/A'}",
+                    message="❌ AI Function Calling thất bại",
+                    error=f"AI không trả về yêu cầu gọi công cụ. Phản hồi: {accumulated_text[:200] if accumulated_text else 'N/A'}",
                     tools_count=len(tools),
                     suggestions=[
-                        "请确认使用的AI模型支持Function Calling",
-                        f"当前Provider: {user_settings.api_provider}",
-                        f"当前模型: {user_settings.llm_model}"
+                        "Vui lòng xác nhận mô hình AI đang dùng hỗ trợ Function Calling",
+                        f"Provider hiện tại: {user_settings.api_provider}",
+                        f"Mô hình hiện tại: {user_settings.llm_model}"
                     ]
                 )
             
@@ -243,8 +243,8 @@ class MCPTestService:
                     logger.error(f"❌ 解析AI参数失败: {e}")
                     return MCPTestResult(
                         success=False,
-                        message="❌ AI返回的参数格式错误",
-                        error=f"无法解析参数JSON: {str(e)}",
+                        message="❌ Định dạng tham số AI trả về bị lỗi",
+                        error=f"Không thể phân tích tham số JSON: {str(e)}",
                         tools_count=len(tools)
                     )
             
@@ -274,20 +274,20 @@ class MCPTestService:
                 # 格式化结果
                 result_str = str(tool_result)
                 if len(result_str) > 800:
-                    result_preview = result_str[:800] + "\n...(结果已截断)"
+                    result_preview = result_str[:800] + "\n...(kết quả đã bị cắt)"
                 else:
                     result_preview = result_str
                 
                 return MCPTestResult(
                     success=True,
-                    message=f"✅ Function Calling测试成功！工具 '{tool_name}' 调用正常",
+                    message=f"✅ Kiểm tra Function Calling thành công! Công cụ '{tool_name}' gọi bình thường",
                     response_time_ms=total_time,
                     tools_count=len(tools),
                     suggestions=[
-                        f"🤖 AI选择: {tool_name}",
-                        f"📝 参数: {json.dumps(test_arguments, ensure_ascii=False)}",
-                        f"⏱️ 耗时: {call_time}ms",
-                        f"📊 结果:\n{result_preview}"
+                        f"🤖 AI chọn: {tool_name}",
+                        f"📝 Tham số: {json.dumps(test_arguments, ensure_ascii=False)}",
+                        f"⏱️ Thời gian: {call_time}ms",
+                        f"📊 Kết quả:\n{result_preview}"
                     ]
                 )
                 
@@ -299,16 +299,16 @@ class MCPTestService:
                 
                 return MCPTestResult(
                     success=True,  # 连接成功就算测试通过
-                    message=f"⚠️ 连接成功，但工具调用失败",
+                    message=f"⚠️ Kết nối thành công nhưng gọi công cụ thất bại",
                     response_time_ms=total_time,
                     tools_count=len(tools),
-                    error=f"工具 '{tool_name}' 调用失败: {str(call_error)}",
+                    error=f"Gọi công cụ '{tool_name}' thất bại: {str(call_error)}",
                     suggestions=[
-                        f"✅ 连接测试: 成功",
-                        f"❌ 工具调用测试: 失败",
-                        f"🤖 AI选择: {tool_name}",
-                        f"❌ 错误: {str(call_error)}",
-                        "💡 可能原因: API Key无效、参数错误或服务限制"
+                        f"✅ Kiểm tra kết nối: thành công",
+                        f"❌ Kiểm tra gọi công cụ: thất bại",
+                        f"🤖 AI chọn: {tool_name}",
+                        f"❌ Lỗi: {str(call_error)}",
+                        "💡 Nguyên nhân có thể: API Key không hợp lệ, tham số sai hoặc giới hạn dịch vụ"
                     ]
                 )
                 
@@ -320,14 +320,14 @@ class MCPTestService:
             
             return MCPTestResult(
                 success=False,
-                message="❌ 测试失败",
+                message="❌ Kiểm tra thất bại",
                 response_time_ms=total_time,
                 error=str(e),
                 error_type=type(e).__name__,
                 suggestions=[
-                    "请检查服务器是否在线",
-                    "请确认配置正确",
-                    "请检查API Key是否有效"
+                    "Vui lòng kiểm tra máy chủ có đang trực tuyến",
+                    "Vui lòng xác nhận cấu hình đúng",
+                    "Vui lòng kiểm tra API Key có hợp lệ"
                 ]
             )
 

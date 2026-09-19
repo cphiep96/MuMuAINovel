@@ -52,7 +52,7 @@ export const SSELoadingOverlay: React.FC<SSELoadingOverlayProps> = ({
             marginTop: 16,
             color: token.colorTextHeading
           }}>
-            AI生成中...
+            AI đang tạo...
           </div>
         </div>
 
@@ -99,7 +99,7 @@ export const SSELoadingOverlay: React.FC<SSELoadingOverlayProps> = ({
           minHeight: 24,
           padding: '0 20px'
         }}>
-          {message || '准备生成...'}
+          {message || 'Chuẩn bị tạo...'}
         </div>
 
         {/* 提示文字 */}
@@ -109,7 +109,7 @@ export const SSELoadingOverlay: React.FC<SSELoadingOverlayProps> = ({
           color: token.colorTextTertiary,
           marginTop: 16
         }}>
-          请勿关闭页面,生成过程需要一定时间
+          Vui lòng không đóng trang, quá trình tạo cần một chút thời gian
         </div>
       </div>
     </div>

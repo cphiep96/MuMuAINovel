@@ -27,37 +27,37 @@ interface SponsorBenefit {
 }
 
 const sponsorOptions: SponsorOption[] = [
-    { amount: 5, label: '🌶️ 一包辣条', image: '/5.png', description: '¥5' },
-    { amount: 10, label: '🍱 一顿拼好饭', image: '/10.png', description: '¥10' },
-    { amount: 20, label: '☕ 一杯咖啡', image: '/20.png', description: '¥20' },
-    { amount: 50, label: '🍖 一次烧烤', image: '/50.png', description: '¥50' },
-    { amount: 99, label: '🍲 一顿海底捞', image: '/99.png', description: '¥99' },
+    { amount: 5, label: '🌶️ Một gói snack cay', image: '/5.png', description: '¥5' },
+    { amount: 10, label: '🍱 Một suất cơm ghép', image: '/10.png', description: '¥10' },
+    { amount: 20, label: '☕ Một tách cà phê', image: '/20.png', description: '¥20' },
+    { amount: 50, label: '🍖 Một buổi nướng', image: '/50.png', description: '¥50' },
+    { amount: 99, label: '🍲 Một bữa Haidilao', image: '/99.png', description: '¥99' },
 ];
 
 const benefits: SponsorBenefit[] = [
     {
         icon: <WechatOutlined style={{ fontSize: '32px', color: 'var(--ant-color-primary)' }} />,
-        title: '加入赞助群',
-        description: '进入内部群，获取项目第一手更新消息',
-        price: '（🌶️ 一包辣条）'
+        title: 'Tham gia nhóm ủng hộ',
+        description: 'Vào nhóm nội bộ để nhận cập nhật dự án sớm nhất',
+        price: '(🌶️ Một gói snack cay)'
     },
     {
         icon: <FileTextOutlined style={{ fontSize: '32px', color: 'var(--ant-color-primary)' }} />,
-        title: '优先需求响应',
-        description: '您的功能需求和问题反馈将获得优先处理',
-        price: '（🌶️ 一包辣条）'
+        title: 'Ưu tiên phản hồi nhu cầu',
+        description: 'Nhu cầu tính năng và phản hồi của bạn sẽ được ưu tiên xử lý',
+        price: '(🌶️ Một gói snack cay)'
     },
     {
         icon: <RocketOutlined style={{ fontSize: '32px', color: 'var(--ant-color-success)' }} />,
-        title: 'Windows一键启动',
-        description: '获取免安装一键启动包，开箱即可使用',
-        price: '（🌶️ 一包辣条）'
+        title: 'Khởi chạy một cú nhấp trên Windows',
+        description: 'Nhận gói khởi chạy một cú nhấp không cần cài, dùng ngay',
+        price: '(🌶️ Một gói snack cay)'
     },
     {
         icon: <MessageOutlined style={{ fontSize: '32px', color: 'var(--ant-color-warning)' }} />,
-        title: '专属技术支持',
-        description: '获得远程协助和配置指导',
-        price: '（☕ 一杯咖啡）'
+        title: 'Hỗ trợ kỹ thuật riêng',
+        description: 'Nhận hỗ trợ từ xa và hướng dẫn cấu hình',
+        price: '(☕ Một tách cà phê)'
     }
 ];
 
@@ -104,22 +104,22 @@ export default function Sponsor() {
                             color: token.colorWhite
                         }}>
                             <Title level={1} style={{ color: token.colorWhite, marginBottom: '8px', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: 'bold' }}>
-                                赞助 MuMuAINovel
+                                Ủng hộ MuMuAINovel
                             </Title>
                             <Text type="secondary" style={{ color: token.colorWhite, fontSize: 'clamp(11px, 2vw, 13px)', letterSpacing: '2px' }}>
                                 SUPPORT MuMuAINovel
                             </Text>
                             <Title level={4} style={{ color: token.colorWhite, marginTop: '8px', marginBottom: '8px' }}>
-                                📚 MuMuAINovel - 基于 AI 的智能小说创作助手
+                                📚 MuMuAINovel - Trợ lý sáng tác tiểu thuyết thông minh dựa trên AI
                             </Title>
                         </div>
                     </div>
 
-                    {/* 赞助专属权益 */}
+                    {/* Quyền lợi riêng khi ủng hộ */}
                     <div style={{ marginBottom: 'clamp(24px, 4vh, 32px)' }}>
                         <Title level={3} style={{ textAlign: 'center', marginBottom: 'clamp(16px, 3vh, 20px)', fontSize: 'clamp(18px, 3vw, 24px)' }}>
                             <CheckCircleOutlined style={{ color: token.colorSuccess, marginRight: '8px' }} />
-                            赞助专属权益
+                            Quyền lợi riêng khi ủng hộ
                         </Title>
 
                         <Row
@@ -159,11 +159,11 @@ export default function Sponsor() {
                         </Row>
                     </div>
 
-                    {/* 选择金额 */}
+                    {/* Chọn số tiền */}
                     <div>
                         <Title level={3} style={{ textAlign: 'center', marginBottom: 'clamp(16px, 3vh, 20px)', fontSize: 'clamp(18px, 3vw, 24px)' }}>
                             <HeartOutlined style={{ color: token.colorError, marginRight: '8px' }} />
-                            选择金额
+                            Chọn số tiền
                         </Title>
 
                         <Row gutter={[{ xs: 8, sm: 12, md: 16 }, { xs: 8, sm: 12, md: 16 }]} justify="center">
@@ -222,10 +222,10 @@ export default function Sponsor() {
                         marginTop: 'auto'
                     }}>
                         <Title level={4} style={{ marginBottom: '12px', fontSize: 'clamp(16px, 3vw, 20px)' }}>
-                            💖 感谢您对 MuMuAINovel 项目的支持
+                            💖 Cảm ơn bạn đã ủng hộ dự án MuMuAINovel
                         </Title>
                         <Paragraph style={{ fontSize: 'clamp(12px, 2vw, 14px)', color: token.colorTextSecondary, marginBottom: '12px' }}>
-                            您的赞助将是我持续更新项目的动力，为大家提供更好的AI小说创作体验!
+                            Sự ủng hộ của bạn là động lực để tôi tiếp tục cập nhật dự án và mang lại trải nghiệm sáng tác AI tốt hơn!
                         </Paragraph>
                         {/* <div style={{ fontSize: 'clamp(18px, 3vw, 24px)' }}>
                             <StarOutlined style={{ color: token.colorWarning, margin: '0 4px' }} />
@@ -245,14 +245,14 @@ export default function Sponsor() {
                         <Title level={3} style={{ marginBottom: '8px' }}>
                             {selectedOption?.description} {selectedOption?.label}
                         </Title>
-                        <Text type="secondary">请使用微信扫码支付</Text>
+                        <Text type="secondary">Vui lòng dùng WeChat quét mã để thanh toán</Text>
                     </div>
                 }
                 open={modalVisible}
                 onCancel={() => setModalVisible(false)}
                 footer={[
                     <Button key="close" type="primary" onClick={() => setModalVisible(false)}>
-                        关闭
+                        Đóng
                     </Button>
                 ]}
                 width={400}
@@ -261,7 +261,7 @@ export default function Sponsor() {
                 <div style={{ textAlign: 'center', padding: '20px 0' }}>
                     <Image
                         src={selectedOption?.image}
-                        alt={`${selectedOption?.description}赞助码`}
+                        alt={`Mã ủng hộ ${selectedOption?.description}`}
                         style={{
                             maxWidth: '280px',
                             borderRadius: '8px',
@@ -270,10 +270,10 @@ export default function Sponsor() {
                         preview={false}
                     />
                     <Paragraph style={{ marginTop: '20px', color: token.colorTextSecondary }}>
-                        扫描二维码完成支付
+                        Quét mã QR để hoàn tất thanh toán
                     </Paragraph>
                     <Paragraph style={{ color: token.colorTextTertiary, fontSize: '12px' }}>
-                        支付后可添加微信/QQ联系我们获取权益
+                        Sau thanh toán có thể thêm WeChat/QQ để liên hệ nhận quyền lợi
                     </Paragraph>
                 </div>
             </Modal>

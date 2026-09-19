@@ -9,21 +9,21 @@ from typing import Callable
 
 class RequestIDMiddleware(BaseHTTPMiddleware):
     """
-    请求追踪ID中间件
+    Middleware ID theo dõi yêu cầu
     
-    为每个请求生成唯一ID，并添加到日志上下文中
+    Tạo ID duy nhất cho mỗi yêu cầu và thêm vào ngữ cảnh log
     """
     
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """
-        处理请求，添加追踪ID
+        Xử lý yêu cầu, thêm ID theo dõi
         
         Args:
-            request: 请求对象
-            call_next: 下一个处理器
+            request: Đối tượng yêu cầu
+            call_next: Bộ xử lý tiếp theo
             
         Returns:
-            响应对象
+            Đối tượng phản hồi
         """
         # 从请求头获取追踪ID，或生成新的
         request_id = request.headers.get('X-Request-ID') or str(uuid.uuid4())
@@ -56,23 +56,23 @@ class RequestIDFilter(logging.Filter):
     
     def __init__(self, request_id: str):
         """
-        初始化过滤器
+        Khởi tạo bộ lọc
         
         Args:
-            request_id: 请求追踪ID
+            request_id: ID theo dõi yêu cầu
         """
         super().__init__()
         self.request_id = request_id
     
     def filter(self, record: logging.LogRecord) -> bool:
         """
-        为日志记录添加request_id属性
+        Thêm thuộc tính request_id vào bản ghi log
         
         Args:
-            record: 日志记录
+            record: Bản ghi log
             
         Returns:
-            True（不过滤任何日志）
+            True (không lọc bất kỳ log nào)
         """
         record.request_id = self.request_id
         return True

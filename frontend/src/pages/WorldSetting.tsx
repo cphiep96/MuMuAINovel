@@ -3,6 +3,7 @@ import { GlobalOutlined, EditOutlined, SyncOutlined, FormOutlined } from '@ant-d
 import { useState } from 'react';
 import { useStore } from '../store';
 import { worldSettingCardStyles } from '../components/CardStyles';
+import { genreLabels, perspectiveLabel } from '../utils/displayLabels';
 import { projectApi, wizardStreamApi } from '../services/api';
 import { SSELoadingOverlay } from '../components/SSELoadingOverlay';
 
@@ -31,20 +32,20 @@ export default function WorldSetting() {
   const [modal, contextHolder] = Modal.useModal();
   const { token } = theme.useToken();
 
-  // AI重新生成世界观
+  // AI tạo lại世界观
   const handleRegenerate = async () => {
     if (!currentProject) return;
 
     modal.confirm({
-      title: '确认重新生成',
-      content: '确定要使用AI重新生成世界观设定吗？这将替换当前的世界观内容。',
+      title: 'Xác nhận tạo lại',
+      content: 'Xác nhận dùng AI tạo lại thiết lập bối cảnh thế giới? Nội dung hiện tại sẽ bị thay.',
       centered: true,
-      okText: '确认重新生成',
-      cancelText: '取消',
+      okText: 'Xác nhận tạo lại',
+      cancelText: 'Hủy',
       onOk: async () => {
         setIsRegenerating(true);
         setRegenerateProgress(0);
-        setRegenerateMessage('准备重新生成世界观...');
+        setRegenerateMessage('Chuẩn bị tạo lại bối cảnh thế giới...');
 
         try {
           await wizardStreamApi.regenerateWorldBuildingStream(
@@ -57,7 +58,7 @@ export default function WorldSetting() {
               },
               onChunk: (chunk: string) => {
                 // 可以在这里显示生成的内容片段（可选）
-                console.log('生成片段:', chunk);
+                console.log('Tạo đoạn:', chunk);
               },
               onResult: (result: { time_period: string; location: string; atmosphere: string; rules: string }) => {
                 // 保存新生成的数据
@@ -70,8 +71,8 @@ export default function WorldSetting() {
                 setNewWorldData(newData);
               },
               onError: (errorMsg: string) => {
-                console.error('重新生成失败:', errorMsg);
-                message.error(errorMsg || '重新生成失败，请重试');
+                console.error('Tạo lại thất bại:', errorMsg);
+                message.error(errorMsg || 'Tạo lại thất bại, vui lòng thử lại');
               },
               onComplete: () => {
                 setIsRegenerating(false);
@@ -83,8 +84,8 @@ export default function WorldSetting() {
             }
           );
         } catch (error) {
-          console.error('重新生成出错:', error);
-          message.error('重新生成出错，请重试');
+          console.error('Lỗi khi tạo lại:', error);
+          message.error('Tạo lại bị lỗi, vui lòng thử lại');
           setIsRegenerating(false);
           setRegenerateProgress(0);
           setRegenerateMessage('');
@@ -107,12 +108,12 @@ export default function WorldSetting() {
       });
 
       setCurrentProject(updatedProject);
-      message.success('世界观已更新！');
+      message.success('Đã cập nhật bối cảnh thế giới!');
       setIsPreviewModalVisible(false);
       setNewWorldData(null);
     } catch (error) {
-      console.error('保存失败:', error);
-      message.error('保存失败，请重试');
+      console.error('Lưu thất bại:', error);
+      message.error('Lưu thất bại, vui lòng thử lại');
     } finally {
       setIsSavingPreview(false);
     }
@@ -122,7 +123,7 @@ export default function WorldSetting() {
   const handleCancelSave = () => {
     setIsPreviewModalVisible(false);
     setNewWorldData(null);
-    message.info('已取消，保持原有内容');
+    message.info('Đã hủy, giữ nội dung cũ');
   };
 
   if (!currentProject) return null;
@@ -149,17 +150,17 @@ export default function WorldSetting() {
           alignItems: 'center'
         }}>
           <GlobalOutlined style={{ fontSize: 24, marginRight: 12, color: token.colorPrimary }} />
-          <h2 style={{ margin: 0 }}>世界设定</h2>
+          <h2 style={{ margin: 0 }}>Thiết lập thế giới</h2>
         </div>
 
         {/* 可滚动内容区域 */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
           <Empty
-            description="暂无世界设定信息"
+            description="Chưa có thông tin thiết lập thế giới"
             style={{ marginTop: 60 }}
           >
             <Paragraph type="secondary">
-              世界设定信息在创建项目向导中生成，用于构建小说的世界观背景。
+              Thông tin thiết lập thế giới được tạo trong hướng dẫn tạo dự án, dùng để dựng bối cảnh thế giới tiểu thuyết.
             </Paragraph>
           </Empty>
         </div>
@@ -188,7 +189,7 @@ export default function WorldSetting() {
         >
           <div style={{ display: 'flex', alignItems: 'center', minWidth: 'fit-content' }}>
             <GlobalOutlined style={{ fontSize: 24, marginRight: 12, color: token.colorPrimary }} />
-            <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>世界设定</h2>
+            <h2 style={{ margin: 0, whiteSpace: 'nowrap' }}>Thiết lập thế giới</h2>
           </div>
           <Flex gap={8} wrap="wrap" style={{ flex: '0 1 auto' }}>
             <Button
@@ -200,7 +201,7 @@ export default function WorldSetting() {
                 flex: '1 1 auto'
               }}
             >
-              <span className="button-text-mobile">AI重新生成</span>
+              <span className="button-text-mobile">AI tạo lại</span>
             </Button>
             <Button
               type="primary"
@@ -221,7 +222,7 @@ export default function WorldSetting() {
                 flex: '1 1 auto'
               }}
             >
-              <span className="button-text-mobile">编辑基础信息</span>
+              <span className="button-text-mobile">Chỉnh sửa thông tin cơ bản</span>
             </Button>
             <Button
               type="primary"
@@ -240,7 +241,7 @@ export default function WorldSetting() {
                 flex: '1 1 auto'
               }}
             >
-              <span className="button-text-mobile">编辑世界观</span>
+              <span className="button-text-mobile">Chỉnh sửa bối cảnh thế giới</span>
             </Button>
           </Flex>
         </Flex>
@@ -255,20 +256,20 @@ export default function WorldSetting() {
           }}
           title={
             <span style={{ fontSize: 18, fontWeight: 500 }}>
-              基础信息
+              Thông tin cơ bản
             </span>
           }
         >
           <Descriptions bordered column={1} styles={{ label: { width: 120, fontWeight: 500 } }}>
-            <Descriptions.Item label="小说名称">{currentProject.title}</Descriptions.Item>
+            <Descriptions.Item label="Tên tiểu thuyết">{currentProject.title}</Descriptions.Item>
             {currentProject.description && (
-              <Descriptions.Item label="小说简介">{currentProject.description}</Descriptions.Item>
+              <Descriptions.Item label="Tóm tắt tiểu thuyết">{currentProject.description}</Descriptions.Item>
             )}
-            <Descriptions.Item label="小说主题">{currentProject.theme || '未设定'}</Descriptions.Item>
-            <Descriptions.Item label="小说类型">{currentProject.genre || '未设定'}</Descriptions.Item>
-            <Descriptions.Item label="叙事视角">{currentProject.narrative_perspective || '未设定'}</Descriptions.Item>
-            <Descriptions.Item label="目标字数">
-              {currentProject.target_words ? `${currentProject.target_words.toLocaleString()} 字` : '未设定'}
+            <Descriptions.Item label="Chủ đề tiểu thuyết">{currentProject.theme || 'Chưa đặt'}</Descriptions.Item>
+            <Descriptions.Item label="Thể loại tiểu thuyết">{genreLabels(currentProject.genre).join(', ') || 'Chưa đặt'}</Descriptions.Item>
+            <Descriptions.Item label="Góc kể chuyện">{perspectiveLabel(currentProject.narrative_perspective) || 'Chưa đặt'}</Descriptions.Item>
+            <Descriptions.Item label="Số chữ mục tiêu">
+              {currentProject.target_words ? `${currentProject.target_words.toLocaleString()} chữ` : 'Chưa đặt'}
             </Descriptions.Item>
           </Descriptions>
         </Card>
@@ -281,7 +282,7 @@ export default function WorldSetting() {
           title={
             <span style={{ fontSize: 18, fontWeight: 500 }}>
               <GlobalOutlined style={{ marginRight: 8 }} />
-              小说世界观
+              Bối cảnh thế giới tiểu thuyết
             </span>
           }
         >
@@ -289,7 +290,7 @@ export default function WorldSetting() {
             {currentProject.world_time_period && (
               <div style={{ marginBottom: 24 }}>
                 <Title level={5} style={{ color: token.colorPrimary, marginBottom: 12 }}>
-                  时间设定
+                  Thiết lập thời gian
                 </Title>
                 <Paragraph style={{
                   fontSize: 15,
@@ -307,7 +308,7 @@ export default function WorldSetting() {
             {currentProject.world_location && (
               <div style={{ marginBottom: 24 }}>
                 <Title level={5} style={{ color: token.colorSuccess, marginBottom: 12 }}>
-                  地点设定
+                  Thiết lập địa điểm
                 </Title>
                 <Paragraph style={{
                   fontSize: 15,
@@ -325,7 +326,7 @@ export default function WorldSetting() {
             {currentProject.world_atmosphere && (
               <div style={{ marginBottom: 24 }}>
                 <Title level={5} style={{ color: token.colorWarning, marginBottom: 12 }}>
-                  氛围设定
+                  Thiết lập không khí
                 </Title>
                 <Paragraph style={{
                   fontSize: 15,
@@ -343,7 +344,7 @@ export default function WorldSetting() {
             {currentProject.world_rules && (
               <div style={{ marginBottom: 0 }}>
                 <Title level={5} style={{ color: token.colorError, marginBottom: 12 }}>
-                  规则设定
+                  Thiết lập quy tắc
                 </Title>
                 <Paragraph style={{
                   fontSize: 15,
@@ -361,9 +362,9 @@ export default function WorldSetting() {
         </Card>
       </div>
 
-      {/* 编辑世界观模态框 */}
+      {/* Chỉnh sửa bối cảnh thế giới模态框 */}
       <Modal
-        title="编辑世界观"
+        title="Chỉnh sửa bối cảnh thế giới"
         open={isEditModalVisible}
         centered
         onCancel={() => {
@@ -383,20 +384,20 @@ export default function WorldSetting() {
             });
 
             setCurrentProject(updatedProject);
-            message.success('世界观更新成功');
+            message.success('Cập nhật bối cảnh thế giới thành công');
             setIsEditModalVisible(false);
             editForm.resetFields();
           } catch (error) {
-            console.error('更新世界观失败:', error);
-            message.error('更新失败，请重试');
+            console.error('Cập nhật bối cảnh thế giới thất bại:', error);
+            message.error('Cập nhật thất bại, vui lòng thử lại');
           } finally {
             setIsSaving(false);
           }
         }}
         confirmLoading={isSaving}
         width={800}
-        okText="保存"
-        cancelText="取消"
+        okText="Lưu"
+        cancelText="Hủy"
       >
         <Form
           form={editForm}
@@ -404,52 +405,52 @@ export default function WorldSetting() {
           style={{ marginTop: 16 }}
         >
           <Form.Item
-            label="时间设定"
+            label="Thiết lập thời gian"
             name="world_time_period"
-            rules={[{ required: true, message: '请输入时间设定' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập thiết lập thời gian' }]}
           >
             <TextArea
               rows={4}
-              placeholder="描述故事发生的时代背景..."
+              placeholder="Mô tả bối cảnh thời đại của câu chuyện..."
               showCount
               maxLength={1000}
             />
           </Form.Item>
 
           <Form.Item
-            label="地点设定"
+            label="Thiết lập địa điểm"
             name="world_location"
-            rules={[{ required: true, message: '请输入地点设定' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập thiết lập địa điểm' }]}
           >
             <TextArea
               rows={4}
-              placeholder="描述故事发生的地理位置和环境..."
+              placeholder="Mô tả vị trí địa lý và môi trường câu chuyện..."
               showCount
               maxLength={1000}
             />
           </Form.Item>
 
           <Form.Item
-            label="氛围设定"
+            label="Thiết lập không khí"
             name="world_atmosphere"
-            rules={[{ required: true, message: '请输入氛围设定' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập thiết lập không khí' }]}
           >
             <TextArea
               rows={4}
-              placeholder="描述故事的整体氛围和基调..."
+              placeholder="Mô tả không khí và tông tổng thể của câu chuyện..."
               showCount
               maxLength={1000}
             />
           </Form.Item>
 
           <Form.Item
-            label="规则设定"
+            label="Thiết lập quy tắc"
             name="world_rules"
-            rules={[{ required: true, message: '请输入规则设定' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập thiết lập quy tắc' }]}
           >
             <TextArea
               rows={4}
-              placeholder="描述这个世界的特殊规则和设定..."
+              placeholder="Mô tả quy tắc và thiết lập đặc biệt của thế giới này..."
               showCount
               maxLength={1000}
             />
@@ -457,9 +458,9 @@ export default function WorldSetting() {
         </Form>
       </Modal>
 
-      {/* 编辑项目基础信息模态框 */}
+      {/* 编辑项目Thông tin cơ bản模态框 */}
       <Modal
-        title="编辑项目基础信息"
+        title="Chỉnh sửa thông tin cơ bản dự án"
         open={isEditProjectModalVisible}
         centered
         onCancel={() => {
@@ -481,20 +482,20 @@ export default function WorldSetting() {
             });
 
             setCurrentProject(updatedProject);
-            message.success('项目基础信息更新成功');
+            message.success('Cập nhật thông tin cơ bản dự án thành công');
             setIsEditProjectModalVisible(false);
             editProjectForm.resetFields();
           } catch (error) {
-            console.error('更新项目基础信息失败:', error);
-            message.error('更新失败，请重试');
+            console.error('Cập nhật thông tin cơ bản của dự án thất bại:', error);
+            message.error('Cập nhật thất bại, vui lòng thử lại');
           } finally {
             setIsSavingProject(false);
           }
         }}
         confirmLoading={isSavingProject}
         width={800}
-        okText="保存"
-        cancelText="取消"
+        okText="Lưu"
+        cancelText="Hủy"
       >
         <Form
           form={editProjectForm}
@@ -502,100 +503,100 @@ export default function WorldSetting() {
           style={{ marginTop: 16 }}
         >
           <Form.Item
-            label="小说名称"
+            label="Tên tiểu thuyết"
             name="title"
             rules={[
-              { required: true, message: '请输入小说名称' },
-              { max: 200, message: '名称不能超过200字' }
+              { required: true, message: 'Vui lòng nhập tên tiểu thuyết' },
+              { max: 200, message: 'Tên không quá 200 chữ' }
             ]}
           >
             <Input
-              placeholder="请输入小说名称"
+              placeholder="Vui lòng nhập tên tiểu thuyết"
               showCount
               maxLength={200}
             />
           </Form.Item>
 
           <Form.Item
-            label="小说简介"
+            label="Tóm tắt tiểu thuyết"
             name="description"
             rules={[
-              { max: 1000, message: '简介不能超过1000字' }
+              { max: 1000, message: 'Tóm tắt không quá 1000 chữ' }
             ]}
           >
             <TextArea
               rows={4}
-              placeholder="请输入小说简介（选填）"
+              placeholder="Vui lòng nhập tóm tắt tiểu thuyết (tùy chọn)"
               showCount
               maxLength={1000}
             />
           </Form.Item>
 
           <Form.Item
-            label="小说主题"
+            label="Chủ đề tiểu thuyết"
             name="theme"
             rules={[
-              { max: 500, message: '主题不能超过500字' }
+              { max: 500, message: 'Chủ đề không quá 500 chữ' }
             ]}
           >
             <TextArea
               rows={3}
-              placeholder="请输入小说主题（选填）"
+              placeholder="Vui lòng nhập chủ đề tiểu thuyết (tùy chọn)"
               showCount
               maxLength={500}
             />
           </Form.Item>
 
           <Form.Item
-            label="小说类型"
+            label="Thể loại tiểu thuyết"
             name="genre"
             rules={[
-              { max: 100, message: '类型不能超过100字' }
+              { max: 100, message: 'Loại không quá 100 chữ' }
             ]}
           >
             <Input
-              placeholder="请输入小说类型，如：玄幻、都市、科幻等（选填）"
+              placeholder="Vui lòng nhập thể loại, VD: huyền huyễn, đô thị, khoa học viễn tưởng... (tùy chọn)"
               showCount
               maxLength={100}
             />
           </Form.Item>
 
           <Form.Item
-            label="叙事视角"
+            label="Góc kể chuyện"
             name="narrative_perspective"
           >
             <Select
-              placeholder="请选择叙事视角（选填）"
+              placeholder="Vui lòng chọn góc kể chuyện (tùy chọn)"
               allowClear
               options={[
-                { label: '第一人称', value: '第一人称' },
-                { label: '第三人称', value: '第三人称' },
-                { label: '全知视角', value: '全知视角' }
+                { label: 'Ngôi thứ nhất', value: '第一人称' },
+                { label: 'Ngôi thứ ba', value: '第三人称' },
+                { label: 'Toàn tri', value: '全知视角' }
               ]}
             />
           </Form.Item>
 
           <Form.Item
-            label="目标字数"
+            label="Số chữ mục tiêu"
             name="target_words"
             rules={[
-              { type: 'number', min: 0, message: '目标字数不能为负数' },
-              { type: 'number', max: 2147483647, message: '目标字数超出范围' }
+              { type: 'number', min: 0, message: 'Số chữ mục tiêu không được âm' },
+              { type: 'number', max: 2147483647, message: 'Số chữ mục tiêu ngoài phạm vi' }
             ]}
           >
             <InputNumber
               style={{ width: '100%' }}
-              placeholder="请输入目标字数（选填，最大21亿字）"
+              placeholder="Vui lòng nhập số chữ mục tiêu (tùy chọn, tối đa 2.1 tỷ)"
               min={0}
               max={2147483647}
               step={1000}
-              addonAfter="字"
+              addonAfter="chữ"
             />
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* AI重新生成加载遮罩 */}
+      {/* AI tạo lại加载遮罩 */}
       <SSELoadingOverlay
         loading={isRegenerating}
         progress={regenerateProgress}
@@ -604,28 +605,28 @@ export default function WorldSetting() {
 
       {/* 预览重新生成的内容模态框 */}
       <Modal
-        title="预览重新生成的世界观"
+        title="Xem trước bối cảnh thế giới tạo lại"
         open={isPreviewModalVisible}
         centered
         width={900}
         onOk={handleConfirmSave}
         onCancel={handleCancelSave}
         confirmLoading={isSavingPreview}
-        okText="确认替换"
-        cancelText="取消"
+        okText="Xác nhận thay thế"
+        cancelText="Hủy"
         okButtonProps={{ danger: true }}
       >
         {newWorldData && (
           <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             <div style={{ marginBottom: 24, padding: 16, background: token.colorWarningBg, border: `1px solid ${token.colorWarningBorder}`, borderRadius: 8 }}>
               <Typography.Text type="warning" strong>
-                ⚠️ 注意：点击"确认替换"将会用新内容替换当前的世界观设定
+                ⚠️ Lưu ý: nhấn "Xác nhận thay thế" sẽ thay thiết lập bối cảnh thế giới hiện tại bằng nội dung mới
               </Typography.Text>
             </div>
 
             <div style={{ marginBottom: 24 }}>
               <Title level={5} style={{ color: token.colorPrimary, marginBottom: 12 }}>
-                时间设定
+                Thiết lập thời gian
               </Title>
               <Paragraph style={{
                 fontSize: 15,
@@ -641,7 +642,7 @@ export default function WorldSetting() {
 
             <div style={{ marginBottom: 24 }}>
               <Title level={5} style={{ color: token.colorSuccess, marginBottom: 12 }}>
-                地点设定
+                Thiết lập địa điểm
               </Title>
               <Paragraph style={{
                 fontSize: 15,
@@ -657,7 +658,7 @@ export default function WorldSetting() {
 
             <div style={{ marginBottom: 24 }}>
               <Title level={5} style={{ color: token.colorWarning, marginBottom: 12 }}>
-                氛围设定
+                Thiết lập không khí
               </Title>
               <Paragraph style={{
                 fontSize: 15,
@@ -673,7 +674,7 @@ export default function WorldSetting() {
 
             <div style={{ marginBottom: 0 }}>
               <Title level={5} style={{ color: token.colorError, marginBottom: 12 }}>
-                规则设定
+                Thiết lập quy tắc
               </Title>
               <Paragraph style={{
                 fontSize: 15,

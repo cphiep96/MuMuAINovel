@@ -111,7 +111,7 @@ async def skill_chat(
 
     if not skill:
         async def error_gen():
-            yield await SSEResponse.send_error(f"未找到 Skill: {request.skill_key}")
+            yield await SSEResponse.send_error(f"Không tìm thấy Skill: {request.skill_key}")
         return create_sse_response(error_gen())
 
     # 获取系统提示词（Skill 内容）
@@ -121,12 +121,12 @@ async def skill_chat(
     history_text = ""
     if request.history:
         for msg in request.history[-20:]:
-            role_label = "用户" if msg.get("role") == "user" else "助手"
+            role_label = "Người dùng" if msg.get("role") == "user" else "Trợ lý"
             history_text += f"\n{role_label}: {msg.get('content', '')}"
 
     full_prompt = request.message
     if history_text:
-        full_prompt = f"以下是之前的对话历史：{history_text}\n\n用户最新消息: {request.message}"
+        full_prompt = f"Sau đây là lịch sử hội thoại trước đó: {history_text}\n\nTin nhắn mới nhất của người dùng: {request.message}"
 
     # 获取用户 AI 配置
     from app.api.settings import get_user_ai_service
@@ -137,13 +137,13 @@ async def skill_chat(
     except Exception as e:
         logger.error(f"创建 AI 服务失败: {e}")
         async def error_gen():
-            yield await SSEResponse.send_error(f"AI 服务配置错误: {str(e)}")
+            yield await SSEResponse.send_error(f"Lỗi cấu hình dịch vụ AI: {str(e)}")
         return create_sse_response(error_gen())
 
     # 流式生成
     async def generate():
         try:
-            yield await SSEResponse.send_progress(f"正在使用 {skill['template_name']}...", 10)
+            yield await SSEResponse.send_progress(f"Đang dùng {skill['template_name']}...", 10)
 
             stream = ai_service.generate_text_stream(
                 prompt=full_prompt,
@@ -157,12 +157,12 @@ async def skill_chat(
                     continue
                 yield await SSEResponse.send_chunk(item)
 
-            yield await SSEResponse.send_progress("回复完成", 100, "success")
+            yield await SSEResponse.send_progress("Trả lời hoàn tất", 100, "success")
             yield await SSEResponse.send_done()
 
         except Exception as e:
             logger.error(f"Skill 聊天生成失败: {e}")
-            yield await SSEResponse.send_error(f"生成失败: {str(e)}")
+            yield await SSEResponse.send_error(f"Tạo thất bại: {str(e)}")
 
     return create_sse_response(generate())
 
@@ -175,7 +175,7 @@ async def get_skill_detail_api(skill_key: str, user: User = Depends(require_logi
     detail = get_skill_detail(skill_key)
     if not detail:
         from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail=f"未找到 Skill: {skill_key}")
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy Skill: {skill_key}")
     
     return {
         "template_key": detail["template_key"],
@@ -211,7 +211,7 @@ async def create_skill(request: SkillCreateRequest, user: User = Depends(require
     except Exception as e:
         logger.error(f"创建 Skill 失败: {e}")
         from fastapi import HTTPException
-        raise HTTPException(status_code=500, detail=f"创建失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Tạo thất bại: {str(e)}")
 
 
 @router.put("/update/{skill_key:path}")
@@ -234,7 +234,7 @@ async def update_skill(skill_key: str, request: SkillUpdateRequest, user: User =
     except Exception as e:
         logger.error(f"更新 Skill 失败: {e}")
         from fastapi import HTTPException
-        raise HTTPException(status_code=500, detail=f"更新失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Cập nhật thất bại: {str(e)}")
 
 
 @router.delete("/delete/{skill_key:path}")
@@ -242,14 +242,14 @@ async def delete_skill(skill_key: str, user: User = Depends(require_login)):
     """删除 Skill"""
     try:
         delete_skill_files(skill_key)
-        return {"success": True, "message": f"已删除 Skill: {skill_key}"}
+        return {"success": True, "message": f"Đã xóa Skill: {skill_key}"}
     except ValueError as e:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(f"删除 Skill 失败: {e}")
         from fastapi import HTTPException
-        raise HTTPException(status_code=500, detail=f"删除失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Xóa thất bại: {str(e)}")
 
 
 @router.post("/refresh-cache")

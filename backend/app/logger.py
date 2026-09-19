@@ -106,20 +106,20 @@ class UvicornFormatter(logging.Formatter):
     
     # 日志级别颜色（ANSI转义码）
     COLORS = {
-        'DEBUG': '\033[36m',      # 青色
-        'INFO': '\033[32m',       # 绿色
-        'WARNING': '\033[33m',    # 黄色
-        'ERROR': '\033[31m',      # 红色
-        'CRITICAL': '\033[35m',   # 紫色
+        'DEBUG': '\033[36m',      # Xanh cyan
+        'INFO': '\033[32m',       # Xanh lá
+        'WARNING': '\033[33m',    # Vàng
+        'ERROR': '\033[31m',      # Đỏ
+        'CRITICAL': '\033[35m',   # Tím
     }
     RESET = '\033[0m'
     
     def __init__(self, use_colors: bool = True, max_message_chars: int = DEFAULT_LOG_MESSAGE_MAX_CHARS):
         """
-        初始化格式化器
+        Khởi tạo formatter
         
         Args:
-            use_colors: 是否使用颜色（控制台输出使用，文件输出不使用）
+            use_colors: Có dùng màu hay không (console có, file không)
         """
         super().__init__()
         self.use_colors = use_colors
@@ -161,15 +161,15 @@ def setup_logging(
     message_max_chars: int = DEFAULT_LOG_MESSAGE_MAX_CHARS,
 ):
     """
-    配置统一的 Uvicorn 风格日志系统
+    Cấu hình hệ thống log thống nhất kiểu Uvicorn
     
     Args:
-        level: 日志级别 (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        log_to_file: 是否输出到文件
-        log_file_path: 日志文件路径
-        max_bytes: 单个日志文件最大字节数（默认10MB）
-        backup_count: 保留的备份文件数量（默认30个）
-        message_max_chars: 单条日志消息最大字符数（默认2000）
+        level: Mức log (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        log_to_file: Có ghi ra file hay không
+        log_file_path: Đường dẫn file log
+        max_bytes: Kích thước tối đa mỗi file log (mặc định 10MB)
+        backup_count: Số bản sao giữ lại (mặc định 30)
+        message_max_chars: Số ký tự tối đa mỗi thông điệp log (mặc định 2000)
     """
     global _logging_configured
     
@@ -215,9 +215,9 @@ def setup_logging(
         root_logger.addHandler(file_handler)
         
         # 记录日志配置信息
-        root_logger.info(f"日志文件输出已启用: {log_file_path}")
-        root_logger.info(f"日志轮转配置: 单文件最大{max_bytes / 1024 / 1024:.1f}MB, 保留{backup_count}个备份")
-        root_logger.info(f"单条日志消息最大长度: {message_max_chars}字符")
+        root_logger.info(f"Đã bật ghi log ra file: {log_file_path}")
+        root_logger.info(f"Cấu hình xoay vòng log: tối đa {max_bytes / 1024 / 1024:.1f}MB/file, giữ {backup_count} bản sao")
+        root_logger.info(f"Độ dài tối đa mỗi thông điệp log: {message_max_chars} ký tự")
     
     # 配置第三方库的日志级别
     _configure_third_party_loggers()
@@ -257,12 +257,12 @@ def _configure_third_party_loggers():
 
 def get_logger(name: str) -> logging.Logger:
     """
-    获取指定名称的日志器
+    Lấy logger theo tên chỉ định
     
     Args:
-        name: 日志器名称，通常使用 __name__
+        name: Tên logger, thường dùng __name__
         
     Returns:
-        配置好的日志器实例
+        Instance logger đã cấu hình
     """
     return logging.getLogger(name)

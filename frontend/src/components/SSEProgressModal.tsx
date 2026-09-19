@@ -21,11 +21,11 @@ export const SSEProgressModal: React.FC<SSEProgressModalProps> = ({
   visible,
   progress,
   message,
-  title = 'AI生成中...',
+  title = 'AI đang tạo...',
   showPercentage = true,
   showIcon = true,
   onCancel,
-  cancelButtonText = '取消任务',
+  cancelButtonText = 'Hủy nhiệm vụ',
 }) => {
   const { token } = theme.useToken();
 
@@ -114,7 +114,7 @@ export const SSEProgressModal: React.FC<SSEProgressModalProps> = ({
           padding: '0 20px',
           marginBottom: 16
         }}>
-          {message || '准备生成...'}
+          {message || 'Chuẩn bị tạo...'}
         </div>
 
         {/* 提示文字 */}
@@ -124,7 +124,7 @@ export const SSEProgressModal: React.FC<SSEProgressModalProps> = ({
           color: token.colorTextTertiary,
           marginBottom: onCancel ? 16 : 0
         }}>
-          请勿关闭页面，生成过程需要一定时间
+          Vui lòng không đóng trang, quá trình tạo cần một chút thời gian
         </div>
 
         {/* 取消按钮 */}

@@ -23,16 +23,16 @@ class AutoOrganizationService:
     def _build_character_summary(self, characters: List[Character]) -> str:
         """构建现有角色摘要信息"""
         if not characters:
-            return "暂无已有角色"
+            return "Chưa có nhân vật hiện có"
         
         lines = []
         for char in characters:
             parts = [f"- {char.name}"]
             if char.role_type:
-                role_map = {"protagonist": "主角", "supporting": "配角", "antagonist": "反派"}
+                role_map = {"protagonist": "Nhân vật chính", "supporting": "Nhân vật phụ", "antagonist": "Phản diện"}
                 parts.append(f"({role_map.get(char.role_type, char.role_type)})")
             if char.personality:
-                parts.append(f"性格: {char.personality[:50]}")
+                parts.append(f"Tính cách: {char.personality[:50]}")
             lines.append(" ".join(parts))
         
         return "\n".join(lines)
@@ -40,11 +40,11 @@ class AutoOrganizationService:
     def _build_organization_summary(self, organizations: List[Dict[str, Any]]) -> str:
         """构建现有组织摘要信息"""
         if not organizations:
-            return "暂无已有组织"
+            return "Chưa có tổ chức hiện có"
         
         lines = []
         for org in organizations:
-            name = org.get("name", "未知") if isinstance(org, dict) else getattr(org, "name", "未知")
+            name = org.get("name", "Chưa rõ") if isinstance(org, dict) else getattr(org, "name", "Chưa rõ")
             lines.append(f"- {name}")
         
         return "\n".join(lines)
@@ -74,15 +74,15 @@ class AutoOrganizationService:
         prompt = PromptService.format_prompt(
             template,
             title=project.title,
-            genre=project.genre or "未设定",
-            theme=project.theme or "未设定",
-            time_period=project.world_time_period or "未设定",
-            location=project.world_location or "未设定",
-            atmosphere=project.world_atmosphere or "未设定",
-            rules=project.world_rules or "未设定",
+            genre=project.genre or "Chưa thiết lập",
+            theme=project.theme or "Chưa thiết lập",
+            time_period=project.world_time_period or "Chưa thiết lập",
+            location=project.world_location or "Chưa thiết lập",
+            atmosphere=project.world_atmosphere or "Chưa thiết lập",
+            rules=project.world_rules or "Chưa thiết lập",
             existing_organizations=existing_orgs_summary,
             existing_characters=existing_chars_summary,
-            plot_context="根据剧情需要引入的新组织",
+            plot_context="Tổ chức mới được đưa vào theo nhu cầu cốt truyện",
             organization_specification=json.dumps(spec, ensure_ascii=False, indent=2),
             mcp_references=""  # 暂时不使用MCP增强
         )
@@ -96,14 +96,14 @@ class AutoOrganizationService:
                 auto_mcp=enable_mcp,
             )
             
-            org_name = organization_data.get('name', '未知')
+            org_name = organization_data.get('name', 'Chưa rõ')
             logger.info(f"    ✅ 组织详情生成成功: {org_name}")
             logger.debug(f"       组织数据字段: {list(organization_data.keys())}")
             
             # 确保关键字段存在
             if 'name' not in organization_data or not organization_data['name']:
                 logger.warning(f"    ⚠️ AI返回的组织数据缺少name字段，使用规格中的信息")
-                organization_data['name'] = spec.get('name', f"新组织{spec.get('organization_description', '')[:10]}")
+                organization_data['name'] = spec.get('name', f"Tổ chức mới {spec.get('organization_description', '')[:10]}")
             
             return organization_data
             
@@ -122,7 +122,7 @@ class AutoOrganizationService:
         # 首先创建Character记录（is_organization=True）
         character = Character(
             project_id=project_id,
-            name=organization_data.get("name", "未命名组织"),
+            name=organization_data.get("name", "Tổ chức chưa đặt tên"),
             is_organization=True,
             role_type=organization_data.get("role_type", "supporting"),
             personality=organization_data.get("personality", ""),  # 组织特性
@@ -200,7 +200,7 @@ class AutoOrganizationService:
                 member = OrganizationMember(
                     organization_id=organization.id,
                     character_id=target_char.id,
-                    position=member_spec.get("position", "成员"),
+                    position=member_spec.get("position", "Thành viên"),
                     rank=member_spec.get("rank", 0),
                     loyalty=member_spec.get("loyalty", 50),
                     status=member_spec.get("status", "active"),
@@ -213,7 +213,7 @@ class AutoOrganizationService:
                 
                 logger.info(
                     f"    ✅ 创建成员关系: {character_name} -> {organization.id} "
-                    f"({member_spec.get('position', '成员')})"
+                    f"({member_spec.get('position', 'Thành viên')})"
                 )
                 
             except Exception as e:
@@ -280,7 +280,7 @@ class AutoOrganizationService:
                             all_organization_names.add(name)
                             if name not in organization_context:
                                 organization_context[name] = []
-                            organization_context[name].append(f"《{title}》: {summary[:200]}")
+                            organization_context[name].append(f"«{title}»: {summary[:200]}")
                         # 旧格式：纯字符串，无法区分类型，跳过
         
         if not all_organization_names:
@@ -358,7 +358,7 @@ class AutoOrganizationService:
             try:
                 if progress_callback:
                     await progress_callback(
-                        f"🏛️ [{idx+1}/{len(missing_names)}] 自动创建组织：{org_name}..."
+                        f"🏛️ [{idx+1}/{len(missing_names)}] Đang tự động tạo tổ chức: {org_name}..."
                     )
                 
                 # 构建组织规格（基于大纲上下文）
@@ -367,8 +367,8 @@ class AutoOrganizationService:
                 
                 spec = {
                     "name": org_name,
-                    "organization_description": f"在大纲中出现的组织/势力，出现场景：\n{context_text}",
-                    "organization_type": "未知",
+                    "organization_description": f"Tổ chức/thế lực xuất hiện trong dàn ý, bối cảnh xuất hiện:\n{context_text}",
+                    "organization_type": "Chưa xác định",
                     "importance": "medium"
                 }
                 
@@ -390,7 +390,7 @@ class AutoOrganizationService:
                 
                 if progress_callback:
                     await progress_callback(
-                        f"💾 [{idx+1}/{len(missing_names)}] 保存组织：{org_name}..."
+                        f"💾 [{idx+1}/{len(missing_names)}] Đang lưu tổ chức: {org_name}..."
                     )
                 
                 # 创建组织记录
@@ -417,7 +417,7 @@ class AutoOrganizationService:
                 if members_data:
                     if progress_callback:
                         await progress_callback(
-                            f"🔗 [{idx+1}/{len(missing_names)}] 建立 {len(members_data)} 个成员关系：{org_name}..."
+                            f"🔗 [{idx+1}/{len(missing_names)}] Đang tạo {len(members_data)} quan hệ thành viên: {org_name}..."
                         )
                     
                     await self._create_member_relationships(
@@ -430,14 +430,14 @@ class AutoOrganizationService:
                 
                 if progress_callback:
                     await progress_callback(
-                        f"✅ [{idx+1}/{len(missing_names)}] 组织创建完成：{org_name}"
+                        f"✅ [{idx+1}/{len(missing_names)}] Đã tạo tổ chức: {org_name}"
                     )
                 
             except Exception as e:
                 logger.error(f"  ❌ 创建组织 {org_name} 失败: {e}", exc_info=True)
                 if progress_callback:
                     await progress_callback(
-                        f"⚠️ [{idx+1}/{len(missing_names)}] 组织 {org_name} 创建失败"
+                        f"⚠️ [{idx+1}/{len(missing_names)}] Tạo tổ chức {org_name} thất bại"
                     )
                 continue
         

@@ -51,17 +51,17 @@ DATA = {"type": "object", "additionalProperties": True}
 OPERATIONAL_TOOL_SPECS: list[dict[str, Any]] = [
     {
         "name": "list_writing_styles",
-        "description": "查询当前用户可用的预设/自定义写作风格及项目默认风格。",
+        "description": "Truy vấn phong cách viết preset/tùy chỉnh khả dụng của người dùng hiện tại và phong cách mặc định của dự án.",
         "parameters": _schema({}),
     },
     {
         "name": "get_writing_style_detail",
-        "description": "按风格 ID 获取可用于当前项目的写作风格详情。",
+        "description": "Lấy chi tiết phong cách viết khả dụng cho dự án hiện tại theo ID phong cách.",
         "parameters": _schema({"style_id": {"type": "integer", "minimum": 1}}, ["style_id"]),
     },
     {
         "name": "list_background_tasks",
-        "description": "查询当前项目的生成、分析、批量生成和重新生成任务。",
+        "description": "Truy vấn các tác vụ tạo, phân tích, tạo hàng loạt và tạo lại của dự án hiện tại.",
         "parameters": _schema({
             "status": {"type": "string"},
             "limit": {"type": "integer", "minimum": 1, "maximum": 100},
@@ -69,37 +69,37 @@ OPERATIONAL_TOOL_SPECS: list[dict[str, Any]] = [
     },
     {
         "name": "get_background_task_detail",
-        "description": "查询当前项目某个后台任务的完整状态和结果。",
+        "description": "Truy vấn trạng thái đầy đủ và kết quả của một tác vụ nền trong dự án hiện tại.",
         "parameters": _schema({"task_id": ID}, ["task_id"]),
     },
     {
         "name": "get_chapter_analysis_status",
-        "description": "查询指定章节最新的分析任务状态。chapter_id 和 chapter_number 至少提供一个；使用章节号时不要传空的 chapter_id。",
+        "description": "Truy vấn trạng thái tác vụ phân tích mới nhất của chương chỉ định. Cần cung cấp ít nhất một trong chapter_id hoặc chapter_number; khi dùng số chương thì đừng truyền chapter_id rỗng.",
         "parameters": _chapter_schema({"chapter_id": ID, "chapter_number": {"type": "integer", "minimum": 1}}),
     },
     {
         "name": "get_chapter_analysis",
-        "description": "获取指定章节的剧情分析和提取出的故事记忆。chapter_id 和 chapter_number 至少提供一个；使用章节号时不要传空的 chapter_id。",
+        "description": "Lấy phân tích cốt truyện và ký ức câu chuyện đã trích xuất của chương chỉ định. Cần cung cấp ít nhất một trong chapter_id hoặc chapter_number; khi dùng số chương thì đừng truyền chapter_id rỗng.",
         "parameters": _chapter_schema({"chapter_id": ID, "chapter_number": {"type": "integer", "minimum": 1}}),
     },
     {
         "name": "get_chapter_annotations",
-        "description": "获取指定章节可用于正文标注的记忆位置、类别和重要度。chapter_id 和 chapter_number 至少提供一个；使用章节号时不要传空的 chapter_id。",
+        "description": "Lấy vị trí, loại và mức quan trọng của ký ức dùng để chú thích nội dung chính văn của chương chỉ định. Cần cung cấp ít nhất một trong chapter_id hoặc chapter_number; khi dùng số chương thì đừng truyền chapter_id rỗng.",
         "parameters": _chapter_schema({"chapter_id": ID, "chapter_number": {"type": "integer", "minimum": 1}}),
     },
     {
         "name": "get_chapter_navigation",
-        "description": "获取指定章节的上一章、下一章和项目章节位置。chapter_id 和 chapter_number 至少提供一个；使用章节号时不要传空的 chapter_id。",
+        "description": "Lấy chương trước, chương sau và vị trí chương trong dự án của chương chỉ định. Cần cung cấp ít nhất một trong chapter_id hoặc chapter_number; khi dùng số chương thì đừng truyền chapter_id rỗng.",
         "parameters": _chapter_schema({"chapter_id": ID, "chapter_number": {"type": "integer", "minimum": 1}}),
     },
     {
         "name": "check_chapter_generation_readiness",
-        "description": "检查指定章节是否满足生成前置条件以及上一章分析是否就绪。chapter_id 和 chapter_number 至少提供一个；使用章节号时不要传空的 chapter_id。",
+        "description": "Kiểm tra chương chỉ định có đủ điều kiện tạo trước hay không và phân tích chương trước đã sẵn sàng chưa. Cần cung cấp ít nhất một trong chapter_id hoặc chapter_number; khi dùng số chương thì đừng truyền chapter_id rỗng.",
         "parameters": _chapter_schema({"chapter_id": ID, "chapter_number": {"type": "integer", "minimum": 1}}),
     },
     {
         "name": "list_story_memories",
-        "description": "查询当前项目的故事记忆，可按章节、类型和关键词筛选。",
+        "description": "Truy vấn ký ức câu chuyện của dự án hiện tại; có thể lọc theo chương, loại và từ khóa.",
         "parameters": _schema({
             "chapter_id": ID,
             "chapter_number": {"type": "integer", "minimum": 1},
@@ -110,22 +110,22 @@ OPERATIONAL_TOOL_SPECS: list[dict[str, Any]] = [
     },
     {
         "name": "get_project_export_links",
-        "description": "获取当前项目完整 JSON、大纲 JSON 和章节 TXT 的安全下载地址。",
+        "description": "Lấy địa chỉ tải an toàn cho JSON đầy đủ, JSON dàn ý và TXT chương của dự án hiện tại.",
         "parameters": _schema({}),
     },
     {
         "name": "get_story_memory_stats",
-        "description": "统计当前项目故事记忆的类型、章节覆盖和重要度。",
+        "description": "Thống kê loại, phạm vi chương và mức quan trọng của ký ức câu chuyện trong dự án hiện tại.",
         "parameters": _schema({}),
     },
     {
         "name": "get_project_cover_status",
-        "description": "获取当前项目封面状态、图片地址和最近错误。",
+        "description": "Lấy trạng thái ảnh bìa, địa chỉ ảnh và lỗi gần nhất của dự án hiện tại.",
         "parameters": _schema({}),
     },
     {
         "name": "manage_writing_style",
-        "description": "创建、更新、删除用户写作风格，或设置/清除当前项目默认风格；执行前必须确认。",
+        "description": "Tạo, cập nhật, xóa phong cách viết của người dùng, hoặc đặt/xóa phong cách mặc định của dự án hiện tại; phải xác nhận trước khi thực hiện.",
         "parameters": _schema({
             "action": {"type": "string", "enum": ["create", "update", "delete", "set_default", "clear_default"]},
             "style_id": {"type": "integer", "minimum": 1},
@@ -136,7 +136,7 @@ OPERATIONAL_TOOL_SPECS: list[dict[str, Any]] = [
     },
     {
         "name": "manage_background_task",
-        "description": "取消当前项目尚未结束的后台任务；执行前必须确认。",
+        "description": "Hủy tác vụ nền chưa kết thúc của dự án hiện tại; phải xác nhận trước khi thực hiện.",
         "parameters": _schema({
             "action": {"type": "string", "enum": ["cancel"]},
             "task_id": ID,
@@ -146,7 +146,7 @@ OPERATIONAL_TOOL_SPECS: list[dict[str, Any]] = [
     },
     {
         "name": "repair_project_consistency",
-        "description": "修复当前项目组织记录、成员计数、大纲章节同步和项目字数；执行前必须确认。",
+        "description": "Sửa bản ghi tổ chức, số thành viên, đồng bộ dàn ý-chương và số chữ dự án của dự án hiện tại; phải xác nhận trước khi thực hiện.",
         "parameters": _schema({
             "action": {"type": "string", "enum": ["all", "organizations", "member_counts", "outline_chapters", "word_counts"]},
         }, ["action"]),
@@ -155,7 +155,7 @@ OPERATIONAL_TOOL_SPECS: list[dict[str, Any]] = [
     },
     {
         "name": "import_outlines_json",
-        "description": "把粘贴的大纲导出 JSON 合并或追加到当前项目；执行前必须确认。",
+        "description": "Gộp hoặc thêm JSON xuất dàn ý đã dán vào dự án hiện tại; phải xác nhận trước khi thực hiện.",
         "parameters": _schema({
             "json_content": {"type": "string", "minLength": 2},
             "mode": {"type": "string", "enum": ["append", "merge"]},
@@ -165,14 +165,14 @@ OPERATIONAL_TOOL_SPECS: list[dict[str, Any]] = [
     },
     {
         "name": "import_characters_json",
-        "description": "把粘贴的角色/组织导出 JSON 导入当前项目；重复名称会跳过，执行前必须确认。",
+        "description": "Nhập JSON xuất nhân vật/tổ chức đã dán vào dự án hiện tại; tên trùng sẽ bị bỏ qua; phải xác nhận trước khi thực hiện.",
         "parameters": _schema({"json_content": {"type": "string", "minLength": 2}}, ["json_content"]),
         "risk_level": 2,
         "resources": ("characters", "organizations", "careers"),
     },
     {
         "name": "manage_story_memories",
-        "description": "删除指定章节的分析结果和故事记忆；执行前必须确认。",
+        "description": "Xóa kết quả phân tích và ký ức câu chuyện của chương chỉ định; phải xác nhận trước khi thực hiện.",
         "parameters": _schema({
             "action": {"type": "string", "enum": ["delete_chapter_analysis"]},
             "chapter_id": ID,
@@ -183,7 +183,7 @@ OPERATIONAL_TOOL_SPECS: list[dict[str, Any]] = [
     },
     {
         "name": "replace_chapter_text",
-        "description": "用新文本替换章节正文中的精确片段；执行前必须确认并校验原文未变化。",
+        "description": "Thay đoạn chính xác trong nội dung chính văn chương bằng văn bản mới; phải xác nhận trước và kiểm tra nguyên văn chưa đổi.",
         "parameters": _schema({
             "chapter_id": ID,
             "chapter_number": {"type": "integer", "minimum": 1},
@@ -197,7 +197,7 @@ OPERATIONAL_TOOL_SPECS: list[dict[str, Any]] = [
     },
     {
         "name": "manage_project_cover",
-        "description": "生成或清除当前项目封面；生成会使用用户已有封面配置，执行前必须确认。",
+        "description": "Tạo hoặc xóa ảnh bìa dự án hiện tại; khi tạo sẽ dùng cấu hình ảnh bìa sẵn có của người dùng; phải xác nhận trước khi thực hiện.",
         "parameters": _schema({
             "action": {"type": "string", "enum": ["generate", "clear"]},
             "overwrite": {"type": "boolean"},
@@ -207,7 +207,7 @@ OPERATIONAL_TOOL_SPECS: list[dict[str, Any]] = [
     },
     {
         "name": "start_project_task",
-        "description": "启动大纲生成/展开、章节生成/批量生成或章节分析后台任务；执行前必须确认。",
+        "description": "Khởi động tác vụ nền tạo/mở rộng dàn ý, tạo/tạo hàng loạt chương hoặc phân tích chương; phải xác nhận trước khi thực hiện.",
         "parameters": _schema({
             "action": {"type": "string", "enum": [
                 "generate_outlines", "expand_outline", "batch_expand_outlines",
@@ -242,7 +242,7 @@ def _value(value: Any) -> Any:
 
 def _preview_value(value: Any, limit: int = 800) -> Any:
     if isinstance(value, str) and len(value) > limit:
-        return f"{value[:limit]}…（共 {len(value)} 字符）"
+        return f"{value[:limit]}… (tổng {len(value)} ký tự)"
     if isinstance(value, dict):
         return {key: _preview_value(item, limit) for key, item in list(value.items())[:50]}
     if isinstance(value, list):
@@ -261,26 +261,26 @@ class ProjectAgentOperationalTools:
 
     async def read(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         if name not in OPERATIONAL_READ_TOOL_NAMES:
-            raise ValueError(f"未注册的运维读取工具：{name}")
+            raise ValueError(f"Công cụ đọc vận hành chưa đăng ký: {name}")
         handler = getattr(self, f"_{name}", None)
         if handler is None:
-            raise ValueError(f"工具尚未实现：{name}")
+            raise ValueError(f"Công cụ chưa được triển khai: {name}")
         return await handler(arguments)
 
     async def preview(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         if name not in OPERATIONAL_WRITE_TOOL_NAMES:
-            raise ValueError(f"未注册的运维写入工具：{name}")
+            raise ValueError(f"Công cụ ghi vận hành chưa đăng ký: {name}")
         action = str(arguments.get("action") or "")
         if name in {"import_outlines_json", "import_characters_json", "replace_chapter_text"}:
             action = "execute"
         if not action:
-            raise ValueError("缺少 action")
+            raise ValueError("Thiếu action")
         handler = getattr(self, f"_{name}_preview_{action}", None)
         if handler is None:
-            raise ValueError(f"工具 {name} 不支持动作 {action}")
+            raise ValueError(f"Công cụ {name} không hỗ trợ hành động {action}")
         before, after, label, entity_id = await handler(arguments)
         if before == after:
-            raise ValueError("没有检测到需要修改的内容")
+            raise ValueError("Không phát hiện nội dung cần sửa")
         spec = next(item for item in OPERATIONAL_TOOL_SPECS if item["name"] == name)
         resources = (
             affected_resources_for_agent_action(action)
@@ -305,14 +305,14 @@ class ProjectAgentOperationalTools:
 
     async def execute(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         if name not in OPERATIONAL_WRITE_TOOL_NAMES:
-            raise ValueError(f"未注册的运维写入工具：{name}")
+            raise ValueError(f"Công cụ ghi vận hành chưa đăng ký: {name}")
         action = str(arguments.get("action") or "")
         if name in {"import_outlines_json", "import_characters_json", "replace_chapter_text"}:
             action = "execute"
         preview_handler = getattr(self, f"_{name}_preview_{action}", None)
         handler = getattr(self, f"_{name}_{action}", None)
         if preview_handler is None or handler is None:
-            raise ValueError(f"工具 {name} 不支持动作 {action}")
+            raise ValueError(f"Công cụ {name} không hỗ trợ hành động {action}")
         before, _, _, _ = await preview_handler(arguments)
         entity_id, after, message = await handler(arguments)
         spec = next(item for item in OPERATIONAL_TOOL_SPECS if item["name"] == name)
@@ -335,16 +335,16 @@ class ProjectAgentOperationalTools:
 
     async def _find_style(self, style_id: Any, *, writable: bool = False) -> WritingStyle:
         if isinstance(style_id, bool) or not isinstance(style_id, int):
-            raise ValueError("必须提供有效的 style_id")
+            raise ValueError("Phải cung cấp style_id hợp lệ")
         query = select(WritingStyle).where(
             WritingStyle.id == style_id,
             or_(WritingStyle.user_id == self.project.user_id, WritingStyle.user_id.is_(None)),
         )
         style = (await self.db.execute(query)).scalar_one_or_none()
         if not style:
-            raise ValueError("当前用户没有可用的指定写作风格")
+            raise ValueError("Người dùng hiện tại không có phong cách viết chỉ định khả dụng")
         if writable and style.user_id != self.project.user_id:
-            raise ValueError("系统预设风格不能修改或删除")
+            raise ValueError("Không thể sửa hoặc xóa phong cách cấu hình sẵn của hệ thống")
         return style
 
     @staticmethod
@@ -426,11 +426,11 @@ class ProjectAgentOperationalTools:
 
     async def _find_task(self, task_id: str) -> tuple[Any, str]:
         if not task_id:
-            raise ValueError("必须提供 task_id")
+            raise ValueError("Phải cung cấp task_id")
         for task, kind in await self._all_tasks():
             if task.id == task_id:
                 return task, kind
-        raise ValueError("当前项目中未找到后台任务")
+        raise ValueError("Không tìm thấy tác vụ nền trong dự án hiện tại")
 
     async def _get_background_task_detail(self, arguments: dict[str, Any]) -> dict[str, Any]:
         task, kind = await self._find_task(str(arguments.get("task_id") or ""))
@@ -461,7 +461,7 @@ class ProjectAgentOperationalTools:
             ).order_by(PlotAnalysis.created_at.desc()).limit(1)
         )).scalar_one_or_none()
         if not analysis:
-            raise ValueError("该章节暂无分析结果")
+            raise ValueError("Chương này tạm chưa có kết quả phân tích")
         memories = (await self.db.execute(
             select(StoryMemory).where(
                 StoryMemory.project_id == self.project.id,
@@ -598,28 +598,28 @@ class ProjectAgentOperationalTools:
     def _data(arguments: dict[str, Any]) -> dict[str, Any]:
         data = arguments.get("data") or {}
         if not isinstance(data, dict):
-            raise ValueError("data 必须是对象")
+            raise ValueError("data phải là object")
         return data
 
     async def _manage_writing_style_preview_create(self, arguments: dict[str, Any]):
         data = self._data(arguments)
         unknown = set(data) - (self.STYLE_FIELDS | {"preset_id"})
         if unknown:
-            raise ValueError(f"包含不支持的字段：{', '.join(sorted(unknown))}")
+            raise ValueError(f"Chứa trường không hỗ trợ: {', '.join(sorted(unknown))}")
         preset = None
         if data.get("preset_id"):
             preset = (await self.db.execute(select(WritingStyle).where(
                 WritingStyle.user_id.is_(None), WritingStyle.preset_id == data["preset_id"]
             ))).scalar_one_or_none()
             if not preset:
-                raise ValueError("指定的预设风格不存在")
+                raise ValueError("Phong cách cấu hình sẵn chỉ định không tồn tại")
         name = str(data.get("name") or (preset.name if preset else "")).strip()
         prompt = str(data.get("prompt_content") or (preset.prompt_content if preset else "")).strip()
         if not name or not prompt:
-            raise ValueError("创建写作风格需要 name 和 prompt_content")
+            raise ValueError("Tạo phong cách viết cần name và prompt_content")
         after = {"name": name, "description": data.get("description", preset.description if preset else None),
                  "prompt_content": prompt, "preset_id": data.get("preset_id")}
-        return {}, after, f"创建写作风格《{name}》", None
+        return {}, after, f"Tạo phong cách viết«{name}»", None
 
     async def _manage_writing_style_create(self, arguments: dict[str, Any]):
         _, after, _, _ = await self._manage_writing_style_preview_create(arguments)
@@ -632,33 +632,33 @@ class ProjectAgentOperationalTools:
                            prompt_content=after["prompt_content"], order_index=order + 1)
         self.db.add(row)
         await self.db.flush()
-        return str(row.id), self._style_data(row), f"已创建写作风格《{row.name}》"
+        return str(row.id), self._style_data(row), f"Đã tạo phong cách viết«{row.name}»"
 
     async def _manage_writing_style_preview_update(self, arguments: dict[str, Any]):
         row = await self._find_style(arguments.get("style_id"), writable=True)
         data = self._data(arguments)
         unknown = set(data) - self.STYLE_FIELDS
         if unknown:
-            raise ValueError(f"包含不支持的字段：{', '.join(sorted(unknown))}")
+            raise ValueError(f"Chứa trường không hỗ trợ: {', '.join(sorted(unknown))}")
         if not data:
-            raise ValueError("没有提供需要更新的字段")
+            raise ValueError("Chưa cung cấp trường cần cập nhật")
         if "name" in data and not str(data["name"]).strip():
-            raise ValueError("name 不能为空")
+            raise ValueError("name không được để trống")
         if "prompt_content" in data and not str(data["prompt_content"]).strip():
-            raise ValueError("prompt_content 不能为空")
+            raise ValueError("prompt_content không được để trống")
         before = {key: getattr(row, key) for key in data}
-        return before, data, f"更新写作风格《{row.name}》", str(row.id)
+        return before, data, f"Cập nhật phong cách viết«{row.name}»", str(row.id)
 
     async def _manage_writing_style_update(self, arguments: dict[str, Any]):
         row = await self._find_style(arguments.get("style_id"), writable=True)
         data = self._data(arguments)
         for key, value in data.items():
             setattr(row, key, value.strip() if key in {"name", "prompt_content"} else value)
-        return str(row.id), self._style_data(row), f"已更新写作风格《{row.name}》"
+        return str(row.id), self._style_data(row), f"Đã cập nhật phong cách viết«{row.name}»"
 
     async def _manage_writing_style_preview_delete(self, arguments: dict[str, Any]):
         row = await self._find_style(arguments.get("style_id"), writable=True)
-        return self._style_data(row), {}, f"删除写作风格《{row.name}》", str(row.id)
+        return self._style_data(row), {}, f"Xóa phong cách viết«{row.name}»", str(row.id)
 
     async def _manage_writing_style_delete(self, arguments: dict[str, Any]):
         row = await self._find_style(arguments.get("style_id"), writable=True)
@@ -670,13 +670,13 @@ class ProjectAgentOperationalTools:
         if default:
             await self.db.delete(default)
         await self.db.delete(row)
-        return str(row_id), {}, f"已删除写作风格《{name}》"
+        return str(row_id), {}, f"Đã xóa phong cách viết«{name}»"
 
     async def _manage_writing_style_preview_set_default(self, arguments: dict[str, Any]):
         row = await self._find_style(arguments.get("style_id"))
         before_id = await self._default_style_id()
         return {"default_style_id": before_id}, {"default_style_id": row.id, "name": row.name}, \
-            f"设置项目默认写作风格为《{row.name}》", str(row.id)
+            f"Đặt phong cách viết mặc định của dự án thành«{row.name}»", str(row.id)
 
     async def _manage_writing_style_set_default(self, arguments: dict[str, Any]):
         row = await self._find_style(arguments.get("style_id"))
@@ -687,13 +687,13 @@ class ProjectAgentOperationalTools:
             default.style_id = row.id
         else:
             self.db.add(ProjectDefaultStyle(project_id=self.project.id, style_id=row.id))
-        return str(row.id), {"default_style_id": row.id, "name": row.name}, f"已将《{row.name}》设为项目默认写作风格"
+        return str(row.id), {"default_style_id": row.id, "name": row.name}, f"Đã đặt«{row.name}» làm phong cách viết mặc định của dự án"
 
     async def _manage_writing_style_preview_clear_default(self, _: dict[str, Any]):
         default_id = await self._default_style_id()
         if default_id is None:
-            raise ValueError("当前项目没有默认写作风格")
-        return {"default_style_id": default_id}, {"default_style_id": None}, "清除项目默认写作风格", str(default_id)
+            raise ValueError("Dự án hiện tại chưa có phong cách viết mặc định")
+        return {"default_style_id": default_id}, {"default_style_id": None}, "Xóa phong cách viết mặc định của dự án", str(default_id)
 
     async def _manage_writing_style_clear_default(self, _: dict[str, Any]):
         default = (await self.db.execute(select(ProjectDefaultStyle).where(
@@ -701,14 +701,14 @@ class ProjectAgentOperationalTools:
         ))).scalar_one()
         old_id = default.style_id
         await self.db.delete(default)
-        return str(old_id), {"default_style_id": None}, "已清除项目默认写作风格"
+        return str(old_id), {"default_style_id": None}, "Đã xóa phong cách viết mặc định của dự án"
 
     async def _manage_background_task_preview_cancel(self, arguments: dict[str, Any]):
         task, kind = await self._find_task(str(arguments.get("task_id") or ""))
         if task.status not in {"pending", "running"}:
-            raise ValueError("只有等待中或运行中的任务可以取消")
+            raise ValueError("Chỉ tác vụ đang chờ hoặc đang chạy mới có thể hủy")
         return {"status": task.status}, {"status": "cancelled", "task_kind": kind}, \
-            f"取消后台任务 {task.id[:8]}", task.id
+            f"Hủy tác vụ nền {task.id[:8]}", task.id
 
     async def _manage_background_task_cancel(self, arguments: dict[str, Any]):
         task, _ = await self._find_task(str(arguments.get("task_id") or ""))
@@ -716,10 +716,10 @@ class ProjectAgentOperationalTools:
         if hasattr(task, "cancel_requested"):
             task.cancel_requested = True
         if hasattr(task, "status_message"):
-            task.status_message = "任务已取消"
+            task.status_message = "Tác vụ đã bị hủy"
         if hasattr(task, "completed_at"):
             task.completed_at = datetime.now()
-        return task.id, {"status": "cancelled"}, f"已取消后台任务 {task.id[:8]}"
+        return task.id, {"status": "cancelled"}, f"Đã hủy tác vụ nền {task.id[:8]}"
 
     async def _consistency_plan(self, action: str) -> dict[str, Any]:
         from app.models.outline import Outline
@@ -789,8 +789,8 @@ class ProjectAgentOperationalTools:
             and plan["project_current_words_before"] != plan["project_current_words_after"]
         )
         if not has_count_issue and not has_total_issue:
-            raise ValueError("没有检测到需要修复的一致性问题")
-        return {}, plan, f"修复项目一致性（{action}）", self.project.id
+            raise ValueError("Không phát hiện vấn đề nhất quán cần sửa")
+        return {}, plan, f"Sửa tính nhất quán dự án ({action})", self.project.id
 
     async def _repair(self, action: str) -> dict[str, Any]:
         from app.models.outline import Outline
@@ -873,12 +873,12 @@ class ProjectAgentOperationalTools:
 
     async def _repair_result(self, action: str):
         result = await self._repair(action)
-        return self.project.id, result, f"已完成项目一致性修复（{action}）"
+        return self.project.id, result, f"Đã hoàn tất sửa tính nhất quán dự án ({action})"
 
     def _parse_outline_import(self, arguments: dict[str, Any]):
         content = str(arguments.get("json_content") or "")
         if len(content.encode("utf-8")) > 10 * 1024 * 1024:
-            raise ValueError("导入内容超过 10MB 限制")
+            raise ValueError("Nội dung nhập vượt giới hạn 10MB")
         return OutlineTransferService.parse_file(content.encode("utf-8"))
 
     async def _import_outlines_json_preview_execute(self, arguments: dict[str, Any]):
@@ -887,11 +887,11 @@ class ProjectAgentOperationalTools:
         preview = await OutlineTransferService.preview_import(parsed, self.project, mode, self.db)
         data = preview.model_dump(mode="json")
         if not preview.valid:
-            raise ValueError("；".join(preview.errors))
+            raise ValueError("; ".join(preview.errors))
         after = {key: data[key] for key in (
             "mode", "statistics", "warnings", "target_outline_mode"
         ) if key in data}
-        return {}, after, f"{mode} 导入 {len(parsed.items)} 条大纲", self.project.id
+        return {}, after, f"{mode} nhập {len(parsed.items)} mục dàn ý", self.project.id
 
     async def _import_outlines_json_execute(self, arguments: dict[str, Any]):
         parsed = self._parse_outline_import(arguments)
@@ -899,18 +899,18 @@ class ProjectAgentOperationalTools:
             parsed=parsed, project=self.project, mode=arguments["mode"], db=self.db
         )
         data = result.model_dump(mode="json")
-        return self.project.id, data, f"大纲导入完成：新增 {result.imported} 条，更新 {result.updated} 条"
+        return self.project.id, data, f"Nhập dàn ý xong: thêm {result.imported} mục, cập nhật {result.updated} mục"
 
     def _parse_character_import(self, arguments: dict[str, Any]) -> dict[str, Any]:
         content = str(arguments.get("json_content") or "")
         if len(content.encode("utf-8")) > 10 * 1024 * 1024:
-            raise ValueError("导入内容超过 10MB 限制")
+            raise ValueError("Nội dung nhập vượt giới hạn 10MB")
         try:
             data = json.loads(content)
         except json.JSONDecodeError as exc:
-            raise ValueError(f"JSON 格式错误：第 {exc.lineno} 行第 {exc.colno} 列") from exc
+            raise ValueError(f"Lỗi định dạng JSON: dòng {exc.lineno} cột {exc.colno}") from exc
         if not isinstance(data, dict):
-            raise ValueError("导入 JSON 根节点必须是对象")
+            raise ValueError("Nút gốc JSON nhập phải là object")
         return data
 
     async def _import_characters_json_preview_execute(self, arguments: dict[str, Any]):
@@ -919,7 +919,7 @@ class ProjectAgentOperationalTools:
         data = self._parse_character_import(arguments)
         validation = ImportExportService.validate_characters_import(data)
         if not validation.get("valid"):
-            raise ValueError("；".join(validation.get("errors") or ["角色导入数据无效"]))
+            raise ValueError("; ".join(validation.get("errors") or ["Dữ liệu nhập nhân vật không hợp lệ"]))
         names = [str(item.get("name") or "") for item in data.get("data", []) if isinstance(item, dict)]
         existing = set((await self.db.execute(select(Character.name).where(
             Character.project_id == self.project.id,
@@ -928,7 +928,7 @@ class ProjectAgentOperationalTools:
         statistics = dict(validation.get("statistics") or {})
         statistics.update({"will_skip_duplicates": len(existing), "will_import": len(names) - len(existing)})
         return {}, {"statistics": statistics, "warnings": validation.get("warnings") or []}, \
-            f"导入 {len(names) - len(existing)} 个角色/组织", self.project.id
+            f"Nhập {len(names) - len(existing)} nhân vật/tổ chức", self.project.id
 
     async def _import_characters_json_execute(self, arguments: dict[str, Any]):
         from app.services.import_export_service import ImportExportService
@@ -940,8 +940,8 @@ class ProjectAgentOperationalTools:
             db=self.db,
         )
         if not result.get("success"):
-            raise ValueError(result.get("message") or "角色导入失败")
-        return self.project.id, result, result.get("message") or "角色/组织导入完成"
+            raise ValueError(result.get("message") or "Nhập nhân vật thất bại")
+        return self.project.id, result, result.get("message") or "Nhập nhân vật/tổ chức hoàn tất"
 
     async def _manage_story_memories_preview_delete_chapter_analysis(self, arguments: dict[str, Any]):
         chapter = await self._find_chapter(arguments)
@@ -963,12 +963,12 @@ class ProjectAgentOperationalTools:
             AnalysisTask.status.in_(["pending", "running"]),
         ).limit(1))).scalar_one_or_none()
         if running_task:
-            raise ValueError("该章节仍有分析任务运行中，请先取消任务")
+            raise ValueError("Chương này vẫn còn tác vụ phân tích đang chạy, vui lòng hủy tác vụ trước")
         if not memory_count and not analysis_count and not task_count:
-            raise ValueError("该章节没有可删除的分析数据")
+            raise ValueError("Chương này không có dữ liệu phân tích để xóa")
         before = {"memories": memory_count, "analyses": analysis_count, "analysis_tasks": task_count}
         return before, {"memories": 0, "analyses": 0, "analysis_tasks": 0}, \
-            f"删除第{chapter.chapter_number}章《{chapter.title}》分析数据", chapter.id
+            f"Xóa dữ liệu phân tích chương {chapter.chapter_number}«{chapter.title}»", chapter.id
 
     async def _manage_story_memories_delete_chapter_analysis(self, arguments: dict[str, Any]):
         chapter = await self._find_chapter(arguments)
@@ -996,22 +996,22 @@ class ProjectAgentOperationalTools:
         except Exception:
             pass
         after = {"memories": 0, "analyses": 0, "analysis_tasks": 0}
-        return chapter.id, after, f"已删除第{chapter.chapter_number}章《{chapter.title}》分析数据"
+        return chapter.id, after, f"Đã xóa dữ liệu phân tích chương {chapter.chapter_number}«{chapter.title}»"
 
     async def _replace_chapter_text_preview_execute(self, arguments: dict[str, Any]):
         chapter = await self._find_chapter(arguments)
         content = chapter.content or ""
         start, end = arguments["start_position"], arguments["end_position"]
         if start < 0 or end > len(content) or start >= end:
-            raise ValueError("替换位置超出章节正文范围")
+            raise ValueError("Vị trí thay thế vượt phạm vi nội dung chương")
         expected = arguments["expected_text"]
         if content[start:end] != expected:
-            raise ValueError("指定位置的原文与 expected_text 不一致，请重新读取章节")
+            raise ValueError("Nguyên văn tại vị trí chỉ định không khớp expected_text, vui lòng đọc lại chương")
         new_text = arguments["new_text"]
         after_content = content[:start] + new_text + content[end:]
         before = {"selected_text": expected, "word_count": chapter.word_count or 0}
         after = {"selected_text": new_text, "word_count": len(after_content)}
-        return before, after, f"替换第{chapter.chapter_number}章《{chapter.title}》正文片段", chapter.id
+        return before, after, f"Thay đoạn nội dung chính văn chương {chapter.chapter_number}«{chapter.title}»", chapter.id
 
     async def _replace_chapter_text_execute(self, arguments: dict[str, Any]):
         chapter = await self._find_chapter(arguments)
@@ -1021,13 +1021,13 @@ class ProjectAgentOperationalTools:
         chapter.content = content[:start] + arguments["new_text"] + content[end:]
         chapter.word_count = len(chapter.content)
         self.project.current_words = max(0, (self.project.current_words or 0) - old_count + chapter.word_count)
-        return chapter.id, {"word_count": chapter.word_count}, f"已替换第{chapter.chapter_number}章《{chapter.title}》正文片段"
+        return chapter.id, {"word_count": chapter.word_count}, f"Đã thay đoạn nội dung chính văn chương {chapter.chapter_number}«{chapter.title}»"
 
     async def _manage_project_cover_preview_generate(self, arguments: dict[str, Any]):
         if self.project.cover_status == "generating":
-            raise ValueError("封面正在生成中")
+            raise ValueError("Bìa đang được tạo")
         return {"cover_status": self.project.cover_status, "cover_image_url": self.project.cover_image_url}, \
-            {"action": "generate", "overwrite": arguments.get("overwrite", True)}, "生成项目封面", self.project.id
+            {"action": "generate", "overwrite": arguments.get("overwrite", True)}, "Tạo ảnh bìa dự án", self.project.id
 
     async def _manage_project_cover_generate(self, arguments: dict[str, Any]):
         from app.services.cover_generation_service import cover_generation_service
@@ -1038,13 +1038,13 @@ class ProjectAgentOperationalTools:
             )
         except HTTPException as exc:
             raise ValueError(str(exc.detail)) from exc
-        return self.project.id, result, result.get("message", "封面生成成功")
+        return self.project.id, result, result.get("message", "Tạo bìa thành công")
 
     async def _manage_project_cover_preview_clear(self, _: dict[str, Any]):
         if not self.project.cover_image_url and self.project.cover_status == "none":
-            raise ValueError("当前项目没有可清除的封面")
+            raise ValueError("Dự án hiện tại không có bìa để xóa")
         return {"cover_status": self.project.cover_status, "cover_image_url": self.project.cover_image_url}, \
-            {"cover_status": "none", "cover_image_url": None}, "清除项目封面", self.project.id
+            {"cover_status": "none", "cover_image_url": None}, "Xóa ảnh bìa dự án", self.project.id
 
     async def _manage_project_cover_clear(self, _: dict[str, Any]):
         self.project.cover_image_url = None
@@ -1052,12 +1052,12 @@ class ProjectAgentOperationalTools:
         self.project.cover_status = "none"
         self.project.cover_error = None
         self.project.cover_updated_at = None
-        return self.project.id, {"cover_status": "none", "cover_image_url": None}, "已清除项目封面"
+        return self.project.id, {"cover_status": "none", "cover_image_url": None}, "Đã xóa ảnh bìa dự án"
 
     async def _task_preview(self, arguments: dict[str, Any], action: str):
         data = self._data(arguments)
         if set(data) & {"project_id", "user_id", "chapter_id", "outline_id"}:
-            raise ValueError("data 中不能包含项目或资源标识，请使用工具顶层参数")
+            raise ValueError("data không được chứa định danh dự án hoặc tài nguyên, hãy dùng tham số cấp cao của công cụ")
         try:
             if action == "generate_chapter":
                 from app.schemas.chapter import ChapterGenerateRequest
@@ -1081,7 +1081,7 @@ class ProjectAgentOperationalTools:
                 from app.schemas.career import CareerGenerateRequest
                 CareerGenerateRequest(project_id=self.project.id, **data)
         except (TypeError, ValueError) as exc:
-            raise ValueError(f"任务参数无效：{exc}") from exc
+            raise ValueError(f"Tham số tác vụ không hợp lệ: {exc}") from exc
         target: dict[str, Any] = {"action": action, "parameters": data}
         entity_id: str | None = self.project.id
         if action in {"expand_outline"}:
@@ -1091,7 +1091,7 @@ class ProjectAgentOperationalTools:
                 Outline.id == outline_id, Outline.project_id == self.project.id
             ))).scalar_one_or_none()
             if not outline:
-                raise ValueError("当前项目中未找到大纲")
+                raise ValueError("Không tìm thấy dàn ý trong dự án hiện tại")
             target["outline"] = {"id": outline.id, "title": outline.title}
             entity_id = outline.id
         if action in {
@@ -1102,12 +1102,12 @@ class ProjectAgentOperationalTools:
             target["chapter"] = {"id": chapter.id, "chapter_number": chapter.chapter_number, "title": chapter.title}
             entity_id = chapter.id
             if action == "analyze_chapter" and not (chapter.content or "").strip():
-                raise ValueError("章节正文为空，无法分析")
+                raise ValueError("Nội dung chương trống, không thể phân tích")
             if action in {"regenerate_chapter", "partial_regenerate_chapter"} and not (chapter.content or "").strip():
-                raise ValueError("章节正文为空，无法重写")
+                raise ValueError("Nội dung chương trống, không thể viết lại")
         if action in {"generate_character", "generate_organization", "generate_careers"}:
             target["project"] = {"id": self.project.id, "title": self.project.title}
-        return {}, target, f"启动后台任务：{action}", entity_id
+        return {}, target, f"Khởi động tác vụ nền: {action}", entity_id
 
     async def _start_project_task_preview_generate_outlines(self, a): return await self._task_preview(a, "generate_outlines")
     async def _start_project_task_preview_expand_outline(self, a): return await self._task_preview(a, "expand_outline")
@@ -1181,7 +1181,7 @@ class ProjectAgentOperationalTools:
             AnalysisTask.user_id == self.project.user_id,
         ).order_by(AnalysisTask.created_at.desc()).limit(1))).scalar_one_or_none()
         if existing and existing.status in {"pending", "running"}:
-            return existing.id, {"task_id": existing.id, "status": existing.status}, "已有分析任务正在执行"
+            return existing.id, {"task_id": existing.id, "status": existing.status}, "Đã có tác vụ phân tích đang chạy"
         task = AnalysisTask(
             chapter_id=chapter.id,
             project_id=self.project.id,
@@ -1200,7 +1200,7 @@ class ProjectAgentOperationalTools:
             task_id=task_id,
         ))
         result = {"task_id": task_id, "chapter_id": chapter.id, "status": "pending"}
-        return task_id, result, "章节分析任务已加入后台队列"
+        return task_id, result, "Tác vụ phân tích chương đã vào hàng đợi nền"
 
     @staticmethod
     async def _consume_sse_response(
@@ -1216,7 +1216,7 @@ class ProjectAgentOperationalTools:
                 if now - last_cancel_check >= 2:
                     last_cancel_check = now
                     if await cancellation_check():
-                        raise RuntimeError("任务已取消")
+                        raise RuntimeError("Tác vụ đã bị hủy")
             chunk = raw_chunk.decode("utf-8") if isinstance(raw_chunk, bytes) else str(raw_chunk)
             for line in chunk.splitlines():
                 if not line.startswith("data: "):
@@ -1226,7 +1226,7 @@ class ProjectAgentOperationalTools:
                 except json.JSONDecodeError:
                     continue
                 if event.get("type") == "error":
-                    raise RuntimeError(str(event.get("error") or "生成任务失败"))
+                    raise RuntimeError(str(event.get("error") or "Tác vụ tạo thất bại"))
                 if event.get("type") == "result" and isinstance(event.get("data"), dict):
                     final_result = event["data"]
         return final_result
@@ -1261,7 +1261,7 @@ class ProjectAgentOperationalTools:
             session_factory = async_sessionmaker(
                 engine, class_=BackgroundSession, expire_on_commit=False
             )
-            tracker = TaskProgressTracker(task_id, user_id, "项目智能体")
+            tracker = TaskProgressTracker(task_id, user_id, "Trợ lý dự án")
             await tracker.start()
             try:
                 async with session_factory() as background_db:
@@ -1298,14 +1298,14 @@ class ProjectAgentOperationalTools:
                             chapter_id, http_request, payload, background_db, ai_service
                         )
                     else:
-                        raise RuntimeError(f"不支持的流式后台任务：{action}")
+                        raise RuntimeError(f"Tác vụ nền dạng stream không được hỗ trợ: {action}")
 
-                    await tracker.generating(1, 2, "AI 正在生成并保存结果...")
+                    await tracker.generating(1, 2, "AI đang tạo và lưu kết quả...")
                     result = await self._consume_sse_response(response, tracker.check_cancelled)
                     if extra_tasks.tasks:
                         self._detach(extra_tasks)
                     await tracker.set_result(result)
-                    await tracker.complete("生成任务完成")
+                    await tracker.complete("Tác vụ tạo đã hoàn thành")
             except Exception as exc:
                 # 取消接口已将任务置为 cancelled；不要再用 failed 覆盖终态。
                 if await tracker.check_cancelled():
@@ -1320,7 +1320,7 @@ class ProjectAgentOperationalTools:
             "task_id": task.id,
             "task_type": action,
             "status": "pending",
-            "message": "生成任务已加入后台队列",
+            "message": "Tác vụ tạo đã được thêm vào hàng đợi nền",
         }
         return task.id, data, data["message"]
 
