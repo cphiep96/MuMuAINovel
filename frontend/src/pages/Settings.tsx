@@ -361,6 +361,12 @@ export default function SettingsPage() {
       defaultUrl: mumuCoverBaseUrlOptions[0].value,
       defaultModel: mumuCoverBaseUrlOptions[0].defaultModel,
     },
+    {
+      value: 'meta_muse',
+      label: 'Meta Muse Image 1.0',
+      defaultUrl: 'https://api.meta.ai/v1',
+      defaultModel: 'muse-image-1.0',
+    },
     { value: 'gemini', label: 'Google Gemini', defaultUrl: 'https://generativelanguage.googleapis.com/v1beta' },
     { value: 'grok', label: 'Grok', defaultUrl: 'https://api.x.ai/v1' },
   ];
@@ -376,7 +382,7 @@ export default function SettingsPage() {
     if (provider.defaultUrl) {
       nextValues.cover_api_base_url = provider.defaultUrl;
     }
-    if (provider.value === 'mumu') {
+    if (provider.value === 'mumu' || provider.value === 'meta_muse') {
       nextValues.cover_api_key = '';
       nextValues.cover_image_model = provider.defaultModel || mumuCoverBaseUrlOptions[0].defaultModel;
     }
@@ -1829,6 +1835,16 @@ export default function SettingsPage() {
                           />
                         )}
 
+                        {selectedCoverProvider === 'meta_muse' && (
+                          <Alert
+                            type="info"
+                            showIcon
+                            message="Cấu hình Meta Muse Image 1.0"
+                            description="Nhập API Key Meta, chọn mô hình và nhấn Lưu cấu hình ảnh bìa. Địa chỉ API đã được điền sẵn. Kiểm tra API sẽ tạo một ảnh và có thể phát sinh phí. Cấu hình này dùng cho ảnh bìa; ảnh phân cảnh được chọn riêng trong trang Xuất video."
+                            style={{ marginBottom: 16 }}
+                          />
+                        )}
+
                         <Form.Item label="API Key ảnh bìa" name="cover_api_key" rules={[{ required: true, message: 'Vui lòng nhập API Key ảnh bìa' }]}>
                           <Input.Password size={isMobile ? 'middle' : 'large'} placeholder={selectedCoverProvider === 'mumu' ? 'Vui lòng nhập MuMuのAPI Key' : 'Nhập API Key ảnh bìa'} autoComplete="new-password" />
                         </Form.Item>
@@ -1844,19 +1860,32 @@ export default function SettingsPage() {
                               }))}
                             />
                           ) : (
-                            <Input size={isMobile ? 'middle' : 'large'} placeholder={selectedCoverProvider === 'grok' ? 'https://api.x.ai/v1' : 'https://generativelanguage.googleapis.com/v1beta'} />
+                            <Input
+                              size={isMobile ? 'middle' : 'large'}
+                              placeholder={selectedCoverProvider === 'meta_muse' ? 'https://api.meta.ai/v1' : selectedCoverProvider === 'grok' ? 'https://api.x.ai/v1' : 'https://generativelanguage.googleapis.com/v1beta'}
+                            />
                           )}
                         </Form.Item>
 
                         <Form.Item label="Mô hình ảnh bìa" name="cover_image_model" rules={[{ required: true, message: 'Vui lòng nhập tên mô hình ảnh bìa' }]}>
+                          {selectedCoverProvider === 'meta_muse' ? (
+                            <Select
+                              size={isMobile ? 'middle' : 'large'}
+                              options={[{ value: 'muse-image-1.0', label: 'Muse Image 1.0 (muse-image-1.0)' }]}
+                              onChange={() => setCoverTestResult(null)}
+                            />
+                          ) : (
                           <Input
                             size={isMobile ? 'middle' : 'large'}
                             placeholder={selectedCoverProvider === 'mumu'
                               ? 'Tự động điền mô hình khuyến nghị sau khi chọn địa chỉ'
-                              : selectedCoverProvider === 'grok'
+                              : selectedCoverProvider === 'meta_muse'
+                                ? 'muse-image-1.0'
+                                : selectedCoverProvider === 'grok'
                                 ? 'grok-2-image'
                                 : 'gemini-2.0-flash-exp-image-generation'}
                           />
+                          )}
                         </Form.Item>
 
                         {coverTestResult && (

@@ -19,6 +19,7 @@ from app.schemas.video_export import (
 from app.services.video_export.service import (
     DOWNLOAD_KIND_SUBTITLES,
     DOWNLOAD_KIND_VIDEO,
+    load_user_image_settings,
     serialize_job,
     video_export_service,
 )
@@ -42,10 +43,11 @@ def _safe_filename(text: str, fallback: str = "phim") -> str:
 
 
 @router.get("/capabilities", response_model=VideoExportCapabilitiesResponse, summary="Lấy khả năng xuất phim")
-async def get_capabilities(request: Request):
+async def get_capabilities(request: Request, db: AsyncSession = Depends(get_db)):
     """返回当前实例是否可用（FFmpeg/TTS）、分辨率白名单与各项上限"""
-    _require_user_id(request)
-    return video_export_service.capabilities()
+    user_id = _require_user_id(request)
+    user_settings = await load_user_image_settings(db, user_id)
+    return video_export_service.capabilities(user_settings=user_settings)
 
 
 @router.post("/jobs", response_model=VideoExportJobResponse, summary="Tạo tác vụ xuất phim")

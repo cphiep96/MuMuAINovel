@@ -27,6 +27,7 @@ from app.logger import get_logger
 from app.models.background_task import BackgroundTask
 from app.models.chapter import Chapter
 from app.models.project import Project
+from app.models.settings import Settings
 from app.models.video_export import VideoExportJob, VideoExportScene
 from app.services.background_task_service import background_task_service
 from app.services.video_export import ffmpeg_runner
@@ -61,6 +62,7 @@ from app.services.video_export.image_providers import (
     image_error_detail,
     is_known_image_provider,
     list_image_provider_capabilities,
+    missing_muse_config_hint,
     output_extension,
 )
 from app.services.video_export.paths import (
@@ -398,34 +400,42 @@ def _http_error_from_image(exc: Exception) -> HTTPException:
     所有分支都经过 sanitize：错误消息可能直接回给客户端，不得包含 key/URL/path。
     """
     if isinstance(exc, ImageConfigError):
-        missing = ", ".join(exc.missing_config) if exc.missing_config else ""
-        detail = image_error_detail(exc)
-        if missing:
-            detail = f"{detail} Biến môi trường còn thiếu: {missing}."
+        detail = image_error_detail(exc) or missing_muse_config_hint()
         return HTTPException(status_code=503, detail=detail)
     if isinstance(exc, ImageRequestError):
         return HTTPException(status_code=400, detail=image_error_detail(exc))
     return HTTPException(status_code=503, detail=image_error_detail(exc))
 
 
-def resolve_image_provider(name: str) -> SceneImageProvider:
+async def load_user_image_settings(db: AsyncSession, user_id: str) -> Optional[Settings]:
+    if not user_id:
+        return None
+    result = await db.execute(select(Settings).where(Settings.user_id == user_id))
+    return result.scalar_one_or_none()
+
+
+def resolve_image_provider(name: str, *, user_settings: Any = None) -> SceneImageProvider:
     """构建图片 provider 并校验配置（缺配置时 503，绝不静默换 provider）"""
     try:
-        provider = build_image_provider(name)
+        provider = build_image_provider(name, user_settings=user_settings)
     except ImageConfigError as exc:
         raise _http_error_from_image(exc) from exc
     state = provider.configuration()
     if not state.configured:
         raise _http_error_from_image(
             ImageConfigError(
-                state.detail or f"Provider ảnh {name} chưa được cấu hình",
+                missing_muse_config_hint(),
                 missing_config=state.missing_config,
             )
         )
     return provider
 
 
-def normalize_image_options(raw: Optional[dict[str, Any]]) -> dict[str, Any]:
+def normalize_image_options(
+    raw: Optional[dict[str, Any]],
+    *,
+    user_settings: Any = None,
+) -> dict[str, Any]:
     """校验“生成场景图”相关参数
 
     - 未开启：全部字段为 None，pipeline 保持旧行为（ảnh cảnh thủ công → cover → placeholder）
@@ -457,18 +467,12 @@ def normalize_image_options(raw: Optional[dict[str, Any]]) -> dict[str, Any]:
     name = (
         requested
         or (settings.video_image_provider or "").strip()
-        or default_image_provider_name()
-        or ""
+        or default_image_provider_name(user_settings=user_settings)
+        or META_PROVIDER_NAME
     )
     if not name:
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "Chưa có provider tạo ảnh nào được cấu hình trên máy chủ "
-                "(cần META_MUSE_API_KEY). Hãy cấu hình rồi thử lại, hoặc tắt tùy chọn tạo ảnh phân cảnh."
-            ),
-        )
-    provider = resolve_image_provider(name)
+        raise HTTPException(status_code=503, detail=missing_muse_config_hint())
+    provider = resolve_image_provider(name, user_settings=user_settings)
 
     aspect_hint = (
         data.get("image_aspect_ratio")
@@ -591,17 +595,21 @@ class VideoExportService:
             )
         return binary
 
-    def capabilities(self) -> dict[str, Any]:
+    def capabilities(self, *, user_settings: Any = None) -> dict[str, Any]:
         """返回当前实例的导出能力，便于前端做降级提示
 
         注意：不返回 FFmpeg 的绝对路径，避免泄露服务端目录结构。
         """
-        image_provider_name = settings.video_image_provider or default_image_provider_name()
+        image_provider_name = settings.video_image_provider or default_image_provider_name(
+            user_settings=user_settings
+        )
         default_image_aspect = settings.video_image_aspect_ratio
         default_image_size: Optional[str] = None
         if image_provider_name:
             try:
-                image_provider = build_image_provider(image_provider_name)
+                image_provider = build_image_provider(
+                    image_provider_name, user_settings=user_settings
+                )
                 default_image_aspect = default_image_aspect or image_provider.aspect_ratios[0]
                 default_image_size = image_provider.size_for_aspect(default_image_aspect)
             except ImageConfigError:
@@ -642,7 +650,7 @@ class VideoExportService:
             "default_image_aspect_ratio": default_image_aspect,
             "default_image_size": default_image_size,
             "image_max_mb": settings.video_image_max_mb,
-            "image_providers": list_image_provider_capabilities(),
+            "image_providers": list_image_provider_capabilities(user_settings=user_settings),
         }
 
     # ------------------------------------------------------------------ 查询
@@ -829,8 +837,9 @@ class VideoExportService:
         normalized = normalize_options(options)
         # 转场参数在这里校验：远端模式缺凭证会立刻 503，不会先建任务再失败
         motion = normalize_motion_options(options)
-        # 场景图参数同样在建任务前校验（缺 META_MUSE_API_KEY 立即 503，不静默换 provider）
-        image = normalize_image_options(options)
+        user_settings = await load_user_image_settings(db, user_id)
+        # 场景图参数：ưu tiên key Muse trên trang Cài đặt, env chỉ là fallback
+        image = normalize_image_options(options, user_settings=user_settings)
         if motion["motion_mode"] != MOTION_MODE_LOCAL:
             self._ensure_remote_reference_available(
                 project=project, normalized=normalized, motion=motion, image=image
@@ -1270,9 +1279,11 @@ class VideoExportService:
         return provider
 
     @staticmethod
-    def _build_image_provider_for_job(name: str) -> SceneImageProvider:
+    def _build_image_provider_for_job(
+        name: str, *, user_settings: Any = None
+    ) -> SceneImageProvider:
         """构建场景图 provider；未配置时抛 503（任务会以明确原因失败，绝不静默降级）"""
-        return resolve_image_provider(name or META_PROVIDER_NAME)
+        return resolve_image_provider(name or META_PROVIDER_NAME, user_settings=user_settings)
 
     @staticmethod
     def _build_reference(asset: SceneAsset) -> Optional[MotionReference]:
@@ -1542,7 +1553,10 @@ class VideoExportService:
         image_provider: Optional[SceneImageProvider] = None
         if options.get("generate_scene_images"):
             image_name = (job.image_provider or options.get("image_provider") or "").strip()
-            image_provider = self._build_image_provider_for_job(image_name)
+            user_settings = await load_user_image_settings(db, user_id)
+            image_provider = self._build_image_provider_for_job(
+                image_name, user_settings=user_settings
+            )
             job.image_provider = image_provider.name
             job.image_model = job.image_model or options.get("image_model")
             await self._safe_commit(db, job)

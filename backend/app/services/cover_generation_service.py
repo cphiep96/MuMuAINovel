@@ -20,6 +20,7 @@ from app.models.settings import Settings
 from app.services.cover_providers.base_cover_provider import BaseCoverProvider, CoverGenerationResult
 from app.services.cover_providers.gemini_cover_provider import GeminiCoverProvider
 from app.services.cover_providers.grok_cover_provider import GrokCoverProvider
+from app.services.cover_providers.meta_muse_cover_provider import MetaMuseCoverProvider
 from app.services.prompt_service import PromptService
 
 logger = get_logger(__name__)
@@ -255,7 +256,12 @@ class CoverGenerationService:
             if normalized_base_url.endswith("/v1beta"):
                 return GeminiCoverProvider(api_key=api_key, base_url=normalized_base_url)
             return GrokCoverProvider(api_key=api_key, base_url=normalized_base_url or "https://zhongzhuan.mumuverse.space/v1")
-        raise HTTPException(status_code=400, detail="Phiên bản hiện tại chỉ hỗ trợ Gemini, Grok hoặc MuMuのAPI làm Provider ảnh bìa")
+        if provider_value in {"meta_muse", "meta_muse_image"}:
+            return MetaMuseCoverProvider(
+                api_key=api_key,
+                base_url=normalized_base_url or "https://api.meta.ai/v1",
+            )
+        raise HTTPException(status_code=400, detail="Phiên bản hiện tại chỉ hỗ trợ Gemini, Grok, MuMuのAPI hoặc Meta Muse làm Provider ảnh bìa")
 
     def _save_cover_file(
         self,

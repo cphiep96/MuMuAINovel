@@ -41,6 +41,10 @@ from app.services.video_export.image_providers.registry import (
     list_image_provider_capabilities,
     list_image_providers,
 )
+from app.services.video_export.image_providers.user_credentials import (
+    image_provider_kwargs_from_settings,
+    missing_muse_config_hint,
+)
 
 __all__ = [
     "ASPECT_RATIOS",
@@ -71,6 +75,8 @@ __all__ = [
     "known_image_provider_names",
     "list_image_provider_capabilities",
     "list_image_providers",
+    "image_provider_kwargs_from_settings",
+    "missing_muse_config_hint",
     "output_extension",
     "validate_provider_base_url",
 ]

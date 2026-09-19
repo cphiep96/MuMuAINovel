@@ -303,11 +303,12 @@ if static_dir.exists():
             return FileResponse(
                 resolved_file,
                 media_type=get_static_media_type(resolved_file),
+                headers={"Cache-Control": "no-cache"} if resolved_file.suffix == ".html" else None,
             )
         
         index_file = static_dir / "index.html"
         if index_file.exists():
-            return FileResponse(index_file)
+            return FileResponse(index_file, headers={"Cache-Control": "no-cache"})
         
         return JSONResponse(
             status_code=404,
