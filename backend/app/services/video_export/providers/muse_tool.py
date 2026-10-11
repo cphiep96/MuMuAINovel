@@ -44,7 +44,7 @@ class MuseToolVideoProvider(RemoteMotionProvider):
     default_resolution = "auto"
     cost_note = (
         "Dùng hạn mức tài khoản Muse đang đăng nhập trong Muse Tool. "
-        "Tạo từ prompt, chưa gửi ảnh tham chiếu. Muse quyết định độ phân giải thực tế; "
+        "Tạo từ prompt, chưa gửi ảnh tham chiếu. Có thể ghép một giọng kể TTS riêng; Muse quyết định độ phân giải thực tế; "
         "tỉ lệ và thời lượng là yêu cầu. Hủy ở đây chỉ dừng theo dõi, tác vụ Muse vẫn có thể chạy."
     )
 
@@ -92,6 +92,7 @@ class MuseToolVideoProvider(RemoteMotionProvider):
     def capabilities(self) -> dict:
         result = super().capabilities()
         result["features"]["image_to_video"] = False
+        result["features"]["narration_postprocess"] = True
         return result
 
     def _headers(self, key: Optional[str] = None) -> dict[str, str]:
@@ -141,11 +142,17 @@ class MuseToolVideoProvider(RemoteMotionProvider):
             raise MotionRequestError("Thiếu hoặc sai khóa chống tạo video trùng")
         model = self.normalize_model(request.model)
         self.normalize_resolution(request.resolution, model)
+        body = {"prompt": prompt, "ratio": self.normalize_aspect_ratio(request.aspect_ratio, model),
+                "duration": f"{int(self.clamp_duration(request.duration_seconds, model))}s"}
+        if request.audio_mode is not None:
+            if request.audio_mode not in ("native", "ambience", "silent"):
+                raise MotionRequestError("Chế độ âm thanh Muse không hợp lệ")
+            body["audioMode"] = request.audio_mode
+        if request.scene_direction:
+            body["sceneDirection"] = request.scene_direction
         payload = await self._request("POST", "/v1/videos", cancel_check=cancel_check,
                                       headers=self._headers(request.idempotency_key),
-                                      json={"prompt": prompt,
-                                            "ratio": self.normalize_aspect_ratio(request.aspect_ratio, model),
-                                            "duration": f"{int(self.clamp_duration(request.duration_seconds, model))}s"})
+                                      json=body)
         return self._operation(payload, model)
 
     async def _poll(self, operation: MotionOperation, cancel_check: Optional[CancelCheck] = None) -> MotionOperation:

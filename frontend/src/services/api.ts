@@ -1408,6 +1408,8 @@ export const foreshadowApi = {
 
 // 视频导出API（章节 → 分镜 → MP4/SRT）
 export const videoExportApi = {
+  previewStoryboard: (data: VideoExportCreateRequest) =>
+    api.post<unknown, import('../types').VideoStoryboardPreview>('/video-export/storyboard/preview', data),
   // 查询实例能力：FFmpeg/TTS 是否可用、分辨率白名单与各项上限
   getCapabilities: () =>
     api.get<unknown, VideoExportCapabilities>('/video-export/capabilities'),

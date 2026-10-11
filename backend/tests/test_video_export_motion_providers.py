@@ -2161,3 +2161,89 @@ async def test_startup_fails_interrupted_jobs_but_keeps_remote_operation(session
     await session.refresh(scene)
     assert scene.motion_operation_id == "req-survives-restart", "operation id 必须保留以便续跑"
     assert scene.motion_status == "running"
+
+@pytest.mark.asyncio
+async def test_preview_and_creation_share_reviewed_storyboard(session, sample_project, monkeypatch):
+    _stub_spawn(monkeypatch)
+    monkeypatch.setattr(settings, 'video_motion_muse_api_key', 'x'*40)
+    monkeypatch.setattr(settings, 'video_motion_muse_config_file', None)
+    chapter=(await session.execute(Chapter.__table__.select())).first()
+    options={'motion_mode':'remote','motion_provider':'muse_tool','storyboard_mode':'continuity','use_project_cover':False}
+    preview=await video_export_service.preview_storyboard(db=session,user_id='user-1',project_id=sample_project.id,
+        chapter_ids=[chapter.id],options=options)
+    assert preview['scene_count']>0
+    options.update(shot_plan=[{'scene_index':s['scene_index'],'direction':s['direction']} for s in preview['scenes']],
+                   storyboard_fingerprint=preview['fingerprint'])
+    job=await video_export_service.create_job(db=session,user_id='user-1',project_id=sample_project.id,
+        chapter_ids=[chapter.id],options=options)
+    assert job.scene_count==preview['scene_count']
+    assert job.options['shot_plan']==options['shot_plan']
+    assert job.options['muse_audio_mode']=='silent'
+
+
+@pytest.mark.asyncio
+async def test_muse_postprocess_retry_keeps_completed_remote_operation(session, sample_project, monkeypatch):
+    _stub_spawn(monkeypatch)
+    chapter=(await session.execute(Chapter.__table__.select())).first()
+    job=await video_export_service.create_job(db=session,user_id='user-1',project_id=sample_project.id,chapter_ids=[chapter.id])
+    scenes=await video_export_service._get_scenes(db=session,job_id=job.id)
+    target=scenes[0]
+    target.status='failed'
+    target.motion_provider='muse_tool'
+    target.motion_status='completed'
+    target.motion_operation_id='muse-already-done'
+    key=target.motion_idempotency_key
+    await session.commit()
+    await video_export_service.retry_scene(db=session,user_id='user-1',job_id=job.id,scene_id=target.id)
+    await session.refresh(target)
+    assert target.motion_operation_id=='muse-already-done'
+    assert target.motion_idempotency_key==key
+    assert target.motion_status=='running'
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('tts_fails',[False,True])
+async def test_muse_pipeline_applies_narration_or_stops_before_paid_generation(session, engine, sample_project, monkeypatch, tts_fails):
+    from app.services.video_export import service as service_module
+    _stub_spawn(monkeypatch)
+    chapter=(await session.execute(Chapter.__table__.select())).first()
+    job=_job_for_pipeline(sample_project,chapter.id,mode='remote')
+    job.motion_provider='muse_tool'
+    job.options={**job.options,'tts_enabled':True,'muse_audio_mode':'silent'}
+    session.add(job);await session.commit()
+    seeded=await _seed_scenes(db=session,job=job,chapter_id=chapter.id)
+    remote=_FakeRemoteProvider(fail=False);remote.name='muse_tool'
+    class Narrator:
+        name='omnivoice'
+        async def synthesize(self,*,text,out_path):
+            if tts_fails:raise RuntimeError('voice failed')
+            out_path.parent.mkdir(parents=True,exist_ok=True)
+            out_path.write_bytes(b'voice')
+            return out_path
+    processed=[]
+    async def replace_audio(clip,*,audio_path,**kwargs):
+        assert audio_path.is_file()
+        processed.append(clip)
+    monkeypatch.setattr(service_module,'build_tts_engine',lambda **kwargs:Narrator())
+    monkeypatch.setattr(service_module,'replace_scene_audio',replace_audio)
+    await _run_pipeline(engine,session,job,monkeypatch,remote,_FakeLocalProvider())
+    if tts_fails:
+        assert job.status=='failed'
+        assert remote.calls==[] and processed==[]
+    else:
+        assert job.status=='completed',job.error_message
+        assert len(processed)==len(seeded)==len(remote.calls)
+        assert all(request.audio_mode=='silent' for request in remote.calls)
+
+
+@pytest.mark.asyncio
+async def test_preview_api_does_not_enqueue_video(session,sample_project,monkeypatch):
+    from fastapi.testclient import TestClient
+    spawned=_stub_spawn(monkeypatch)
+    chapter=(await session.execute(Chapter.__table__.select())).first()
+    with TestClient(_build_api_app(session)) as client:
+        response=client.post('/api/video-export/storyboard/preview',headers={'x-test-user':'user-1'},
+            json={'project_id':sample_project.id,'chapter_ids':[chapter.id],'options':{'motion_provider':'muse_tool'}})
+    assert response.status_code==200,response.text
+    assert response.json()['scene_count']>0
+    assert spawned==[]
+    assert (await session.execute(VideoExportJob.__table__.select())).all()==[]

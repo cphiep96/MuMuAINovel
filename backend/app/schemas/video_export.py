@@ -10,6 +10,11 @@ class VideoExportChapterRef(BaseModel):
     chapter_id: str = Field(min_length=1, max_length=36)
 
 
+class VideoShotPlanEntry(BaseModel):
+    scene_index: int = Field(ge=0)
+    direction: dict[str, Any] = Field(default_factory=dict)
+
+
 class VideoExportOptions(BaseModel):
     """导出参数，所有字段都有服务端默认值"""
 
@@ -29,6 +34,11 @@ class VideoExportOptions(BaseModel):
     chars_per_second: Optional[float] = Field(
         default=None, ge=4, le=40, description="朗读速度（字/秒），用于估算分镜时长"
     )
+
+    storyboard_mode: Optional[str] = None
+    muse_audio_mode: Optional[str] = None
+    storyboard_fingerprint: Optional[str] = None
+    shot_plan: Optional[list[VideoShotPlanEntry]] = Field(default=None, max_length=80)
 
     # ---- 视频转场（motion video）----
     motion_mode: Optional[str] = Field(
@@ -176,6 +186,7 @@ class VideoMotionFeatures(BaseModel):
     """provider 支持的特性"""
 
     image_to_video: bool = True
+    narration_postprocess: bool = False
     placeholder: bool = False
     cancel: bool = False
     idempotency: bool = False

@@ -7,6 +7,8 @@ import {
   Col,
   Empty,
   InputNumber,
+  Input,
+  Modal,
   Popconfirm,
   Progress,
   Row,
@@ -34,6 +36,8 @@ import { chapterApi, videoExportApi } from '../services/api';
 import { eventBus, EventNames } from '../store/eventBus';
 import type {
   VideoExportCapabilities,
+  VideoExportOptions,
+  VideoShotDirection,
   VideoExportJob,
   VideoExportScene,
   VideoImageProviderInfo,
@@ -154,6 +158,7 @@ const VideoExport: React.FC = () => {
   const [fps, setFps] = useState<number>(24);
   const [useCover, setUseCover] = useState(true);
   const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [museAudioMode, setMuseAudioMode] = useState<"native" | "ambience" | "silent">("silent");
   const [ttsProviderId, setTtsProviderId] = useState<string | null>(null);
   const [ttsModel, setTtsModel] = useState<string | null>(null);
   const [charsPerScene, setCharsPerScene] = useState<number>(220);
@@ -253,6 +258,8 @@ const VideoExport: React.FC = () => {
     return `${selectedModelLimits.min_duration_seconds}–${selectedModelLimits.max_duration_seconds} giây`;
   }, [selectedModelLimits]);
   const remoteModeSelected = motionMode === 'remote' || motionMode === 'hybrid';
+  const museSelected = remoteModeSelected && motionProviderId === 'muse_tool';
+  const narrationSupported = !remoteModeSelected || museSelected;
   // 选择远端但没有可用 provider（未选/未配置）时不得提交请求
   const motionInvalid = remoteModeSelected && (!selectedProvider || !selectedProvider.configured);
   const remoteModeActive = (activeJob?.motion_mode || 'local') !== 'local';
@@ -510,7 +517,7 @@ const VideoExport: React.FC = () => {
       applyProviderDefaults(provider, provider.default_model);
     }
     // 远端 provider 不会把 TTS 音轨合进返回的片段
-    setTtsEnabled(false);
+    if (provider?.id !== "muse_tool") setTtsEnabled(false);
   };
 
   const handleMotionProviderChange = (providerId: string) => {
@@ -590,16 +597,18 @@ const VideoExport: React.FC = () => {
     }
     try {
       setCreating(true);
-      const job = await videoExportApi.createJob({
+      const request = {
         project_id: projectId,
         chapter_ids: selectedChapterIds,
         options: {
           resolution,
           fps,
           use_project_cover: useCover,
-          tts_enabled: remoteModeSelected ? false : ttsEnabled && !!capabilities?.tts_available,
-          tts_provider: remoteModeSelected ? null : ttsProviderId || capabilities?.default_tts_provider || 'omnivoice',
-          tts_model: remoteModeSelected ? null : ttsModel,
+          tts_enabled: narrationSupported && ttsEnabled && !!capabilities?.tts_available,
+          storyboard_mode: museSelected ? "continuity" : "legacy",
+          muse_audio_mode: museSelected ? (ttsEnabled ? "silent" : museAudioMode) : undefined,
+          tts_provider: narrationSupported ? ttsProviderId || capabilities?.default_tts_provider || 'omnivoice' : null,
+          tts_model: narrationSupported ? ttsModel : null,
           narration_chars_per_scene: charsPerScene,
           motion_mode: motionMode,
           motion_provider: remoteModeSelected ? motionProviderId : null,
@@ -613,8 +622,40 @@ const VideoExport: React.FC = () => {
           image_aspect_ratio: generateSceneImages ? imageAspectRatio : null,
           image_size: generateSceneImages ? imageSize : null,
           image_reasoning_strength: generateSceneImages ? imageReasoningStrength : null,
-        },
-      });
+        } as VideoExportOptions,
+      };
+      if (museSelected) {
+        const preview = await videoExportApi.previewStoryboard(request);
+        const plan = preview.scenes.map(scene => ({scene_index: scene.scene_index, direction: {...scene.direction}}));
+        const fields: [keyof VideoShotDirection, string][] = [
+          ['startState', 'Trạng thái đầu'], ['endState', 'Trạng thái cuối'], ['location', 'Địa điểm'],
+          ['timeOfDay', 'Thời điểm'], ['lighting', 'Ánh sáng'], ['action', 'Hành động'], ['transition', 'Chuyển cảnh']];
+        const accepted = await new Promise<boolean>(resolve => Modal.confirm({
+          title: `Duyệt ${preview.scene_count} phân cảnh trước khi gửi Muse`, width: 920,
+          okText: "Duyệt và tạo phim", cancelText: "Quay lại",
+          content: <div style={{maxHeight: "65vh", overflowY: "auto"}}>
+            <Alert type="info" showIcon message="Giữ trạng thái cuối cảnh trước bằng trạng thái đầu cảnh sau. Chỉ thay ánh sáng khi chuyển thời gian."
+              description="Đây là chỉ dẫn bằng chữ; chưa có frame tham chiếu. Xác định rõ ai xuất hiện để tránh thêm nhân vật ngoài cảnh." />
+            {preview.scenes.map((scene, index) => <Card key={scene.scene_index} size="small" title={`Cảnh ${index + 1}`} style={{marginTop: 12}}>
+              <p>{scene.narration}</p>
+              {fields.map(([key, label]) => <label key={key} style={{display: "block", marginBottom: 8}}>
+                {label}<Input.TextArea autoSize={{minRows: 1, maxRows: 3}} maxLength={1500}
+                  defaultValue={String(scene.direction[key] || "")}
+                  onChange={e => {Object.assign(plan[index].direction, {[key]: e.target.value});}} />
+              </label>)}
+              <label>Nhân vật xuất hiện (mỗi dòng một nhân vật và mô tả)
+                <Input.TextArea maxLength={5000} defaultValue={(scene.direction.characters || []).join("\n")}
+                  onChange={e => {plan[index].direction.characters = e.target.value.split("\n").map(v => v.trim()).filter(Boolean);}} />
+              </label>
+            </Card>)}
+          </div>,
+          onOk: () => {resolve(true);}, onCancel: () => {resolve(false);},
+        }));
+        if (!accepted) return;
+        request.options.shot_plan = plan;
+        request.options.storyboard_fingerprint = preview.fingerprint;
+      }
+      const job = await videoExportApi.createJob(request);
       revokePlayerUrl();
       setActiveJob(job);
       await loadJobs();
@@ -1102,12 +1143,13 @@ const VideoExport: React.FC = () => {
                   <Switch
                     checked={ttsEnabled}
                     onChange={setTtsEnabled}
-                    disabled={!capabilities?.tts_available || remoteModeSelected}
+                    disabled={!capabilities?.tts_available || !narrationSupported}
                   />
                   <Tooltip
                     title={
-                      remoteModeSelected
-                        ? 'Chế độ provider AI không ghép giọng đọc vào clip do provider trả về'
+                      !narrationSupported
+                        ? 'Provider này chưa hỗ trợ ghép giọng kể riêng'
+                        : museSelected ? 'Thay âm thanh Muse bằng một giọng kể cố định; giữ trọn lời kể, kéo dài hình nếu cần.'
                         : capabilities?.tts_available
                           ? 'Bật để đọc lời thoại từng phân cảnh. Truyện tiếng Việt hãy chọn OmniVoice (Nữ / Nam).'
                           : capabilities?.tts_hint || 'TTS chưa sẵn sàng. Cài OmniVoice (pip install torch torchaudio omnivoice) hoặc vào Cài đặt → Giọng đọc video.'
@@ -1130,7 +1172,7 @@ const VideoExport: React.FC = () => {
                   }
                 />
               )}
-              {capabilities?.tts_available && !remoteModeSelected && (
+              {capabilities?.tts_available && narrationSupported && (
                 <>
                   <div>
                     <Text style={{ fontSize: 12 }}>Nhà cung cấp giọng</Text>
@@ -1296,6 +1338,13 @@ const VideoExport: React.FC = () => {
                 />
               )}
 
+              {museSelected && <div>
+                <Text>Âm thanh Muse</Text>
+                <Select style={{width: "100%"}} value={ttsEnabled ? "silent" : museAudioMode} disabled={ttsEnabled}
+                  onChange={setMuseAudioMode} options={[{value:"ambience", label:"Chỉ tiếng môi trường (không lời nói)"},
+                    {value:"silent", label:"Im lặng — loại bỏ audio Muse"}, {value:"native", label:"Giữ audio Muse (cần nghe duyệt)"}]} />
+                <Text type="secondary">Bật TTS để dùng cùng một giọng kể. Chế độ tiếng môi trường là chỉ dẫn cho Muse, cần kiểm tra audio sau khi tạo.</Text>
+              </div>}
               <Text strong>Ảnh phân cảnh (AI image)</Text>
               <Space size={8}>
                 <Switch

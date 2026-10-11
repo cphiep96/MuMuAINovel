@@ -1371,6 +1371,7 @@ export type VideoMotionSceneStatus =
 
 export interface VideoMotionFeatures {
   image_to_video: boolean;
+  narration_postprocess?: boolean;
   placeholder: boolean;
   cancel: boolean;
   idempotency: boolean;
@@ -1423,7 +1424,20 @@ export interface VideoImageProviderInfo {
   cost_note: string;
 }
 
+export interface VideoShotDirection {
+  startState?: string; endState?: string; location?: string; timeOfDay?: string;
+  lighting?: string; action?: string; camera?: string; transition?: string; characters?: string[];
+}
+export interface VideoStoryboardPreview {
+  fingerprint: string; scene_count: number; duration_seconds: number;
+  scenes: {scene_index: number; narration: string; direction: VideoShotDirection}[];
+}
+
 export interface VideoExportOptions {
+  storyboard_mode?: "legacy" | "continuity";
+  muse_audio_mode?: "native" | "ambience" | "silent";
+  storyboard_fingerprint?: string;
+  shot_plan?: {scene_index: number; direction: VideoShotDirection}[];
   resolution?: string | null;
   fps?: number | null;
   use_project_cover?: boolean | null;

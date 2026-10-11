@@ -82,6 +82,8 @@ class MotionRequest:
     negative_prompt: Optional[str] = None
     local: Optional[LocalRenderOptions] = None
     resume_operation_id: Optional[str] = None
+    audio_mode: Optional[str] = None
+    scene_direction: Optional[dict[str, Any]] = None
 
 
 @dataclass

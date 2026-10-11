@@ -91,6 +91,8 @@ from app.services.video_export.providers import (
     list_provider_capabilities,
     provider_error_detail,
 )
+from app.services.video_export.continuity import build_continuity_storyboard
+from app.services.video_export.scene_audio import replace_scene_audio
 from app.services.video_export.storyboard import (
     DEFAULT_CHARS_PER_SECOND,
     DEFAULT_NARRATION_CHARS,
@@ -251,7 +253,18 @@ def normalize_options(
         )
     tts_model = str(data.get("tts_model") or "").strip() or None
 
+    muse = data.get("motion_provider") == "muse_tool" or (not data.get("motion_provider") and settings.video_motion_provider == "muse_tool")
+    storyboard_mode = data.get("storyboard_mode") or ("continuity" if muse else "legacy")
+    if storyboard_mode not in ("legacy", "continuity"):
+        raise HTTPException(400, "Chế độ storyboard không hợp lệ")
+    audio_mode = data.get("muse_audio_mode") or ("silent" if muse else None)
+    if audio_mode is not None and audio_mode not in ("native", "ambience", "silent"):
+        raise HTTPException(400, "Chế độ âm thanh Muse không hợp lệ")
+    if tts_enabled and muse:
+        audio_mode = "silent"
     return {
+        "storyboard_mode": storyboard_mode,
+        "muse_audio_mode": audio_mode,
         "resolution": resolution,
         "fps": fps,
         "use_project_cover": bool(data.get("use_project_cover", True)),
@@ -676,7 +689,7 @@ class VideoExportService:
             "default_motion_model": settings.video_motion_model,
             "default_motion_resolution": settings.video_motion_resolution,
             "hybrid_fallback_on_error": bool(settings.video_motion_hybrid_fallback_on_error),
-            "remote_tts_supported": False,
+            "remote_tts_supported": True,
             "motion_providers": list_provider_capabilities(),
             # 场景图能力：只暴露 provider 名称、模型、尺寸与缺失的 env 名，绝不含密钥/路径
             "image_enabled": bool(settings.video_image_enabled),
@@ -814,7 +827,7 @@ class VideoExportService:
         - 若已开启“生成场景图”（image provider），每个分镜都会有真实参考图 → 不再要求项目封面
         - hybrid 允许回落本地占位背景，仅提示而非阻断
         """
-        if normalized.get("tts_enabled"):
+        if normalized.get("tts_enabled") and motion.get("motion_provider") != "muse_tool":
             raise HTTPException(
                 status_code=400,
                 detail=(
@@ -848,6 +861,22 @@ class VideoExportService:
                     "hoặc chọn chế độ cục bộ / kết hợp."
                 ),
             )
+
+    async def preview_storyboard(self, *, db, user_id, project_id, chapter_ids, options=None):
+        self.ensure_enabled()
+        await self._load_project(db=db, user_id=user_id, project_id=project_id)
+        if not chapter_ids or len(chapter_ids) > settings.video_max_chapters:
+            raise HTTPException(400, "Số chương không hợp lệ")
+        user_settings = await load_user_image_settings(db, user_id)
+        normalized = normalize_options(options, user_settings=user_settings)
+        chapters = await self._load_source_chapters(db=db, project_id=project_id, chapter_ids=chapter_ids)
+        storyboard_options = StoryboardOptions(narration_chars_per_scene=normalized["narration_chars_per_scene"],
+            chars_per_second=normalized["chars_per_second"], resolution=normalized["resolution"], fps=normalized["fps"])
+        scenes, directions, stamp = build_continuity_storyboard(chapters, storyboard_options)
+        duration = validate_storyboard_limits(scenes)
+        return {"fingerprint": stamp, "scene_count": len(scenes), "duration_seconds": duration,
+            "scenes": [{"scene_index": s.scene_index, "narration": s.narration, "direction": directions[i]}
+                       for i, s in enumerate(scenes)]}
 
     async def create_job(
         self,
@@ -892,7 +921,17 @@ class VideoExportService:
             resolution=normalized["resolution"],
             fps=normalized["fps"],
         )
-        scenes = build_storyboard(chapters, storyboard_options)
+        if normalized.get("storyboard_mode") == "continuity":
+            scenes, directions, stamp = build_continuity_storyboard(chapters, storyboard_options,
+                reviewed_plan=(options or {}).get("shot_plan"),
+                reviewed_fingerprint=(options or {}).get("storyboard_fingerprint"))
+            normalized["shot_plan"] = [{"scene_index": s.scene_index, "direction": directions[i]}
+                                     for i, s in enumerate(scenes)]
+            normalized["storyboard_fingerprint"] = stamp
+        else:
+            if (options or {}).get("shot_plan") is not None:
+                raise HTTPException(400, "Storyboard đã duyệt cần chế độ continuity")
+            scenes = build_storyboard(chapters, storyboard_options)
         total_duration = validate_storyboard_limits(scenes)
 
         job = VideoExportJob(
@@ -1685,9 +1724,23 @@ class VideoExportService:
                 except Exception as exc:  # noqa: BLE001 - TTS 失败必须回落到静音
                     tts_failed = True
                     audio_path = None
+                    if remote_provider and remote_provider.name == "muse_tool":
+                        scene.status = "failed"
+                        scene.error_message = "Tạo lời kể thất bại; chưa gửi yêu cầu Muse cho cảnh này."
+                        await self._safe_commit(db, job)
+                        continue
                     logger.warning("TTS 合成失败，改用静音: scene=%s error=%s", scene.scene_index, exc)
 
+            if options.get("tts_enabled") and remote_provider and remote_provider.name == "muse_tool" and audio_path is None:
+                scene.status = "failed"
+                scene.error_message = "Không có audio lời kể; chưa gửi yêu cầu Muse."
+                await self._safe_commit(db, job)
+                continue
+            shot = next((item.get("direction") for item in options.get("shot_plan", [])
+                         if item.get("scene_index") == scene.scene_index), None)
             request = MotionRequest(
+                audio_mode=options.get("muse_audio_mode") if job.motion_provider == "muse_tool" else None,
+                scene_direction=shot if job.motion_provider == "muse_tool" else None,
                 prompt=scene.visual_prompt or scene.narration or "",
                 duration_seconds=float(scene.duration_seconds or settings.video_scene_min_seconds),
                 aspect_ratio=str(
@@ -1704,7 +1757,7 @@ class VideoExportService:
                 # 远端操作仍可能存活时复用同一个 operation（续跑），避免重复计费
                 resume_operation_id=(
                     scene.motion_operation_id
-                    if scene.motion_operation_id and scene.motion_status in self.RESUME_MOTION_STATUSES
+                    if scene.motion_operation_id and (scene.motion_status in self.RESUME_MOTION_STATUSES or (scene.motion_provider == "muse_tool" and scene.motion_status == MOTION_STATUS_COMPLETED and scene.status != "ready"))
                     else None
                 ),
                 local=LocalRenderOptions(
@@ -1735,6 +1788,8 @@ class VideoExportService:
                     timeout=provider_timeout,
                     on_operation=self._operation_hook(db=db, job=job, scene=scene, provider=provider),
                 )
+                if provider.name == "muse_tool" and (audio_path or options.get("muse_audio_mode") == "silent"):
+                    await replace_scene_audio(clip_path, audio_path=audio_path, cancel_check=cancel_check, timeout=step_timeout())
                 await self._finish_scene(scene=scene, asset=asset, clip_path=clip_path, result=result)
                 ready_clips.append(clip_path)
             except (MotionCancelledError, FFmpegCancelledError):
@@ -1858,7 +1913,7 @@ class VideoExportService:
         resumed = 0
         for scene in scenes:
             resume_remote = bool(
-                scene.motion_operation_id and scene.motion_status in self.RESUME_MOTION_STATUSES
+                scene.motion_operation_id and (scene.motion_status in self.RESUME_MOTION_STATUSES or (scene.motion_provider == "muse_tool" and scene.motion_status == MOTION_STATUS_COMPLETED and scene.status != "ready"))
             )
             scene.status = "pending"
             scene.error_message = None

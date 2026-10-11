@@ -50,6 +50,13 @@ async def get_capabilities(request: Request, db: AsyncSession = Depends(get_db))
     return video_export_service.capabilities(user_settings=user_settings)
 
 
+@router.post("/storyboard/preview", summary="Duyệt storyboard trước khi tạo video")
+async def preview_storyboard(payload: VideoExportCreateRequest, request: Request, db: AsyncSession = Depends(get_db)):
+    return await video_export_service.preview_storyboard(db=db, user_id=_require_user_id(request),
+        project_id=payload.project_id, chapter_ids=payload.chapter_ids,
+        options=payload.options.model_dump() if payload.options else None)
+
+
 @router.post("/jobs", response_model=VideoExportJobResponse, summary="Tạo tác vụ xuất phim")
 async def create_video_export_job(
     payload: VideoExportCreateRequest,
