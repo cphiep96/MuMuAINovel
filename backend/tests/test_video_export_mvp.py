@@ -151,7 +151,6 @@ def test_normalize_options_defaults():
         ({"resolution": "4096x2160"}, "Độ phân giải"),
         ({"fps": 7}, "FPS"),
         ({"narration_chars_per_scene": 10}, "Số ký tự"),
-        ({"tts_enabled": True}, "TTS"),
     ],
 )
 def test_normalize_options_rejects_invalid_values(payload, expected):
@@ -830,6 +829,39 @@ async def test_api_download_missing_output_returns_404(session, sample_project):
         )
         assert response.status_code == 404
 
+
+
+@pytest.mark.asyncio
+async def test_api_download_video_is_inline_for_player(
+    session, sample_project, isolated_video_storage
+):
+    """Thẻ <video> cần Content-Disposition: inline; attachment sẽ không phát trong Chrome."""
+    from fastapi.testclient import TestClient
+
+    job_id = str(uuid.uuid4())
+    job = VideoExportJob(
+        id=job_id,
+        user_id="user-1",
+        project_id=sample_project.id,
+        status="completed",
+        video_path=f"user-1/{job_id}/output.mp4",
+    )
+    session.add(job)
+    await session.commit()
+    job_dir = isolated_video_storage / "user-1" / job_id
+    job_dir.mkdir(parents=True, exist_ok=True)
+    (job_dir / "output.mp4").write_bytes(b"fake-mp4-bytes")
+
+    with TestClient(_build_api_app(session)) as client:
+        response = client.get(
+            f"/api/video-export/jobs/{job_id}/download/video", headers={"x-test-user": "user-1"}
+        )
+    assert response.status_code == 200
+    disposition = response.headers.get("content-disposition", "")
+    assert "inline" in disposition
+    assert "attachment" not in disposition
+    assert response.headers.get("content-type", "").startswith("video/mp4")
+    assert response.content == b"fake-mp4-bytes"
 
 # --------------------------------------------------------------------------- FFmpeg 端到端
 

@@ -953,7 +953,7 @@ async def _run_pipeline(engine, session, job, monkeypatch, *, image=None, motion
     monkeypatch.setattr(service_module, "resolve_motion_provider", lambda name: motion)
     monkeypatch.setattr(service_module, "build_provider", lambda name, **kwargs: local)
     if image is not None:
-        monkeypatch.setattr(service_module, "resolve_image_provider", lambda name: image)
+        monkeypatch.setattr(service_module, "resolve_image_provider", lambda name, **kwargs: image)
         monkeypatch.setattr(service_module, "build_image_provider", lambda name, **kwargs: image)
 
     async def fake_concat(clip_paths, out_path, **kwargs):
@@ -1502,10 +1502,10 @@ def test_api_capabilities_reports_missing_env_names(session):
             "/api/video-export/capabilities", headers={"x-test-user": "user-1"}
         ).json()
 
-    provider = payload["image_providers"][0]
+    providers = {item["id"]: item for item in payload["image_providers"]}
+    provider = providers["meta_muse_image"]
     assert provider["configured"] is False
     assert provider["missing_config"] == ["META_MUSE_API_KEY"]
-    assert payload["default_image_provider"] is None
 
 
 @pytest.mark.asyncio

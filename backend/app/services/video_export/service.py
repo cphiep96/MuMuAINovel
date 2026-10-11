@@ -102,7 +102,17 @@ from app.services.video_export.storyboard import (
     validate_storyboard_limits,
 )
 from app.services.video_export.subtitles import build_srt_from_scenes
-from app.services.video_export.tts import NullTTSEngine, build_tts_engine, tts_configured
+from app.services.video_export.tts import (
+    TTS_PROVIDERS,
+    NullTTSEngine,
+    build_tts_engine,
+    default_tts_model,
+    default_tts_provider_name,
+    list_tts_provider_capabilities,
+    missing_tts_config_hint,
+    prefer_native_language_engine,
+    tts_configured,
+)
 
 logger = get_logger(__name__)
 
@@ -182,7 +192,11 @@ def parse_resolution(resolution: str) -> tuple[int, int]:
     return width, height
 
 
-def normalize_options(raw: Optional[dict[str, Any]]) -> dict[str, Any]:
+def normalize_options(
+    raw: Optional[dict[str, Any]],
+    *,
+    user_settings: Any = None,
+) -> dict[str, Any]:
     """校验并补全导出参数"""
     data = dict(raw or {})
 
@@ -221,17 +235,29 @@ def normalize_options(raw: Optional[dict[str, Any]]) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="Tốc độ đọc không hợp lệ") from exc
 
     tts_enabled = bool(data.get("tts_enabled", False))
-    if tts_enabled and not tts_configured():
+    if tts_enabled and not tts_configured(user_settings=user_settings):
         raise HTTPException(
             status_code=400,
-            detail="TTS chưa được cấu hình trên máy chủ này, hãy tắt tùy chọn giọng đọc để xuất video im lặng",
+            detail=missing_tts_config_hint(),
         )
+
+    tts_provider = str(data.get("tts_provider") or "").strip().lower() or None
+    if tts_provider in {"edge", "microsoft", "edge_tts"}:
+        tts_provider = "omnivoice"
+    if tts_provider and tts_provider not in TTS_PROVIDERS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Provider TTS không hỗ trợ, chỉ chấp nhận: {', '.join(TTS_PROVIDERS)}",
+        )
+    tts_model = str(data.get("tts_model") or "").strip() or None
 
     return {
         "resolution": resolution,
         "fps": fps,
         "use_project_cover": bool(data.get("use_project_cover", True)),
         "tts_enabled": tts_enabled,
+        "tts_provider": tts_provider,
+        "tts_model": tts_model,
         "narration_chars_per_scene": chars_per_scene,
         "chars_per_second": char_speed_clamp(chars_per_second),
     }
@@ -480,12 +506,16 @@ def normalize_image_options(
         or _aspect_from_resolution(data.get("resolution"))
     )
     try:
-        model = provider.normalize_model(data.get("image_model") or settings.video_image_model)
+        requested_model = data.get("image_model") or settings.video_image_model
+        if requested_model and requested_model not in provider.models:
+            requested_model = None
+        model = provider.normalize_model(requested_model)
         aspect_ratio = provider.normalize_aspect_ratio(aspect_hint)
         size = provider.normalize_size(data.get("image_size"), aspect_ratio)
-        reasoning = provider.normalize_reasoning_strength(
-            data.get("image_reasoning_strength") or settings.video_image_reasoning_strength
-        )
+        reasoning_raw = data.get("image_reasoning_strength")
+        if reasoning_raw is None and provider.supports_reasoning_strength:
+            reasoning_raw = settings.video_image_reasoning_strength
+        reasoning = provider.normalize_reasoning_strength(reasoning_raw)
     except ImageRequestError as exc:
         raise _http_error_from_image(exc) from exc
 
@@ -532,6 +562,7 @@ def serialize_scene(scene: VideoExportScene) -> dict[str, Any]:
         "image_status": scene.image_status,
         "image_error": scene.image_error,
         "image_size": scene.image_size,
+        "has_image": scene.image_status == IMAGE_STATUS_READY,
     }
 
 
@@ -617,7 +648,11 @@ class VideoExportService:
         return {
             "enabled": bool(settings.video_export_enabled),
             "ffmpeg_available": bool(ffmpeg_runner.ffmpeg_binary()),
-            "tts_available": tts_configured(),
+            "tts_available": tts_configured(user_settings=user_settings),
+            "default_tts_provider": default_tts_provider_name(user_settings),
+            "default_tts_model": default_tts_model(user_settings),
+            "tts_hint": missing_tts_config_hint(),
+            "tts_providers": list_tts_provider_capabilities(user_settings),
             "allowed_resolutions": _allowed_resolutions(),
             "default_resolution": settings.video_default_resolution,
             "allowed_fps": _allowed_fps(),
@@ -834,10 +869,10 @@ class VideoExportService:
 
         await self._ensure_active_quota(db=db, user_id=user_id)
 
-        normalized = normalize_options(options)
+        user_settings = await load_user_image_settings(db, user_id)
+        normalized = normalize_options(options, user_settings=user_settings)
         # 转场参数在这里校验：远端模式缺凭证会立刻 503，不会先建任务再失败
         motion = normalize_motion_options(options)
-        user_settings = await load_user_image_settings(db, user_id)
         # 场景图参数：ưu tiên key Muse trên trang Cài đặt, env chỉ là fallback
         image = normalize_image_options(options, user_settings=user_settings)
         if motion["motion_mode"] != MOTION_MODE_LOCAL:
@@ -1550,10 +1585,10 @@ class VideoExportService:
         )
 
         # 场景图 provider（可选）：缺配置直接让任务失败并说明原因，不静默改用封面/占位图
+        user_settings = await load_user_image_settings(db, user_id)
         image_provider: Optional[SceneImageProvider] = None
         if options.get("generate_scene_images"):
             image_name = (job.image_provider or options.get("image_provider") or "").strip()
-            user_settings = await load_user_image_settings(db, user_id)
             image_provider = self._build_image_provider_for_job(
                 image_name, user_settings=user_settings
             )
@@ -1561,7 +1596,19 @@ class VideoExportService:
             job.image_model = job.image_model or options.get("image_model")
             await self._safe_commit(db, job)
 
-        tts_engine = build_tts_engine() if options.get("tts_enabled") else NullTTSEngine()
+        tts_engine = (
+            build_tts_engine(
+                user_settings=user_settings,
+                provider=options.get("tts_provider"),
+                model=options.get("tts_model"),
+            )
+            if options.get("tts_enabled")
+            else NullTTSEngine()
+        )
+        tts_switched = False
+        if options.get("tts_enabled"):
+            sample = " ".join((scene.narration or "") for scene in scenes[:3])
+            tts_engine, tts_switched = prefer_native_language_engine(tts_engine, sample)
         tts_failed = False
 
         total = len(scenes)
@@ -1581,11 +1628,12 @@ class VideoExportService:
             await self._safe_commit(db, job)
 
             progress = 5 + int(75 * (position - 1) / max(total, 1))
+            switch_note = " (giọng tiếng Việt)" if tts_switched else ""
             await self._apply_state(
                 db,
                 job,
                 progress=progress,
-                message=f"Đang dựng phân cảnh {position}/{total}...",
+                message=f"Đang dựng phân cảnh {position}/{total}{switch_note}...",
             )
 
             # 生成场景图（nếu bật）：图片先落到 assets/，再作为参考图交给 motion provider
@@ -1621,8 +1669,19 @@ class VideoExportService:
                         text=scene.narration or "",
                         out_path=clips_dir / f"tts_{scene.scene_index:03d}.mp3",
                     )
+                    if audio_path is not None:
+                        audio_duration = await ffmpeg_runner.probe_duration(audio_path)
+                        if audio_duration and audio_duration > 0:
+                            scene.duration_seconds = round(
+                                max(
+                                    settings.video_scene_min_seconds,
+                                    min(float(audio_duration) + 0.25, 90.0),
+                                ),
+                                1,
+                            )
                 except Exception as exc:  # noqa: BLE001 - TTS 失败必须回落到静音
                     tts_failed = True
+                    audio_path = None
                     logger.warning("TTS 合成失败，改用静音: scene=%s error=%s", scene.scene_index, exc)
 
             request = MotionRequest(
@@ -1755,6 +1814,8 @@ class VideoExportService:
             job.duration_seconds = round(float(actual_duration), 1)
 
         message = "Xuất phim hoàn tất"
+        if tts_switched and not tts_failed:
+            message = "Xuất phim hoàn tất (đã dùng giọng tiếng Việt vì Deepgram chỉ đọc được tiếng Anh)"
         if tts_failed:
             message = "Xuất phim hoàn tất (một số phân cảnh không có giọng đọc, đã dùng video im lặng)"
         await self._apply_state(
@@ -2139,6 +2200,21 @@ class VideoExportService:
         if not path.is_file():
             raise HTTPException(status_code=404, detail="Tệp đã bị xóa khỏi máy chủ, vui lòng dựng lại")
         return job, path
+
+    async def get_scene_image_path(
+        self, *, db: AsyncSession, user_id: str, job_id: str, scene_id: str
+    ) -> tuple[VideoExportJob, VideoExportScene, Path]:
+        job = await self._get_job(db=db, user_id=user_id, job_id=job_id)
+        scenes = await self._get_scenes(db=db, job_id=job.id)
+        scene = next((item for item in scenes if item.id == scene_id), None)
+        if scene is None:
+            raise HTTPException(status_code=404, detail="Phân cảnh không tồn tại")
+        if scene.image_status != IMAGE_STATUS_READY:
+            raise HTTPException(status_code=404, detail="Phân cảnh chưa có ảnh")
+        path = _scene_image_file(job_directory_path(user_id, job.id), scene)
+        if not path.is_file():
+            raise HTTPException(status_code=404, detail="Ảnh phân cảnh đã bị xóa khỏi máy chủ")
+        return job, scene, path
 
 
 async def _run_video_export_job(task_id: str, user_id: str, job_id: str) -> None:

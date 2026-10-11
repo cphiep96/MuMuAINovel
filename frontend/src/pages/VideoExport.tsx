@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import {
   Alert,
   Button,
@@ -30,7 +30,7 @@ import {
   StopOutlined,
   VideoCameraOutlined,
 } from '@ant-design/icons';
-import api, { videoExportApi } from '../services/api';
+import { chapterApi, videoExportApi } from '../services/api';
 import { eventBus, EventNames } from '../store/eventBus';
 import type {
   VideoExportCapabilities,
@@ -39,7 +39,9 @@ import type {
   VideoImageProviderInfo,
   VideoMotionMode,
   VideoMotionProviderInfo,
+  VideoTTSProviderInfo,
 } from '../types';
+import './VideoExport.css';
 
 const { Text } = Typography;
 
@@ -130,6 +132,8 @@ const saveBlob = (blob: Blob, filename: string) => {
  */
 const VideoExport: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
+  const [searchParams] = useSearchParams();
+  const requestedJobId = searchParams.get('job');
   const { token } = theme.useToken();
 
   const [capabilities, setCapabilities] = useState<VideoExportCapabilities | null>(null);
@@ -140,12 +144,18 @@ const VideoExport: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [sceneActionId, setSceneActionId] = useState<string | null>(null);
+  const [playerUrl, setPlayerUrl] = useState<string | null>(null);
+  const playerUrlRef = useRef<string | null>(null);
+  const playerJobIdRef = useRef<string | null>(null);
+  const playerSectionRef = useRef<HTMLElement | null>(null);
 
   // 导出参数
   const [resolution, setResolution] = useState<string>('1280x720');
   const [fps, setFps] = useState<number>(24);
   const [useCover, setUseCover] = useState(true);
   const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [ttsProviderId, setTtsProviderId] = useState<string | null>(null);
+  const [ttsModel, setTtsModel] = useState<string | null>(null);
   const [charsPerScene, setCharsPerScene] = useState<number>(220);
 
   // 视频转场（motion video）参数
@@ -166,8 +176,52 @@ const VideoExport: React.FC = () => {
 
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const revokePlayerUrl = useCallback(() => {
+    if (playerUrlRef.current) {
+      URL.revokeObjectURL(playerUrlRef.current);
+      playerUrlRef.current = null;
+    }
+    playerJobIdRef.current = null;
+    setPlayerUrl(null);
+  }, []);
+
   const isActive = (job: VideoExportJob | null): boolean =>
     !!job && (job.status === 'pending' || job.status === 'running');
+
+  const loadPlayerBlob = useCallback(
+    async (job: VideoExportJob) => {
+      if (!job.has_video) {
+        revokePlayerUrl();
+        return;
+      }
+      if (playerJobIdRef.current === job.id && playerUrlRef.current) {
+        return;
+      }
+      const requestedId = job.id;
+      playerJobIdRef.current = requestedId;
+      try {
+        const blob = await videoExportApi.downloadVideo(requestedId);
+        if (playerJobIdRef.current !== requestedId) {
+          return;
+        }
+        if (!(blob instanceof Blob) || blob.size === 0 || blob.type.includes('json')) {
+          throw new Error('Tệp video không hợp lệ');
+        }
+        if (playerUrlRef.current) {
+          URL.revokeObjectURL(playerUrlRef.current);
+        }
+        const nextUrl = URL.createObjectURL(blob);
+        playerUrlRef.current = nextUrl;
+        setPlayerUrl(nextUrl);
+      } catch (error) {
+        if (playerJobIdRef.current === requestedId) {
+          console.error('Không tải được video để xem trong trang:', error);
+          revokePlayerUrl();
+        }
+      }
+    },
+    [revokePlayerUrl]
+  );
 
   const motionProviders: VideoMotionProviderInfo[] = useMemo(
     () => capabilities?.motion_providers || [],
@@ -222,6 +276,28 @@ const VideoExport: React.FC = () => {
     generateSceneImages &&
     (!imageFeatureEnabled || !selectedImageProvider || !selectedImageProvider.configured);
 
+  const ttsProviders: VideoTTSProviderInfo[] = useMemo(
+    () => capabilities?.tts_providers || [],
+    [capabilities]
+  );
+  const selectedTtsProvider = useMemo(
+    () =>
+      ttsProviders.find((item) => item.id === ttsProviderId) ||
+      ttsProviders.find((item) => item.id === (capabilities?.default_tts_provider || 'omnivoice')) ||
+      ttsProviders.find((item) => item.configured) ||
+      ttsProviders[0] ||
+      null,
+    [ttsProviders, ttsProviderId, capabilities?.default_tts_provider]
+  );
+  const ttsEnglishOnly = (selectedTtsProvider?.languages || []).length === 1 && selectedTtsProvider?.languages?.[0] === 'en';
+  const selectedChapters = useMemo(
+    () => chapters.filter((chapter) => selectedChapterIds.includes(chapter.id)),
+    [chapters, selectedChapterIds]
+  );
+  const sceneImageUrl = (jobId: string, sceneId: string) =>
+    `/api/video-export/jobs/${jobId}/scenes/${sceneId}/image`;
+  const storyboardScenes = activeJob?.scenes || [];
+
   const applyImageProviderDefaults = (provider: VideoImageProviderInfo) => {
     const aspect = imageAspectRatio || capabilities?.default_image_aspect_ratio || provider.aspect_ratios[0];
     setImageModel(provider.default_model);
@@ -233,33 +309,43 @@ const VideoExport: React.FC = () => {
   };
 
   const loadJobs = useCallback(
-    async (selectFirst = false) => {
+    async (selectFirst = false, preferredJobId?: string | null) => {
       if (!projectId) return;
       try {
         const response = await videoExportApi.listJobs(projectId);
         const items = (response?.items || []) as VideoExportJob[];
         setJobs(items);
         if (selectFirst && items.length > 0) {
-          const detail = await videoExportApi.getJob(items[0].id);
+          const preferred =
+            items.find((job) => preferredJobId && job.id === preferredJobId) ||
+            items.find((job) => job.has_video && job.status === 'completed') ||
+            items.find((job) => job.has_video) ||
+            items[0];
+          const detail = await videoExportApi.getJob(preferred.id);
           setActiveJob(detail);
+          void loadPlayerBlob(detail);
         }
       } catch (error) {
         console.error('Tải danh sách tác vụ xuất phim thất bại:', error);
       }
     },
-    [projectId]
+    [projectId, loadPlayerBlob]
   );
 
-  const loadJobDetail = useCallback(async (jobId: string) => {
-    try {
-      const detail = await videoExportApi.getJob(jobId);
-      setActiveJob(detail);
-      return detail;
-    } catch (error) {
-      console.error('Tải chi tiết tác vụ xuất phim thất bại:', error);
-      return null;
-    }
-  }, []);
+  const loadJobDetail = useCallback(
+    async (jobId: string) => {
+      try {
+        const detail = await videoExportApi.getJob(jobId);
+        setActiveJob(detail);
+        void loadPlayerBlob(detail);
+        return detail;
+      } catch (error) {
+        console.error('Tải chi tiết tác vụ xuất phim thất bại:', error);
+        return null;
+      }
+    },
+    [loadPlayerBlob]
+  );
 
   // 初始化：能力 + 章节 + 任务列表
   useEffect(() => {
@@ -267,9 +353,9 @@ const VideoExport: React.FC = () => {
       if (!projectId) return;
       try {
         setLoading(true);
-        const [capabilityResponse, chapterResponse] = await Promise.all([
+        const [capabilityResponse, chapterItems] = await Promise.all([
           videoExportApi.getCapabilities().catch(() => null),
-          api.get(`/chapters/project/${projectId}`).catch(() => null),
+          chapterApi.getChapters(projectId).catch(() => [] as ChapterItem[]),
         ]);
 
         if (capabilityResponse) {
@@ -319,12 +405,17 @@ const VideoExport: React.FC = () => {
             capabilityResponse.default_image_aspect_ratio || preferredImage?.aspect_ratios?.[0] || null
           );
           setImageSize(capabilityResponse.default_image_size || null);
-          setGenerateSceneImages(false);
+          setGenerateSceneImages(Boolean(preferredImage));
+          setTtsProviderId(capabilityResponse.default_tts_provider || 'omnivoice');
+          setTtsModel(capabilityResponse.default_tts_model || 'female');
+          setTtsEnabled(Boolean(capabilityResponse.tts_available));
         }
 
-        const chapterData = chapterResponse?.data || chapterResponse;
-        setChapters(chapterData?.items || []);
-        await loadJobs(true);
+        setChapters(chapterItems);
+        setSelectedChapterIds(
+          chapterItems.filter((chapter) => chapter.content && chapter.content.trim()).map((chapter) => chapter.id)
+        );
+        await loadJobs(true, requestedJobId);
       } catch (error) {
         console.error('Khởi tạo trang xuất phim thất bại:', error);
         message.error('Không tải được dữ liệu xuất phim');
@@ -334,6 +425,35 @@ const VideoExport: React.FC = () => {
     };
     bootstrap();
   }, [projectId, loadJobs]);
+
+  useEffect(() => {
+    const handleOpenJob = (payload?: unknown) => {
+      let jobId = '';
+      if (payload && typeof payload === 'object' && 'jobId' in payload) {
+        const rawId = payload.jobId;
+        if (typeof rawId === 'string') jobId = rawId;
+      }
+      if (!jobId) return;
+      void loadJobDetail(jobId).then((detail) => {
+        if (detail?.has_video) {
+          playerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    };
+    eventBus.on(EventNames.OPEN_VIDEO_EXPORT_JOB, handleOpenJob);
+    return () => {
+      eventBus.off(EventNames.OPEN_VIDEO_EXPORT_JOB, handleOpenJob);
+    };
+  }, [loadJobDetail]);
+
+  useEffect(() => {
+    if (!requestedJobId) return;
+    void loadJobDetail(requestedJobId).then((detail) => {
+      if (detail?.has_video) {
+        playerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }, [requestedJobId, loadJobDetail]);
 
   // 轮询运行中的任务
   useEffect(() => {
@@ -348,7 +468,8 @@ const VideoExport: React.FC = () => {
       if (detail && !isActive(detail)) {
         await loadJobs();
         if (detail.status === 'completed') {
-          message.success('Xuất phim hoàn tất, bạn có thể tải MP4 và SRT');
+          message.success('Xuất phim hoàn tất. Video nằm ngay dưới nút dựng phim.');
+          playerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } else if (detail.status === 'failed') {
           message.error(detail.error_message || 'Dựng phim thất bại');
         }
@@ -362,6 +483,12 @@ const VideoExport: React.FC = () => {
       }
     };
   }, [activeJob, loadJobDetail, loadJobs]);
+
+  useEffect(() => {
+    return () => {
+      revokePlayerUrl();
+    };
+  }, [revokePlayerUrl]);
 
   /** 选择 provider/模型后，把分辨率与比例收敛到该模型必然支持的取值 */
   const applyProviderDefaults = (provider: VideoMotionProviderInfo, model?: string | null) => {
@@ -471,6 +598,8 @@ const VideoExport: React.FC = () => {
           fps,
           use_project_cover: useCover,
           tts_enabled: remoteModeSelected ? false : ttsEnabled && !!capabilities?.tts_available,
+          tts_provider: remoteModeSelected ? null : ttsProviderId || capabilities?.default_tts_provider || 'omnivoice',
+          tts_model: remoteModeSelected ? null : ttsModel,
           narration_chars_per_scene: charsPerScene,
           motion_mode: motionMode,
           motion_provider: remoteModeSelected ? motionProviderId : null,
@@ -486,6 +615,7 @@ const VideoExport: React.FC = () => {
           image_reasoning_strength: generateSceneImages ? imageReasoningStrength : null,
         },
       });
+      revokePlayerUrl();
       setActiveJob(job);
       await loadJobs();
       // 通知悬浮任务框立即刷新并展开，和新任务行为保持一致
@@ -553,7 +683,10 @@ const VideoExport: React.FC = () => {
   const handleDeleteJob = async (jobId: string) => {
     try {
       await videoExportApi.deleteJob(jobId);
-      if (activeJob?.id === jobId) setActiveJob(null);
+      if (activeJob?.id === jobId) {
+        revokePlayerUrl();
+        setActiveJob(null);
+      }
       await loadJobs();
       message.success('Đã xóa tác vụ và tệp đính kèm');
     } catch (error) {
@@ -591,6 +724,21 @@ const VideoExport: React.FC = () => {
   );
 
   const sceneColumns = [
+    {
+      title: 'Khung',
+      key: 'frame',
+      width: 92,
+      render: (_: unknown, scene: VideoExportScene) =>
+        scene.has_image && activeJob ? (
+          <img
+            className="scene-thumb"
+            src={sceneImageUrl(activeJob.id, scene.id)}
+            alt={scene.title || `Cảnh ${scene.scene_index + 1}`}
+          />
+        ) : (
+          <div className="scene-thumb scene-thumb-empty" />
+        ),
+    },
     {
       title: '#',
       dataIndex: 'scene_index',
@@ -748,17 +896,114 @@ const VideoExport: React.FC = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'auto', gap: 16 }}>
-      <Card
+    <main className="cinematic-studio" aria-label="Xưởng dựng phim">
+      <header className="cinematic-header">
+        <div>
+          <p className="cinematic-kicker">Story to screen</p>
+          <h1 className="cinematic-title">Xưởng hình ảnh điện ảnh</h1>
+          <p className="cinematic-description">
+            Chọn chương, tạo khung hình AI nhất quán và dựng storyboard thành một bản phim có phụ đề.
+          </p>
+        </div>
+        <div className="cinematic-header-meta" aria-label="Tổng quan dự án phim">
+          <div className="cinematic-meta"><strong>{selectedChapterIds.length}</strong><span>chương đã chọn</span></div>
+          <div className="cinematic-meta"><strong>{activeJob?.scene_count ?? 0}</strong><span>phân cảnh hiện tại</span></div>
+          <div className="cinematic-meta"><strong>{fps}</strong><span>khung hình / giây</span></div>
+        </div>
+      </header>
+
+      <section className="shot-rail" aria-label="Dải phân cảnh dự kiến">
+        <div className="shot-rail-head">
+          <span className="shot-rail-title">Dải phân cảnh</span>
+          <span className="shot-rail-status">
+            {storyboardScenes.length
+              ? `${storyboardScenes.filter((scene) => scene.has_image).length}/${storyboardScenes.length} khung đã có ảnh`
+              : selectedChapters.length
+                ? `${selectedChapters.length} chương sẵn sàng cho storyboard`
+                : 'Chọn chương để bắt đầu dàn cảnh'}
+          </span>
+        </div>
+        <div className="shot-strip">
+          {storyboardScenes.length ? storyboardScenes.map((scene) => (
+            <article className={`shot${scene.has_image ? ' shot-has-media' : ''}`} key={scene.id}>
+              {scene.has_image && activeJob ? (
+                <img
+                  className="shot-frame"
+                  src={sceneImageUrl(activeJob.id, scene.id)}
+                  alt={scene.title || `Cảnh ${scene.scene_index + 1}`}
+                />
+              ) : null}
+              <span className="shot-number">CẢNH {String(scene.scene_index + 1).padStart(2, '0')}</span>
+              <div className="shot-title">{scene.title || scene.narration || `Phân cảnh ${scene.scene_index + 1}`}</div>
+            </article>
+          )) : selectedChapters.length ? selectedChapters.map((chapter, index) => (
+            <article className="shot" key={chapter.id}>
+              <span className="shot-number">CẢNH {String(index + 1).padStart(2, '0')}</span>
+              <div className="shot-title">{chapter.title || `Chương ${chapter.chapter_number}`}</div>
+            </article>
+          )) : <div className="shot-empty">Các khung hình sẽ xuất hiện tại đây.</div>}
+        </div>
+      </section>
+
+      <section ref={playerSectionRef} className="cinematic-player-stage" aria-label="Xem phim đã dựng">
+        <div className="cinematic-player-head">
+          <span className="cinematic-player-title">Xem phim</span>
+          <span className="cinematic-player-status">
+            {activeJob?.has_video
+              ? `${formatDuration(activeJob.duration_seconds)} · ${formatSize(activeJob.video_size_bytes)}`
+              : isActive(activeJob)
+                ? activeJob?.status_message || 'Đang dựng phim...'
+                : 'Phim sẽ xuất hiện tại đây sau khi dựng xong'}
+          </span>
+        </div>
+        {playerUrl ? (
+          <video
+            className="cinematic-player"
+            controls
+            playsInline
+            preload="metadata"
+            src={playerUrl}
+          />
+        ) : (
+          <div className="cinematic-player-empty">
+            {isActive(activeJob)
+              ? 'Đang ghép các phân cảnh thành video. Khi xong, phim sẽ tự hiện ở đây.'
+              : jobs.some((job) => job.has_video)
+                ? 'Đã có phim. Đang tải để phát…'
+                : 'Chưa có video. Bấm “Tạo storyboard và dựng phim”, phim sẽ hiện ngay tại đây.'}
+          </div>
+        )}
+        {activeJob?.has_video && (
+          <Space wrap className="cinematic-player-actions">
+            <Button
+              icon={<DownloadOutlined />}
+              disabled={activeJob.status !== 'completed'}
+              onClick={() => handleDownload(activeJob.id, 'video')}
+            >
+              Tải MP4
+            </Button>
+            <Button
+              icon={<FileTextOutlined />}
+              disabled={!activeJob.has_subtitles || activeJob.status !== 'completed'}
+              onClick={() => handleDownload(activeJob.id, 'subtitles')}
+            >
+              Tải SRT
+            </Button>
+          </Space>
+        )}
+      </section>
+
+      <section className="cinematic-workbench">
+      <Card className="cinematic-settings"
         title={
           <Space>
             <VideoCameraOutlined />
-            <span>Xuất phim từ chương</span>
+            <span>Thiết lập sản xuất</span>
           </Space>
         }
         extra={
           <Button icon={<ReloadOutlined />} onClick={() => loadJobs()} size="small">
-            Làm mới
+            Đồng bộ tác vụ
           </Button>
         }
       >
@@ -864,14 +1109,70 @@ const VideoExport: React.FC = () => {
                       remoteModeSelected
                         ? 'Chế độ provider AI không ghép giọng đọc vào clip do provider trả về'
                         : capabilities?.tts_available
-                          ? 'Bật để tổng hợp giọng đọc cho từng phân cảnh'
-                          : 'TTS chưa được cấu hình trên máy chủ, video sẽ không có tiếng'
+                          ? 'Bật để đọc lời thoại từng phân cảnh. Truyện tiếng Việt hãy chọn OmniVoice (Nữ / Nam).'
+                          : capabilities?.tts_hint || 'TTS chưa sẵn sàng. Cài OmniVoice (pip install torch torchaudio omnivoice) hoặc vào Cài đặt → Giọng đọc video.'
                     }
                   >
                     <Text style={{ fontSize: 12 }}>Giọng đọc (TTS)</Text>
                   </Tooltip>
                 </Space>
               </Space>
+              {!capabilities?.tts_available && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  message="Chưa cấu hình giọng đọc"
+                  description={
+                    <span>
+                      Cài OmniVoice trên máy chủ (<Text code>pip install torch torchaudio omnivoice</Text>), hoặc vào{' '}
+                      <Link to="/settings">Cài đặt → Giọng đọc video</Link>.
+                    </span>
+                  }
+                />
+              )}
+              {capabilities?.tts_available && !remoteModeSelected && (
+                <>
+                  <div>
+                    <Text style={{ fontSize: 12 }}>Nhà cung cấp giọng</Text>
+                    <Select
+                      style={{ width: '100%' }}
+                      value={selectedTtsProvider?.id || ttsProviderId || 'omnivoice'}
+                      onChange={(value) => {
+                        const next = ttsProviders.find((item) => item.id === value);
+                        setTtsProviderId(value);
+                        setTtsModel(next?.default_model || null);
+                      }}
+                      disabled={!ttsEnabled}
+                      options={ttsProviders.map((item) => ({
+                        label: item.label,
+                        value: item.id,
+                        disabled: !item.configured,
+                      }))}
+                    />
+                  </div>
+                  <div>
+                    <Text style={{ fontSize: 12 }}>Giọng đọc</Text>
+                    <Select
+                      style={{ width: '100%' }}
+                      value={ttsModel || selectedTtsProvider?.default_model || 'female'}
+                      onChange={setTtsModel}
+                      disabled={!ttsEnabled}
+                      options={(selectedTtsProvider?.models || ['female']).map((item) => ({
+                        label: selectedTtsProvider?.model_labels?.[item] || item,
+                        value: item,
+                      }))}
+                    />
+                  </div>
+                  {ttsEnglishOnly && ttsEnabled && (
+                    <Alert
+                      type="warning"
+                      showIcon
+                      message="Giọng này chỉ nói tiếng Anh"
+                      description="Deepgram Flux sẽ đọc chữ Việt theo âm English. Hãy chọn OmniVoice — Nữ hoặc Nam."
+                    />
+                  )}
+                </>
+              )}
 
               <Text strong>Chuyển động video</Text>
               <div>
@@ -1004,11 +1305,13 @@ const VideoExport: React.FC = () => {
                     !imageFeatureEnabled
                       ? 'Quản trị viên đã tắt chức năng tạo ảnh phân cảnh trên máy chủ'
                       : configuredImageProviders.length === 0
-                        ? 'Provider tạo ảnh chưa được cấu hình (cần META_MUSE_API_KEY)'
+                        ? 'Provider tạo ảnh chưa được cấu hình'
                         : 'Mỗi phân cảnh sẽ được tạo một ảnh AI làm ảnh tham chiếu cho video'
                   }
                 >
-                  <Text style={{ fontSize: 12 }}>Tạo ảnh cảnh bằng Meta Muse (tính phí)</Text>
+                  <Text style={{ fontSize: 12 }}>
+                    Tạo ảnh cảnh bằng {selectedImageProvider?.label || 'AI image'}
+                  </Text>
                 </Tooltip>
               </Space>
 
@@ -1119,25 +1422,59 @@ const VideoExport: React.FC = () => {
                 />
               )}
 
+              {(playerUrl || jobs.some((job) => job.has_video)) && (
+                <Alert
+                  type="success"
+                  showIcon
+                  message={playerUrl ? 'Phim đã dựng xong — xem ngay dưới dải phân cảnh' : 'Đã có phim xuất'}
+                  description={
+                    <span style={{ fontSize: 12 }}>
+                      {playerUrl
+                        ? 'Không cần tạo lại. Phim đang hiện ngay dưới dải phân cảnh, phía trên form này.'
+                        : 'Chọn tác vụ hoàn tất trong Tác vụ xuất phim, hoặc bấm Xem phim trên Tác vụ nền.'}
+                    </span>
+                  }
+                  action={
+                    <Button
+                      type="primary"
+                      size="small"
+                      icon={<PlayCircleOutlined />}
+                      onClick={() => {
+                        const ready =
+                          jobs.find((job) => job.has_video && job.status === 'completed') ||
+                          jobs.find((job) => job.has_video);
+                        if (ready && activeJob?.id !== ready.id) {
+                          void loadJobDetail(ready.id);
+                        }
+                        playerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                    >
+                      Xem phim
+                    </Button>
+                  }
+                />
+              )}
+
               <Button
+                className="cinematic-create"
                 type="primary"
                 icon={<PlayCircleOutlined />}
                 loading={creating}
                 disabled={!canCreate || selectedChapterIds.length === 0}
                 onClick={handleCreate}
               >
-                Tạo tác vụ xuất phim
+                Tạo storyboard và dựng phim
               </Button>
               <Text type="secondary" style={{ fontSize: 12 }}>
-                Video sẽ được ghép từ các phân cảnh, kèm tệp phụ đề SRT. Chế độ cục bộ không tạo cảnh AI mới (chỉ
-                pan/zoom hoặc nền placeholder) và không phát sinh chi phí; chế độ provider AI cần API key và có tính phí.
+                Hệ thống tách chương thành phân cảnh, tạo ảnh tham chiếu khi bật AI image, rồi ghép phim và phụ đề SRT.
               </Text>
             </Space>
           </Col>
         </Row>
       </Card>
+      </section>
 
-      <Card title="Tác vụ xuất phim" size="small">
+      <Card className="cinematic-jobs" title="Tác vụ xuất phim" size="small">
         {jobs.length === 0 ? (
           <Empty description="Chưa có tác vụ xuất phim nào" />
         ) : (
@@ -1197,6 +1534,14 @@ const VideoExport: React.FC = () => {
 
                   <Space wrap>
                     <Button
+                      type="primary"
+                      icon={<PlayCircleOutlined />}
+                      disabled={!activeJob.has_video}
+                      onClick={() => playerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    >
+                      Xem phim
+                    </Button>
+                    <Button
                       icon={<DownloadOutlined />}
                       disabled={!activeJob.has_video || activeJob.status !== 'completed'}
                       onClick={() => handleDownload(activeJob.id, 'video')}
@@ -1249,7 +1594,7 @@ const VideoExport: React.FC = () => {
       </Card>
 
       {activeJob && (
-        <Card
+        <Card className="cinematic-storyboard"
           title={
             <Space>
               <VideoCameraOutlined />
@@ -1268,7 +1613,7 @@ const VideoExport: React.FC = () => {
           />
         </Card>
       )}
-    </div>
+    </main>
   );
 };
 

@@ -54,6 +54,13 @@ def _log_response_summary(data: Dict[str, Any]) -> None:
     )
 
 
+def is_meta_model_api(base_url: Optional[str] = None, model: Optional[str] = None) -> bool:
+    """Meta Model API (Muse Spark) dùng https://api.meta.ai/v1."""
+    url = (base_url or "").lower()
+    name = (model or "").lower()
+    return "api.meta.ai" in url or name.startswith("muse-spark")
+
+
 class OpenAIClient(BaseAIClient):
     """OpenAI API 客户端"""
 
@@ -94,9 +101,18 @@ class OpenAIClient(BaseAIClient):
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
-        # 合并额外请求体参数（如关闭思考: chat_template_kwargs={"enable_thinking": False}）
-        if self.extra_body:
-            payload.update(self.extra_body)
+        extra = dict(self.extra_body or {})
+        if is_meta_model_api(self.base_url, model):
+            # Muse Spark luôn reasoning; reasoning_effort=none / enable_thinking=false → HTTP 400.
+            # Token suy nghĩ tính vào max_tokens. User max_tokens=200 → finish_reason=length,
+            # chưa kịp tool_calls (MCP và bài kiểm tra Function Calling đều fail).
+            thinking = extra.pop("chat_template_kwargs", None)
+            disable_thinking = isinstance(thinking, dict) and thinking.get("enable_thinking") is False
+            extra.setdefault("reasoning_effort", "minimal" if disable_thinking else "low")
+            min_tokens = 4096 if tools else 1024
+            payload["max_tokens"] = max(int(max_tokens or 0), min_tokens)
+        if extra:
+            payload.update(extra)
         if stream:
             payload["stream"] = True
         if uses_minimax_api(model, self.base_url):
@@ -115,7 +131,11 @@ class OpenAIClient(BaseAIClient):
                 cleaned.append(tc)
             payload["tools"] = cleaned
             if tool_choice:
-                payload["tool_choice"] = tool_choice
+                # Meta Muse Spark chỉ nhận tool_choice=auto (required/none → HTTP 400).
+                if is_meta_model_api(self.base_url, model) and str(tool_choice) != "auto":
+                    payload["tool_choice"] = "auto"
+                else:
+                    payload["tool_choice"] = tool_choice
         return payload
 
     async def chat_completion(

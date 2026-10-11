@@ -87,6 +87,11 @@ export interface Settings {
   cover_api_base_url?: string;
   cover_image_model?: string;
   cover_enabled?: boolean;
+  tts_enabled?: boolean;
+  tts_api_provider?: string;
+  tts_api_key?: string;
+  tts_api_base_url?: string;
+  tts_model?: string;
   preferences?: string;
   created_at: string;
   updated_at: string;
@@ -106,6 +111,11 @@ export interface SettingsUpdate {
   cover_api_base_url?: string;
   cover_image_model?: string;
   cover_enabled?: boolean;
+  tts_enabled?: boolean;
+  tts_api_provider?: string;
+  tts_api_key?: string;
+  tts_api_base_url?: string;
+  tts_model?: string;
   preferences?: string;
 }
 
@@ -1418,6 +1428,8 @@ export interface VideoExportOptions {
   fps?: number | null;
   use_project_cover?: boolean | null;
   tts_enabled?: boolean | null;
+  tts_provider?: string | null;
+  tts_model?: string | null;
   narration_chars_per_scene?: number | null;
   chars_per_second?: number | null;
   motion_mode?: VideoMotionMode | null;
@@ -1459,6 +1471,7 @@ export interface VideoExportScene {
   image_status?: VideoImageStatus | string | null;
   image_error?: string | null;
   image_size?: string | null;
+  has_image?: boolean;
 }
 
 export interface VideoExportJob {
@@ -1487,10 +1500,27 @@ export interface VideoExportJob {
   scenes?: VideoExportScene[];
 }
 
+export interface VideoTTSProviderInfo {
+  id: string;
+  label: string;
+  kind: string;
+  description: string;
+  configured: boolean;
+  missing_config: string[];
+  models: string[];
+  model_labels?: Record<string, string>;
+  default_model: string;
+  languages?: string[];
+}
+
 export interface VideoExportCapabilities {
   enabled: boolean;
   ffmpeg_available: boolean;
   tts_available: boolean;
+  default_tts_provider?: string | null;
+  default_tts_model?: string | null;
+  tts_hint?: string | null;
+  tts_providers?: VideoTTSProviderInfo[];
   allowed_resolutions: string[];
   default_resolution: string;
   allowed_fps: number[];

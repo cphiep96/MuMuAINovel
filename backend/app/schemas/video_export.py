@@ -17,6 +17,12 @@ class VideoExportOptions(BaseModel):
     fps: Optional[int] = Field(default=None, ge=1, le=60, description="帧率，需在白名单内")
     use_project_cover: Optional[bool] = Field(default=True, description="是否使用项目封面作为画面")
     tts_enabled: Optional[bool] = Field(default=False, description="是否合成旁白音频（默认静音）")
+    tts_provider: Optional[str] = Field(
+        default=None, max_length=50, description="TTS provider: deepgram / openai_compatible"
+    )
+    tts_model: Optional[str] = Field(
+        default=None, max_length=100, description="TTS model, ví dụ flux-hannah-en"
+    )
     narration_chars_per_scene: Optional[int] = Field(
         default=None, ge=80, le=600, description="每个分镜的旁白字数"
     )
@@ -101,6 +107,7 @@ class VideoExportSceneResponse(BaseModel):
     image_status: Optional[str] = None
     image_error: Optional[str] = None
     image_size: Optional[str] = None
+    has_image: bool = False
 
 
 class VideoExportJobResponse(BaseModel):
@@ -226,12 +233,31 @@ class VideoImageProviderInfo(BaseModel):
     cost_note: str = ""
 
 
+class VideoTTSProviderInfo(BaseModel):
+    """TTS provider visible to the client — no secrets."""
+
+    id: str
+    label: str
+    kind: str = "tts"
+    description: str = ""
+    configured: bool = False
+    missing_config: list[str] = Field(default_factory=list)
+    models: list[str] = Field(default_factory=list)
+    model_labels: dict[str, str] = Field(default_factory=dict)
+    default_model: str = ""
+    languages: list[str] = Field(default_factory=list)
+
+
 class VideoExportCapabilitiesResponse(BaseModel):
     """实例能力与限制说明（不包含 FFmpeg 绝对路径，避免泄露服务端目录）"""
 
     enabled: bool
     ffmpeg_available: bool
     tts_available: bool = False
+    default_tts_provider: Optional[str] = None
+    default_tts_model: Optional[str] = None
+    tts_hint: Optional[str] = None
+    tts_providers: list[VideoTTSProviderInfo] = Field(default_factory=list)
     allowed_resolutions: list[str] = Field(default_factory=list)
     default_resolution: str
     allowed_fps: list[int] = Field(default_factory=list)

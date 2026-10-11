@@ -46,3 +46,12 @@ cryptography>=43.0.0
 reportlab>=4.2.0
 pillow>=10.4.0
 
+# TTS tiếng Việt local: k2-fsa OmniVoice (https://github.com/k2-fsa/OmniVoice)
+# Cài riêng vì phụ thuộc PyTorch nặng:
+#   pip install torch torchaudio
+#   pip install omnivoice
+
+# Meta AI Playwright MCP (POC meta.ai/create — profile login tay):
+#   pip install playwright
+#   py -3 -m playwright install chromium
+

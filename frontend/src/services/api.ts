@@ -299,6 +299,14 @@ export const settingsApi = {
       model?: string;
     }>('/settings/cover/test', params),
 
+  testTtsConnection: (params: { tts_api_provider: string; tts_api_key: string; tts_api_base_url?: string; tts_model?: string }) =>
+    api.post<unknown, {
+      success: boolean;
+      message: string;
+      provider?: string;
+      model?: string;
+    }>('/settings/tts/test', params),
+
   checkFunctionCalling: (params: { api_key?: string; api_base_url?: string; provider: string; llm_model: string }) =>
     api.post<unknown, {
       success: boolean;

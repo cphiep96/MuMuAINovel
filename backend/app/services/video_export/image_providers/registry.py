@@ -6,17 +6,20 @@ from typing import Any, Callable, Optional
 from app.services.video_export.image_providers.base import SceneImageProvider
 from app.services.video_export.image_providers.errors import ImageConfigError
 from app.services.video_export.image_providers.meta_muse_image import MetaMuseImageProvider
+from app.services.video_export.image_providers.gptimage_proxy import GptImageProxyProvider
 from app.services.video_export.image_providers.user_credentials import (
     image_provider_kwargs_from_settings,
     missing_muse_config_hint,
 )
 
 META_PROVIDER_NAME = MetaMuseImageProvider.name
+GPTIMAGE_PROVIDER_NAME = GptImageProxyProvider.name
 
-IMAGE_PROVIDER_ORDER: tuple[str, ...] = (META_PROVIDER_NAME,)
+IMAGE_PROVIDER_ORDER: tuple[str, ...] = (GPTIMAGE_PROVIDER_NAME, META_PROVIDER_NAME)
 
 _FACTORIES: dict[str, Callable[..., SceneImageProvider]] = {
     META_PROVIDER_NAME: MetaMuseImageProvider,
+    GPTIMAGE_PROVIDER_NAME: GptImageProxyProvider,
 }
 
 
@@ -61,7 +64,7 @@ def list_image_provider_capabilities(*, user_settings: Any = None) -> list[dict]
     items = []
     for provider in list_image_providers(user_settings=user_settings):
         payload = provider.capabilities()
-        if not payload.get("configured"):
+        if not payload.get("configured") and not payload.get("config_error"):
             payload["config_error"] = missing_muse_config_hint()
         items.append(payload)
     return items
@@ -84,6 +87,7 @@ def default_image_provider_name(*, user_settings: Any = None) -> Optional[str]:
 __all__ = [
     "IMAGE_PROVIDER_ORDER",
     "META_PROVIDER_NAME",
+    "GPTIMAGE_PROVIDER_NAME",
     "build_image_provider",
     "configured_image_providers",
     "default_image_provider_name",

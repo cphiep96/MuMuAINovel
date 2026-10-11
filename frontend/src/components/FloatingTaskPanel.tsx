@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, List, Button, Space, Badge, Tag, Progress, Popconfirm, Empty, theme, Tooltip, message } from 'antd';
 import {
   ClockCircleOutlined,
@@ -10,9 +11,12 @@ import {
   UpOutlined,
   DownOutlined,
   ClearOutlined,
+  PlayCircleOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons';
 import { getProjectTasks, getTaskStatus, cancelTask, cancelBatchTask, deleteTask, clearProjectTasks, type TaskStatus } from '../services/backgroundTaskService';
 import { eventBus, EventNames } from '../store/eventBus';
+import { videoExportApi } from '../services/api';
 
 interface FloatingTaskPanelProps {
   projectId: string;
@@ -29,6 +33,8 @@ export const FloatingTaskPanel: React.FC<FloatingTaskPanelProps> = ({
   autoRefreshInterval = 3000,
   rightOffset = 23,
 }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [taskList, setTaskList] = useState<TaskStatus[]>([]);
   const [loading, setLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(true); // 默认收起
@@ -185,6 +191,33 @@ export const FloatingTaskPanel: React.FC<FloatingTaskPanelProps> = ({
     } catch (error) {
       console.error('Dọn bản ghi tác vụ thất bại:', error);
       message.error('Dọn dẹp bản ghi tác vụ thất bại');
+    }
+  };
+
+  const openVideoExportJob = (jobId: string) => {
+    if (location.pathname.includes('/video-export')) {
+      eventBus.emit(EventNames.OPEN_VIDEO_EXPORT_JOB, { jobId });
+      return;
+    }
+    navigate(`/project/${projectId}/video-export?job=${encodeURIComponent(jobId)}`);
+  };
+
+  const downloadVideoExport = async (jobId: string) => {
+    try {
+      const blob = await videoExportApi.downloadVideo(jobId);
+      if (!(blob instanceof Blob) || blob.size === 0 || blob.type.includes('json')) {
+        throw new Error('Tệp video không hợp lệ');
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${jobId.slice(0, 8)}.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Tải video thất bại:', error);
     }
   };
 
@@ -381,7 +414,26 @@ export const FloatingTaskPanel: React.FC<FloatingTaskPanelProps> = ({
                       )}
 
                       <div style={{ marginTop: 8 }}>
-                        <Space size={4}>
+                        <Space size={4} wrap>
+                          {task.task_type === 'video_export' && task.status === 'completed' && (
+                            <>
+                              <Button
+                                size="small"
+                                type="primary"
+                                icon={<PlayCircleOutlined />}
+                                onClick={() => openVideoExportJob(task.id)}
+                              >
+                                Xem phim
+                              </Button>
+                              <Button
+                                size="small"
+                                icon={<DownloadOutlined />}
+                                onClick={() => downloadVideoExport(task.id)}
+                              >
+                                Tải MP4
+                              </Button>
+                            </>
+                          )}
                           {task.can_cancel && (task.status === 'running' || task.status === 'pending') && (
                             <Popconfirm
                               title="Xác nhận hủy tác vụ?"

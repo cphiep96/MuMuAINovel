@@ -54,6 +54,8 @@ env/
 
 # 浏览器/自动化工具缓存（UI 验证时产生）
 .playwright-mcp/
+backend/data/meta_ai_playwright_profile/
+backend/storage/meta_ai_videos/
 
 # Logs
 *.log

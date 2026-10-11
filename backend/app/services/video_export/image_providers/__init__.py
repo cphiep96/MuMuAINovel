@@ -30,8 +30,10 @@ from app.services.video_export.image_providers.meta_muse_image import (
     output_extension,
     validate_provider_base_url,
 )
+from app.services.video_export.image_providers.gptimage_proxy import GptImageProxyProvider
 from app.services.video_export.image_providers.registry import (
     IMAGE_PROVIDER_ORDER,
+    GPTIMAGE_PROVIDER_NAME,
     META_PROVIDER_NAME,
     build_image_provider,
     configured_image_providers,
@@ -49,6 +51,7 @@ from app.services.video_export.image_providers.user_credentials import (
 __all__ = [
     "ASPECT_RATIOS",
     "IMAGE_PROVIDER_ORDER",
+    "GPTIMAGE_PROVIDER_NAME",
     "IMAGE_STATUS_CANCELLED",
     "IMAGE_STATUS_FAILED",
     "IMAGE_STATUS_GENERATING",
@@ -63,6 +66,7 @@ __all__ = [
     "ImageRequest",
     "ImageRequestError",
     "ImageTimeoutError",
+    "GptImageProxyProvider",
     "MetaMuseImageProvider",
     "SceneImageProvider",
     "SceneImageResult",

@@ -159,14 +159,19 @@ class Settings(BaseSettings):
     video_default_resolution: str = "1280x720"
     video_default_fps: int = 24
     video_allowed_fps: str = "12,15,24,25,30"
-    # TTS 为可选项：默认生成静音成片，配置完整后才会合成旁白音频
+    # TTS: ưu tiên key trên trang Cài đặt; env là fallback máy chủ
     video_tts_enabled: bool = False
-    video_tts_provider: str = "openai_compatible"  # 目前支持 openai_compatible（/audio/speech）
-    video_tts_base_url: Optional[str] = None
+    video_tts_provider: str = "omnivoice"  # omnivoice (tiếng Việt, k2-fsa) | deepgram (chỉ tiếng Anh) | openai_compatible
+    video_tts_base_url: Optional[str] = "https://api.deepgram.com"
     video_tts_api_key: Optional[str] = None
-    video_tts_model: Optional[str] = None
+    video_tts_model: Optional[str] = "female"
     video_tts_voice: str = "alloy"
-    video_tts_timeout_seconds: int = 120
+    video_tts_speed: float = 1.0
+    video_tts_expressivity: int = 0
+    video_tts_timeout_seconds: int = 600
+    video_tts_omnivoice_model_id: str = "k2-fsa/OmniVoice"
+    video_tts_omnivoice_device: Optional[str] = None  # auto: cuda / mps / cpu
+    video_tts_omnivoice_num_step: int = 16
 
     # 视频转场 Provider（motion video）：local = FFmpeg 兜底，remote = 远端 image-to-video，hybrid = 优先远端并可按策略回落 local
     video_motion_mode: str = "local"  # local/remote/hybrid（客户端可覆盖，受 capabilities 约束）
@@ -222,6 +227,7 @@ class Settings(BaseSettings):
     meta_muse_model: str = "muse-image-1.0"
     meta_muse_output_format: str = "webp"  # webp/png/jpeg
     meta_muse_reasoning_strengths: str = "low,high"  # theo docs Meta hiện hành chỉ low/high
+    gptimage_base_url: Optional[str] = None  # Local GPT Image Studio, e.g. http://127.0.0.1:3000
 
     # PDF 全本导出（ReportLab Platypus）
     pdf_export_enabled: bool = True  # 总开关

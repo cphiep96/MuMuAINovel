@@ -81,6 +81,10 @@ async def lifespan(app: FastAPI):
             from app.services.pdf_export.schema import sync_pdf_export_schema
 
             await conn.run_sync(sync_pdf_export_schema)
+
+            from app.services.settings_schema import sync_settings_schema
+
+            await conn.run_sync(sync_settings_schema)
             interrupted_at = datetime.now()
             await conn.execute(
                 sql_update(BackgroundTask)

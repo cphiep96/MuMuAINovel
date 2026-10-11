@@ -1,5 +1,5 @@
 """设置数据模型"""
-from sqlalchemy import Column, String, Text, Float, Integer, DateTime, Boolean, Index
+from sqlalchemy import Column, String, Text, Float, Integer, DateTime, Boolean, Index, text
 from sqlalchemy.sql import func
 from app.database import Base
 import uuid
@@ -26,6 +26,13 @@ class Settings(Base):
     cover_api_base_url = Column(String(500), comment="封面图片自定义API地址")
     cover_image_model = Column(String(100), comment="封面图片模型名称")
     cover_enabled = Column(Boolean, default=False, server_default="0", nullable=False, comment="是否启用封面图片生成")
+
+    # TTS cho xuất video (Deepgram Speak / OpenAI-compatible)
+    tts_enabled = Column(Boolean, default=False, server_default=text("false"), nullable=True, comment="是否启用视频旁白 TTS")
+    tts_api_provider = Column(String(50), comment="视频 TTS 提供商")
+    tts_api_key = Column(String(500), comment="视频 TTS API 密钥")
+    tts_api_base_url = Column(String(500), comment="视频 TTS API 地址")
+    tts_model = Column(String(100), comment="视频 TTS 模型/音色")
 
     # 系统级 SMTP 配置（仅管理员维护）
     smtp_provider = Column(String(50), default="qq", server_default="qq", nullable=False, comment="SMTP 提供商")

@@ -120,6 +120,9 @@ export const EventNames = {
   BACKGROUND_TASK_CREATED: 'backgroundTask:created',
   BACKGROUND_TASK_SETTLED: 'backgroundTask:settled',
 
+  // Mở phim đã dựng từ Tác vụ nền
+  OPEN_VIDEO_EXPORT_JOB: 'videoExport:openJob',
+
   // 视图切换事件
   SWITCH_TO_MCP_VIEW: 'view:switchToMcp',
 } as const;

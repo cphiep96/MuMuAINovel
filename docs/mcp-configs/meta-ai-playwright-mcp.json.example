@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "meta-ai-playwright": {
+      "command": "py",
+      "args": ["-3", "-m", "app.mcp_meta_ai_playwright"],
+      "cwd": "D:\\project\\tool\\story-tool\\MuMuAINovel\\backend",
+      "env": {
+        "PYTHONPATH": "D:\\project\\tool\\story-tool\\MuMuAINovel\\backend",
+        "META_AI_BROWSER_CHANNEL": "chrome",
+        "META_AI_HEADED": "true"
+      }
+    }
+  }
+}

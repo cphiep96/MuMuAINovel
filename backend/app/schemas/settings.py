@@ -21,6 +21,11 @@ class SettingsBase(BaseModel):
     cover_api_base_url: Optional[str] = Field(default=None, description="封面图片自定义API地址")
     cover_image_model: Optional[str] = Field(default=None, description="封面图片模型名称")
     cover_enabled: Optional[bool] = Field(default=False, description="是否启用封面图片生成")
+    tts_enabled: Optional[bool] = Field(default=False, description="是否启用视频旁白 TTS")
+    tts_api_provider: Optional[str] = Field(default=None, description="视频 TTS 提供商")
+    tts_api_key: Optional[str] = Field(default=None, description="视频 TTS API 密钥")
+    tts_api_base_url: Optional[str] = Field(default=None, description="视频 TTS API 地址")
+    tts_model: Optional[str] = Field(default=None, description="视频 TTS 模型/音色")
     preferences: Optional[str] = Field(default=None, description="其他偏好设置(JSON)")
 
 

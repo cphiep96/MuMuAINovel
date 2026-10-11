@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, Form, Input, Button, Select, Slider, InputNumber, message, Space, Typography, Spin, Modal, Alert, Grid, Tabs, List, Tag, Popconfirm, Empty, Row, Col, Switch, theme } from 'antd';
-import { SaveOutlined, DeleteOutlined, ReloadOutlined, InfoCircleOutlined, CheckCircleOutlined, CloseCircleOutlined, ThunderboltOutlined, PlusOutlined, EditOutlined, CopyOutlined, WarningOutlined, PictureOutlined } from '@ant-design/icons';
+import { SaveOutlined, DeleteOutlined, ReloadOutlined, InfoCircleOutlined, CheckCircleOutlined, CloseCircleOutlined, ThunderboltOutlined, PlusOutlined, EditOutlined, CopyOutlined, WarningOutlined, PictureOutlined, SoundOutlined } from '@ant-design/icons';
 import { settingsApi, mcpPluginApi } from '../services/api';
 import type { SettingsUpdate, APIKeyPreset, PresetCreateRequest, APIKeyPresetConfig } from '../types';
 import { eventBus, EventNames } from '../store/eventBus';
@@ -37,6 +37,13 @@ export default function SettingsPage() {
   const [showTestResult, setShowTestResult] = useState(false);
   const [testingCoverApi, setTestingCoverApi] = useState(false);
   const [coverTestResult, setCoverTestResult] = useState<{
+    success: boolean;
+    message: string;
+    provider?: string;
+    model?: string;
+  } | null>(null);
+  const [testingTtsApi, setTestingTtsApi] = useState(false);
+  const [ttsTestResult, setTtsTestResult] = useState<{
     success: boolean;
     message: string;
     provider?: string;
@@ -91,12 +98,31 @@ export default function SettingsPage() {
       const settings = await settingsApi.getSettings();
       form.setFieldsValue({
         ...defaultCoverSettings,
+        ...defaultTtsSettings,
         ...settings,
         cover_api_provider: settings.cover_api_provider || defaultCoverSettings.cover_api_provider,
         cover_api_key: settings.cover_api_key ?? defaultCoverSettings.cover_api_key,
         cover_api_base_url: settings.cover_api_base_url || defaultCoverSettings.cover_api_base_url,
         cover_image_model: settings.cover_image_model || defaultCoverSettings.cover_image_model,
         cover_enabled: settings.cover_enabled ?? defaultCoverSettings.cover_enabled,
+        tts_enabled: settings.tts_enabled ?? defaultTtsSettings.tts_enabled,
+        tts_api_provider: ['edge', 'microsoft', 'edge_tts'].includes(
+          String(settings.tts_api_provider || '').toLowerCase()
+        )
+          ? 'omnivoice'
+          : settings.tts_api_provider || defaultTtsSettings.tts_api_provider,
+        tts_api_key: settings.tts_api_key ?? defaultTtsSettings.tts_api_key,
+        tts_api_base_url: settings.tts_api_base_url || defaultTtsSettings.tts_api_base_url,
+        tts_model: (() => {
+          const provider = String(settings.tts_api_provider || '').toLowerCase();
+          const model = String(settings.tts_model || '').toLowerCase();
+          if (['omnivoice', 'edge', 'microsoft', 'edge_tts', ''].includes(provider)) {
+            if (model.includes('namminh') || model === 'male') return 'male';
+            if (model === 'auto') return 'auto';
+            return 'female';
+          }
+          return settings.tts_model || defaultTtsSettings.tts_model;
+        })(),
       });
 
       // 判断是否为默认设置（id='0'表示来自.env的默认配置）
@@ -121,6 +147,7 @@ export default function SettingsPage() {
           max_tokens: 2000,
           disable_thinking: false,
           ...defaultCoverSettings,
+          ...defaultTtsSettings,
         });
       } else {
         message.error('Tải cài đặt thất bại');
@@ -260,6 +287,7 @@ export default function SettingsPage() {
           max_tokens: 2000,
           disable_thinking: false,
           ...defaultCoverSettings,
+          ...defaultTtsSettings,
         });
         message.info('Đã đặt lại về giá trị mặc định, vui lòng nhấn lưu');
       },
@@ -308,6 +336,41 @@ export default function SettingsPage() {
     cover_api_base_url: mumuCoverBaseUrlOptions[0].value,
     cover_image_model: mumuCoverBaseUrlOptions[0].defaultModel,
   };
+  const defaultTtsSettings = {
+    tts_enabled: true,
+    tts_api_provider: 'omnivoice',
+    tts_api_key: '',
+    tts_api_base_url: '',
+    tts_model: 'female',
+  };
+  const ttsProviders = [
+    { value: 'omnivoice', label: 'OmniVoice (k2-fsa)', defaultUrl: '', defaultModel: 'female' },
+    { value: 'deepgram', label: 'Deepgram Flux (chỉ tiếng Anh)', defaultUrl: 'https://api.deepgram.com', defaultModel: 'flux-hannah-en' },
+    { value: 'openai_compatible', label: 'OpenAI Compatible', defaultUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o-mini-tts' },
+  ];
+  const omnivoiceTtsModels = [
+    { value: 'female', label: 'Nữ · kể chuyện' },
+    { value: 'male', label: 'Nam · kể chuyện' },
+    { value: 'auto', label: 'Tự chọn giọng' },
+  ];
+  const deepgramTtsModels = [
+    { value: 'flux-hannah-en', label: 'Hannah · Mỹ · kể chuyện' },
+    { value: 'flux-kit-en', label: 'Kit · Anh · kể chuyện' },
+    { value: 'flux-alexis-en', label: 'Alexis · Mỹ · chuyên nghiệp' },
+    { value: 'flux-cliff-en', label: 'Cliff · Mỹ · trầm, tự tin' },
+    { value: 'flux-sienna-en', label: 'Sienna · Mỹ · ấm' },
+    { value: 'flux-cole-en', label: 'Cole · Mỹ · năng lượng' },
+    { value: 'flux-brooke-en', label: 'Brooke · Mỹ · tự tin' },
+    { value: 'flux-colin-en', label: 'Colin · Anh · đáng tin' },
+    { value: 'flux-gemma-en', label: 'Gemma · Anh · thân thiện' },
+    { value: 'flux-haley-en', label: 'Haley · Mỹ · điềm tĩnh' },
+    { value: 'flux-heather-en', label: 'Heather · Mỹ · lôi cuốn' },
+    { value: 'flux-miles-en', label: 'Miles · Mỹ · chân thành' },
+    { value: 'flux-sean-en', label: 'Sean · Anh · dịu dàng' },
+    { value: 'flux-jack-en', label: 'Jack · Anh · kể chuyện' },
+    { value: 'flux-rufus-en', label: 'Rufus · Anh · kể chuyện' },
+    { value: 'flux-maeve-en', label: 'Maeve · Ireland · kể chuyện' },
+  ];
 
   const apiProviders = [
     {
@@ -330,6 +393,7 @@ export default function SettingsPage() {
 
   const selectedProvider = Form.useWatch('api_provider', form);
   const selectedCoverProvider = Form.useWatch('cover_api_provider', form);
+  const selectedTtsProvider = Form.useWatch('tts_api_provider', form);
   const selectedPresetProvider = Form.useWatch('api_provider', presetForm);
 
   const handleProviderChange = (value: string) => {
@@ -434,6 +498,56 @@ export default function SettingsPage() {
       });
     } finally {
       setTestingCoverApi(false);
+    }
+  };
+
+  const handleTtsProviderChange = (value: string) => {
+    const provider = ttsProviders.find(item => item.value === value);
+    form.setFieldsValue({
+      tts_api_base_url: provider?.defaultUrl || defaultTtsSettings.tts_api_base_url,
+      tts_model: provider?.defaultModel || defaultTtsSettings.tts_model,
+    });
+    setTtsTestResult(null);
+  };
+
+  const handleTtsTestConnection = async () => {
+    const ttsApiProvider = form.getFieldValue('tts_api_provider');
+    const ttsApiKey = form.getFieldValue('tts_api_key');
+    const ttsApiBaseUrl = form.getFieldValue('tts_api_base_url');
+    const ttsModel = form.getFieldValue('tts_model');
+
+    if (!ttsApiProvider || (ttsApiProvider !== 'omnivoice' && ttsApiProvider !== 'edge' && !ttsApiKey)) {
+      message.warning(
+        ttsApiProvider === 'omnivoice' || ttsApiProvider === 'edge'
+          ? 'Chọn giọng OmniVoice rồi kiểm tra'
+          : 'Vui lòng nhập API Key giọng đọc trước'
+      );
+      return;
+    }
+
+    setTestingTtsApi(true);
+    setTtsTestResult(null);
+    try {
+      const result = await settingsApi.testTtsConnection({
+        tts_api_provider: ttsApiProvider,
+        tts_api_key: ttsApiKey,
+        tts_api_base_url: ttsApiBaseUrl,
+        tts_model: ttsModel,
+      });
+      setTtsTestResult(result);
+      if (result.success) {
+        message.success('Kiểm tra giọng đọc thành công');
+      } else {
+        message.error(result.message || 'Kiểm tra giọng đọc thất bại');
+      }
+    } catch (error) {
+      console.error('Kiểm tra TTS thất bại:', error);
+      setTtsTestResult({
+        success: false,
+        message: 'Kiểm tra giọng đọc thất bại',
+      });
+    } finally {
+      setTestingTtsApi(false);
     }
   };
 
@@ -1912,6 +2026,99 @@ export default function SettingsPage() {
                               <Button icon={<ReloadOutlined />} onClick={handleReset}>Đặt lại</Button>
                             </Space>
                             <Button type="primary" icon={<SaveOutlined />} htmlType="submit" loading={loading}>Lưu cấu hình ảnh bìa</Button>
+                          </Space>
+                        </Form.Item>
+                      </Form>
+                    </Spin>
+                  ),
+                },
+                {
+                  key: 'tts',
+                  label: <Space size={6}><SoundOutlined />Giọng đọc video</Space>,
+                  children: (
+                    <Spin spinning={initialLoading}>
+                      <Form form={form} layout="vertical" onFinish={handleSave} autoComplete="off">
+                        <Alert
+                          type="info"
+                          showIcon
+                          message="Giọng đọc video"
+                          description="Truyện tiếng Việt dùng OmniVoice (k2-fsa), model local 600+ ngôn ngữ — không dùng Microsoft Edge. Deepgram Flux chỉ có giọng tiếng Anh."
+                          style={{ marginBottom: 16 }}
+                        />
+
+                        <Form.Item label="Bật giọng đọc khi xuất video" name="tts_enabled" style={{ marginBottom: 16 }}>
+                          <Select
+                            size={isMobile ? 'middle' : 'large'}
+                            onChange={() => setTtsTestResult(null)}
+                            options={[
+                              { value: true, label: 'Bật giọng đọc khi xuất video' },
+                              { value: false, label: 'Tắt — video im lặng' },
+                            ]}
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Provider giọng đọc" name="tts_api_provider">
+                          <Select size={isMobile ? 'middle' : 'large'} onChange={handleTtsProviderChange}>
+                            {ttsProviders.map(provider => (
+                              <Option key={provider.value} value={provider.value}>{provider.label}</Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+
+                        {selectedTtsProvider !== 'omnivoice' && selectedTtsProvider !== 'edge' && (
+                          <>
+                        <Form.Item label={selectedTtsProvider === 'deepgram' ? 'API Key Deepgram' : 'API Key'} name="tts_api_key">
+                          <Input.Password size={isMobile ? 'middle' : 'large'} placeholder="Token API" autoComplete="new-password" />
+                        </Form.Item>
+
+                        <Form.Item label="Địa chỉ API" name="tts_api_base_url" rules={[{ type: 'url', message: 'Vui lòng nhập URL hợp lệ' }]}>
+                          <Input size={isMobile ? 'middle' : 'large'} placeholder={selectedTtsProvider === 'deepgram' ? 'https://api.deepgram.com' : 'https://api.openai.com/v1'} />
+                        </Form.Item>
+                          </>
+                        )}
+
+                        <Form.Item label="Giọng / mô hình" name="tts_model">
+                          {selectedTtsProvider === 'omnivoice' || selectedTtsProvider === 'edge' ? (
+                            <Select
+                              size={isMobile ? 'middle' : 'large'}
+                              options={omnivoiceTtsModels}
+                              onChange={() => setTtsTestResult(null)}
+                            />
+                          ) : selectedTtsProvider === 'deepgram' ? (
+                            <Select
+                              size={isMobile ? 'middle' : 'large'}
+                              options={deepgramTtsModels}
+                              onChange={() => setTtsTestResult(null)}
+                            />
+                          ) : (
+                            <Input size={isMobile ? 'middle' : 'large'} placeholder="gpt-4o-mini-tts" />
+                          )}
+                        </Form.Item>
+
+                        {ttsTestResult && (
+                          <Alert
+                            type={ttsTestResult.success ? 'success' : 'error'}
+                            showIcon
+                            message={ttsTestResult.message}
+                            description={ttsTestResult.success ? `Provider: ${ttsTestResult.provider || '-'} / Model: ${ttsTestResult.model || '-'}` : undefined}
+                            style={{ marginBottom: 16 }}
+                          />
+                        )}
+
+                        <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+                          <Space wrap style={{ width: '100%', justifyContent: 'space-between' }}>
+                            <Space wrap>
+                              <Button
+                                icon={<ThunderboltOutlined />}
+                                onClick={handleTtsTestConnection}
+                                loading={testingTtsApi}
+                                style={{ borderColor: token.colorSuccess, color: token.colorSuccess, fontWeight: 500 }}
+                              >
+                                {testingTtsApi ? 'Đang kiểm tra...' : 'Kiểm tra giọng đọc'}
+                              </Button>
+                              <Button icon={<ReloadOutlined />} onClick={handleReset}>Đặt lại</Button>
+                            </Space>
+                            <Button type="primary" icon={<SaveOutlined />} htmlType="submit" loading={loading}>Lưu giọng đọc</Button>
                           </Space>
                         </Form.Item>
                       </Form>

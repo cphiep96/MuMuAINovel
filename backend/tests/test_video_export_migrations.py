@@ -29,13 +29,15 @@ LEASE_MIGRATION_PREFIX = "20260917_1200_b3e6c8a1d457_add_video_export_worker_lea
 IMAGE_MIGRATION_PREFIX = "20260917_1500_c4f7d9b2e568_add_scene_image_columns"
 PDF_MIGRATION_PREFIX = "20260917_1800_e6b1f4a9c287_add_pdf_export_tables"
 PDF_ARTIFACT_MIGRATION_PREFIX = "20260917_2000_f7c2a5d8b913_add_pdf_export_artifact_generation"
+TTS_MIGRATION_PREFIX = "20260919_2300_a8c3e1f4b702_add_video_tts_settings"
 PARENT_REVISION = "5c7d1e9a4b21"
 MOTION_REVISION = "7d2f9b4c1e58"
 LEASE_REVISION = "b3e6c8a1d457"
 IMAGE_REVISION = "c4f7d9b2e568"
 PDF_REVISION = "e6b1f4a9c287"
 PDF_ARTIFACT_REVISION = "f7c2a5d8b913"
-HEAD_REVISION = PDF_ARTIFACT_REVISION
+TTS_REVISION = "a8c3e1f4b702"
+HEAD_REVISION = TTS_REVISION
 
 JOB_COLUMNS = {"motion_mode", "motion_provider", "motion_model"}
 LEASE_COLUMNS = {"worker_token", "claimed_at"}
@@ -88,6 +90,8 @@ def _load_pdf_migration(tree: str):
 
 def _load_pdf_artifact_migration(tree: str):
     return _load_migration(tree, PDF_ARTIFACT_MIGRATION_PREFIX)
+def _load_tts_migration(tree: str):
+    return _load_migration(tree, TTS_MIGRATION_PREFIX)
 
 
 def _upgrade_all(tree: str):
@@ -122,6 +126,9 @@ def test_migration_scripts_link_to_video_export_revision(tree: str):
     artifact = _load_pdf_artifact_migration(tree)
     assert artifact.revision == PDF_ARTIFACT_REVISION
     assert artifact.down_revision == PDF_REVISION
+    tts = _load_tts_migration(tree)
+    assert tts.revision == TTS_REVISION
+    assert tts.down_revision == PDF_ARTIFACT_REVISION
 
 
 @pytest.mark.parametrize("tree", sorted(VERSION_TREES))
@@ -150,6 +157,7 @@ def test_migration_graph_has_single_head_and_no_duplicate_revisions(tree: str):
     assert MOTION_REVISION in revisions and LEASE_REVISION in revisions and IMAGE_REVISION in revisions
     assert PDF_REVISION in revisions
     assert PDF_ARTIFACT_REVISION in revisions
+    assert TTS_REVISION in revisions
 
 
 def _legacy_database(path: Path) -> sa.Engine:
@@ -192,6 +200,35 @@ def _legacy_database(path: Path) -> sa.Engine:
 
 def _columns(connection, table: str) -> set[str]:
     return {column["name"] for column in sa.inspect(connection).get_columns(table)}
+
+
+def _settings_database(path: Path) -> sa.Engine:
+    engine = sa.create_engine(f"sqlite:///{path.as_posix()}")
+    with engine.begin() as connection:
+        connection.exec_driver_sql(
+            "CREATE TABLE settings (id VARCHAR(36) PRIMARY KEY, user_id VARCHAR(50) NOT NULL)"
+        )
+    return engine
+
+
+@pytest.mark.parametrize("tree", sorted(VERSION_TREES))
+def test_tts_migration_is_idempotent(tree: str, tmp_path: Path):
+    module = _load_tts_migration(tree)
+    engine = _settings_database(tmp_path / f"tts-{tree}.db")
+    try:
+        with engine.begin() as connection:
+            context = MigrationContext.configure(connection)
+            with Operations.context(context):
+                module.upgrade()
+                module.upgrade()
+            expected = {"tts_enabled", "tts_api_provider", "tts_api_key", "tts_api_base_url", "tts_model"}
+            assert expected <= _columns(connection, "settings")
+            with Operations.context(context):
+                module.downgrade()
+                module.downgrade()
+            assert not (expected & _columns(connection, "settings"))
+    finally:
+        engine.dispose()
 
 
 @pytest.mark.parametrize("tree", sorted(VERSION_TREES))

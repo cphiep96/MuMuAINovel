@@ -30,6 +30,29 @@ from app.services.email_service import email_service
 from app.security import validate_ai_http_url
 
 logger = get_logger(__name__)
+MASKED_SECRET = "********"
+SETTINGS_SECRET_FIELDS = ("api_key", "cover_api_key", "tts_api_key")
+
+
+def _settings_response_payload(settings: Settings) -> dict[str, Any]:
+    payload = SettingsResponse.model_validate(settings).model_dump()
+    for field in SETTINGS_SECRET_FIELDS:
+        if payload.get(field):
+            payload[field] = MASKED_SECRET
+    return payload
+
+
+def _preserve_masked_secrets(values: dict[str, Any]) -> None:
+    for field in SETTINGS_SECRET_FIELDS:
+        if values.get(field) == MASKED_SECRET:
+            values.pop(field)
+
+
+def _validate_tts_base_url(raw_url: Optional[str]) -> Optional[str]:
+    if raw_url is None:
+        return None
+    clean = raw_url.strip()
+    return validate_ai_http_url(clean) if clean else ""
 
 router = APIRouter(prefix="/settings", tags=["Quản lý cài đặt"])
 
@@ -39,6 +62,13 @@ class CoverSettingsTestRequest(BaseModel):
     cover_api_key: str
     cover_api_base_url: Optional[str] = None
     cover_image_model: str
+
+
+class TTSSettingsTestRequest(BaseModel):
+    tts_api_provider: str
+    tts_api_key: str
+    tts_api_base_url: Optional[str] = None
+    tts_model: Optional[str] = None
 
 
 def read_env_defaults() -> Dict[str, Any]:
@@ -167,6 +197,19 @@ def require_login(request: Request):
     if not hasattr(request.state, "user") or not request.state.user:
         raise HTTPException(status_code=401, detail="Cần đăng nhập")
     return request.state.user
+
+
+async def _resolve_secret_value(
+    value: Optional[str],
+    field: str,
+    user: User,
+    db: AsyncSession,
+) -> str:
+    if value != MASKED_SECRET:
+        return value or ""
+    result = await db.execute(select(Settings).where(Settings.user_id == user.user_id))
+    settings = result.scalar_one_or_none()
+    return str(getattr(settings, field, "") or "") if settings else ""
 
 
 def require_admin(user: User = Depends(require_login)):
@@ -353,11 +396,8 @@ async def get_settings(
     settings = result.scalar_one_or_none()
     
     if not settings:
-        # 如果用户没有保存过设置，从.env读取默认配置并保存到数据库
         env_defaults = read_env_defaults()
         logger.info(f"用户 {user.user_id} 首次获取设置，自动从.env同步到数据库")
-        
-        # 创建新设置并保存到数据库
         settings = Settings(
             user_id=user.user_id,
             **env_defaults
@@ -368,17 +408,19 @@ async def get_settings(
         logger.info(f"用户 {user.user_id} 的设置已从.env同步到数据库")
     
     logger.info(f"用户 {user.user_id} 获取已保存的设置")
-    return settings
+    return _settings_response_payload(settings)
 
 
 @router.post("/cover/test")
 async def test_cover_settings(
     data: CoverSettingsTestRequest,
     user: User = Depends(require_login),
+    db: AsyncSession = Depends(get_db),
 ):
+    api_key = await _resolve_secret_value(data.cover_api_key, "cover_api_key", user, db)
     result = await cover_generation_service.test_cover_settings(
         provider=data.cover_api_provider,
-        api_key=data.cover_api_key,
+        api_key=api_key,
         api_base_url=data.cover_api_base_url,
         model=data.cover_image_model,
     )
@@ -388,6 +430,33 @@ async def test_cover_settings(
         "provider": result.provider,
         "model": result.model,
     }
+
+
+@router.post("/tts/test")
+async def test_tts_settings_endpoint(
+    data: TTSSettingsTestRequest,
+    user: User = Depends(require_login),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.video_export.tts import test_tts_settings
+
+    api_key = await _resolve_secret_value(data.tts_api_key, "tts_api_key", user, db)
+    api_base_url = _validate_tts_base_url(data.tts_api_base_url)
+    result = await test_tts_settings(
+        provider=data.tts_api_provider,
+        api_key=api_key,
+        api_base_url=api_base_url,
+        model=data.tts_model,
+    )
+    logger.info(
+        "Người dùng %s kiểm tra TTS provider=%s success=%s",
+        user.user_id,
+        data.tts_api_provider,
+        bool(result.get("success")),
+    )
+    return result
+
+
 
 
 @router.get("/system/smtp", response_model=SystemSMTPSettingsResponse)
@@ -505,73 +574,52 @@ async def save_settings(
     user: User = Depends(require_login),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    创建或更新当前用户的设置（Upsert）
-    如果设置已存在则更新，否则创建新设置
-    仅保存到数据库
-    
-    注意：手动保存配置后会自动取消之前激活的预设状态，
-    因为手动修改的配置可能与预设不一致
-    """
-    # 查找现有设置
+    """创建或更新当前用户的设置。"""
     result = await db.execute(
         select(Settings).where(Settings.user_id == user.user_id)
     )
     settings = result.scalar_one_or_none()
-    
-    # 准备数据
     settings_dict = data.model_dump(exclude_unset=True)
-    
+    _preserve_masked_secrets(settings_dict)
+    if "tts_api_base_url" in settings_dict:
+        settings_dict["tts_api_base_url"] = _validate_tts_base_url(settings_dict["tts_api_base_url"])
+
     if settings:
-        # 更新现有设置
         for key, value in settings_dict.items():
             setattr(settings, key, value)
-        
-        # 检查并取消预设激活状态
-        # 因为用户手动修改了配置，可能与之前激活的预设不一致
         try:
             prefs = json.loads(settings.preferences or '{}')
             api_presets = prefs.get('api_presets', {'presets': [], 'version': '1.0'})
             presets = api_presets.get('presets', [])
-            
-            # 找到激活的预设并检查是否与当前保存的配置一致
             active_preset = next((p for p in presets if p.get('is_active')), None)
             if active_preset:
                 preset_config = active_preset.get('config', {})
-                # 检查配置是否发生变化
                 config_changed = (
-                    preset_config.get('api_provider') != settings_dict.get('api_provider', settings.api_provider) or
-                    preset_config.get('api_key') != settings_dict.get('api_key', settings.api_key) or
-                    preset_config.get('api_base_url') != settings_dict.get('api_base_url', settings.api_base_url) or
-                    preset_config.get('llm_model') != settings_dict.get('llm_model', settings.llm_model) or
-                    preset_config.get('temperature') != settings_dict.get('temperature', settings.temperature) or
-                    preset_config.get('max_tokens') != settings_dict.get('max_tokens', settings.max_tokens)
+                    preset_config.get('api_provider') != settings_dict.get('api_provider', settings.api_provider)
+                    or preset_config.get('api_key') != settings_dict.get('api_key', settings.api_key)
+                    or preset_config.get('api_base_url') != settings_dict.get('api_base_url', settings.api_base_url)
+                    or preset_config.get('llm_model') != settings_dict.get('llm_model', settings.llm_model)
+                    or preset_config.get('temperature') != settings_dict.get('temperature', settings.temperature)
+                    or preset_config.get('max_tokens') != settings_dict.get('max_tokens', settings.max_tokens)
                 )
-                
                 if config_changed:
-                    # 取消激活状态
                     active_preset['is_active'] = False
                     prefs['api_presets'] = api_presets
                     settings.preferences = json.dumps(prefs, ensure_ascii=False)
                     logger.info(f"用户 {user.user_id} 手动修改配置，已取消预设 {active_preset.get('name')} 的激活状态")
         except (json.JSONDecodeError, TypeError) as e:
             logger.warning(f"解析用户 {user.user_id} 的preferences失败: {e}")
-        
         await db.commit()
         await db.refresh(settings)
         logger.info(f"用户 {user.user_id} 更新设置")
     else:
-        # 创建新设置
-        settings = Settings(
-            user_id=user.user_id,
-            **settings_dict
-        )
+        settings = Settings(user_id=user.user_id, **settings_dict)
         db.add(settings)
         await db.commit()
         await db.refresh(settings)
         logger.info(f"用户 {user.user_id} 创建设置")
-    
-    return settings
+
+    return _settings_response_payload(settings)
 
 
 @router.put("", response_model=SettingsResponse)
@@ -580,28 +628,25 @@ async def update_settings(
     user: User = Depends(require_login),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    更新当前用户的设置
-    仅保存到数据库
-    """
+    """更新当前用户的设置。"""
     result = await db.execute(
         select(Settings).where(Settings.user_id == user.user_id)
     )
     settings = result.scalar_one_or_none()
-    
     if not settings:
         raise HTTPException(status_code=404, detail="Chưa có cài đặt, vui lòng tạo cài đặt trước")
-    
-    # 更新设置
+
     update_data = data.model_dump(exclude_unset=True)
+    _preserve_masked_secrets(update_data)
+    if "tts_api_base_url" in update_data:
+        update_data["tts_api_base_url"] = _validate_tts_base_url(update_data["tts_api_base_url"])
     for key, value in update_data.items():
         setattr(settings, key, value)
-    
+
     await db.commit()
     await db.refresh(settings)
     logger.info(f"用户 {user.user_id} 更新设置")
-    
-    return settings
+    return _settings_response_payload(settings)
 
 
 @router.delete("")
@@ -609,21 +654,16 @@ async def delete_settings(
     user: User = Depends(require_login),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    删除当前用户的设置
-    """
+    """删除当前用户的设置。"""
     result = await db.execute(
         select(Settings).where(Settings.user_id == user.user_id)
     )
     settings = result.scalar_one_or_none()
-    
     if not settings:
         raise HTTPException(status_code=404, detail="Cài đặt không tồn tại")
-    
     await db.delete(settings)
     await db.commit()
     logger.info(f"用户 {user.user_id} 删除设置")
-    
     return {"message": "Cài đặt đã bị xóa", "user_id": user.user_id}
 
 
@@ -632,7 +672,8 @@ async def get_available_models(
     api_key: Optional[str] = "",
     api_base_url: Optional[str] = "",
     provider: str = "openai",
-    user: User = Depends(require_login)
+    user: User = Depends(require_login),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     从配置的 API 获取可用的模型列表
@@ -647,10 +688,12 @@ async def get_available_models(
     """
     try:
         raw_provider = _normalize_raw_provider(provider)
+        api_key = await _resolve_secret_value(api_key, "api_key", user, db)
         resolved_config = resolve_runtime_ai_config(raw_provider, api_key, api_base_url)
         provider = resolved_config["api_provider"]
         api_key = resolved_config["api_key"]
         api_base_url = validate_ai_http_url(resolved_config["api_base_url"])
+
         async with httpx.AsyncClient(timeout=10.0) as client:
             if provider == "openai" or provider == "azure" or provider == "custom":
                 # OpenAI 兼容接口获取模型列表
@@ -755,7 +798,12 @@ class ApiTestRequest(BaseModel):
 
 
 @router.post("/check-function-calling")
-async def check_function_calling_support(data: ApiTestRequest):
+async def check_function_calling_support(
+    data: ApiTestRequest,
+    user: User = Depends(require_login),
+    db: AsyncSession = Depends(get_db),
+):
+
     """
     检查模型是否支持 Function Calling（工具调用）
     
@@ -771,68 +819,90 @@ async def check_function_calling_support(data: ApiTestRequest):
         检测结果包含支持状态、详细信息和建议
     """
     raw_provider = _normalize_raw_provider(data.provider)
-    resolved_config = resolve_runtime_ai_config(raw_provider, data.api_key, data.api_base_url)
+    request_api_key = await _resolve_secret_value(data.api_key, "api_key", user, db)
+    resolved_config = resolve_runtime_ai_config(raw_provider, request_api_key, data.api_base_url)
     api_key = resolved_config["api_key"]
-    api_base_url = resolved_config["api_base_url"]
+    api_base_url = validate_ai_http_url(resolved_config["api_base_url"])
     provider = resolved_config["api_provider"]
     llm_model = data.llm_model
+
     
     try:
         start_time = time.time()
         
-        # 定义一个简单的测试工具（天气查询）
+        from app.services.ai_clients.openai_client import is_meta_model_api
+
+        meta_model = is_meta_model_api(api_base_url, llm_model)
+        # Muse Spark luôn reasoning; token suy nghĩ tính vào max_tokens.
+        # Probe 200 token → finish_reason=length, chưa kịp tool_calls.
+        probe_max_tokens = 4096 if meta_model else 800
+        probe_temperature = 1.0 if meta_model else 0.3
+        system_prompt = (
+            "You are a function-calling probe. You MUST call get_weather. "
+            "Do not answer the weather from memory or in prose."
+            if meta_model
+            else None
+        )
+
         test_tools = [{
             "type": "function",
             "function": {
                 "name": "get_weather",
-                "description": "Lấy thông tin thời tiết hiện tại của thành phố được chỉ định",
+                "description": "Return current weather for the given location.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "city": {
+                        "location": {
                             "type": "string",
-                            "description": "Tên thành phố, ví dụ: Bắc Kinh, Thượng Hải, Thâm Quyến"
-                        },
-                        "unit": {
-                            "type": "string",
-                            "enum": ["celsius", "fahrenheit"],
-                            "description": "Đơn vị nhiệt độ"
+                            "description": "City name, e.g. Seattle"
                         }
                     },
-                    "required": ["city"]
+                    "required": ["location"]
                 }
             }
         }]
-        
-        # 测试提示：故意设计一个需要调用工具的问题
-        test_prompt = "Hãy cho tôi biết thời tiết hiện tại ở Bắc Kinh như thế nào?"
-        
-        logger.info(f"🧪 开始检测 Function Calling 支持")
-        logger.info(f"  - 提供商: {provider}")
-        logger.info(f"  - 模型: {llm_model}")
-        logger.info(f"  - 测试工具: get_weather")
-        
-        # 创建临时 AI 服务实例进行测试
+
+        test_prompt = (
+            "What is the weather in Seattle right now? Use the get_weather tool."
+        )
+
+        logger.info("🧪 开始检测 Function Calling 支持")
+        logger.info("  - 提供商: %s", provider)
+        logger.info("  - 模型: %s", llm_model)
+        logger.info("  - meta_model: %s", meta_model)
+        logger.info("  - 测试工具: get_weather")
+        logger.info("  - max_tokens: %s", probe_max_tokens)
+
         test_service = AIService(
             api_provider=provider,
             api_key=api_key,
             api_base_url=api_base_url,
             default_model=llm_model,
-            default_temperature=0.3,  # 使用较低温度以获得更确定的行为
-            default_max_tokens=200
+            default_temperature=probe_temperature,
+            default_max_tokens=probe_max_tokens,
+            enable_mcp=False,
+            disable_thinking=False,
         )
-        
-        # 发送带工具的测试请求
-        response = await test_service.generate_text(
-            prompt=test_prompt,
-            provider=provider,
-            model=llm_model,
-            temperature=0.3,
-            max_tokens=200,
-            tools=test_tools,
-            tool_choice="auto",  # 让模型自动决定是否使用工具
-            auto_mcp=False  # 禁用 MCP 自动加载
-        )
+
+        async def _probe() -> Any:
+            return await test_service.generate_text(
+                prompt=test_prompt,
+                provider=provider,
+                model=llm_model,
+                temperature=probe_temperature,
+                max_tokens=probe_max_tokens,
+                system_prompt=system_prompt,
+                tools=test_tools,
+                tool_choice="auto",
+                auto_mcp=False,
+                handle_tool_calls=False,
+            )
+
+        response = await _probe()
+        if meta_model and isinstance(response, dict) and not response.get("tool_calls"):
+            if response.get("finish_reason") in {"length", "max_tokens", None}:
+                logger.info("🔁 Muse Spark chưa gọi tool (finish_reason=%s), thử lại một lần", response.get("finish_reason"))
+                response = await _probe()
         
         end_time = time.time()
         response_time = round((end_time - start_time) * 1000, 2)
@@ -852,19 +922,25 @@ async def check_function_calling_support(data: ApiTestRequest):
                 supported = True
                 tool_calls = response["tool_calls"]
                 logger.info(f"✅ 检测到工具调用: {len(tool_calls)} 个")
+            elif finish_reason == "tool_calls":
+                supported = True
+                logger.info("✅ finish_reason=tool_calls")
+            elif meta_model:
+                # Meta chỉ cho tool_choice=auto. Muse Spark hay hết token lúc reasoning
+                # (finish_reason=length) dù API đã nhận tools — vẫn dùng được MCP.
+                supported = True
+                logger.info("✅ Muse Spark nhận tools thành công, coi như hỗ trợ Function Calling")
             
             # 记录返回的内容（如果有）
             if "content" in response:
-                response_content = response["content"]
+                response_content = response.get("content")
         elif isinstance(response, str):
-            # 如果只返回字符串，说明不支持工具调用
             response_content = response
-        
+
         logger.info(f"  - 响应时间: {response_time}ms")
         logger.info(f"  - finish_reason: {finish_reason}")
         logger.info(f"  - 支持状态: {'✅ 支持' if supported else '❌ 不支持'}")
-        
-        # 构建详细的返回信息
+
         result = {
             "success": True,
             "supported": supported,
@@ -881,15 +957,20 @@ async def check_function_calling_support(data: ApiTestRequest):
                 "response_type": "tool_calls" if supported else "text"
             }
         }
-        
-        # 添加工具调用详情
-        if tool_calls:
-            result["tool_calls"] = tool_calls
+
+        if supported:
+            if tool_calls:
+                result["tool_calls"] = tool_calls
+            elif response_content:
+                result["response_preview"] = response_content[:200]
             result["suggestions"] = [
                 "✅ Mô hình này hỗ trợ Function Calling và có thể sử dụng plugin MCP bình thường",
                 "Gợi ý: bật các plugin MCP cần thiết để mở rộng khả năng AI",
-                "Lưu ý: bài kiểm tra đã phát hiện lệnh gọi công cụ thành công, mô hình có thể phân tích và sử dụng công cụ bên ngoài đúng cách"
             ]
+            if meta_model:
+                result["suggestions"].append(
+                    "Muse Spark dùng token để suy nghĩ trước khi gọi tool; backend đã nâng hạn mức tối thiểu khi có công cụ."
+                )
         else:
             result["response_preview"] = response_content[:200] if response_content else None
             result["suggestions"] = [
@@ -898,7 +979,7 @@ async def check_function_calling_support(data: ApiTestRequest):
                 "Mô hình đề xuất: dòng GPT-4, GPT-4-turbo, Claude 3 Opus/Sonnet, Gemini 1.5 Pro, v.v.",
                 "Giải thích: mô hình trả về phản hồi văn bản thay vì gọi công cụ, cho thấy mô hình không hỗ trợ tính năng này"
             ]
-        
+
         return result
         
     except ValueError as e:
@@ -978,7 +1059,12 @@ async def check_function_calling_support(data: ApiTestRequest):
 
 
 @router.post("/test")
-async def test_api_connection(data: ApiTestRequest):
+async def test_api_connection(
+    data: ApiTestRequest,
+    user: User = Depends(require_login),
+    db: AsyncSession = Depends(get_db),
+):
+
     """
     测试 API 连接和配置是否正确
     
@@ -989,9 +1075,10 @@ async def test_api_connection(data: ApiTestRequest):
         测试结果包含状态、响应时间和详细信息
     """
     raw_provider = _normalize_raw_provider(data.provider)
-    resolved_config = resolve_runtime_ai_config(raw_provider, data.api_key, data.api_base_url)
+    request_api_key = await _resolve_secret_value(data.api_key, "api_key", user, db)
+    resolved_config = resolve_runtime_ai_config(raw_provider, request_api_key, data.api_base_url)
     api_key = resolved_config["api_key"]
-    api_base_url = resolved_config["api_base_url"]
+    api_base_url = validate_ai_http_url(resolved_config["api_base_url"])
     provider = resolved_config["api_provider"]
     llm_model = data.llm_model
     # 使用前端传递的参数，如果未传递则使用默认值
