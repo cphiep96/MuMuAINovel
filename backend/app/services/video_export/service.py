@@ -822,6 +822,9 @@ class VideoExportService:
                     "Hãy tắt giọng đọc hoặc dùng chế độ cục bộ."
                 ),
             )
+        if build_provider(motion["motion_provider"]).supports_placeholder:
+            # Text-to-video providers do not require a project cover.
+            return
         if image and image.get("generate_scene_images"):
             # 每个分镜都会先生成 ảnh 场景 → 一定有参考图
             return

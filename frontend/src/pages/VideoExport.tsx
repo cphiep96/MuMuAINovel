@@ -1231,7 +1231,7 @@ const VideoExport: React.FC = () => {
                           value={motionResolution ?? selectedModelLimits.default_resolution}
                           onChange={setMotionResolution}
                           options={(selectedModelLimits.resolutions || []).map((item) => ({
-                            label: item,
+                            label: item === 'auto' ? 'Theo Muse' : item,
                             value: item,
                           }))}
                         />
@@ -1265,8 +1265,11 @@ const VideoExport: React.FC = () => {
                       message="Video AI có tính phí theo từng phân cảnh"
                       description={
                         <span style={{ fontSize: 12 }}>
-                          {selectedProvider.cost_note} Provider cần ảnh tham chiếu (ảnh bìa dự án hoặc ảnh phân cảnh);
-                          phân cảnh không có ảnh sẽ báo lỗi rõ chứ không tự tạo ảnh AI. Model đang chọn tạo clip{' '}
+                          {selectedProvider.cost_note}{' '}
+                          {selectedProvider.features.image_to_video
+                            ? 'Provider cần ảnh tham chiếu (ảnh bìa dự án hoặc ảnh phân cảnh); phân cảnh không có ảnh sẽ báo lỗi rõ chứ không tự tạo ảnh AI. '
+                            : 'Tạo video từ prompt; ảnh bìa và ảnh phân cảnh không được gửi sang provider này. '}
+                          Model đang chọn tạo clip{' '}
                           {durationHint} cho mỗi phân cảnh (dài/ngắn hơn lời kể sẽ được ghép theo clip thực tế),
                           phụ đề bám theo độ dài clip thực tế.
                         </span>

@@ -67,6 +67,9 @@ FAKE_MP4 = b"\x00\x00\x00\x18ftypmp42" + b"\x00" * 256
 def motion_settings(monkeypatch):
     """所有用例统一的转场配置：清空凭证、加快轮询、仅本用例内放开 localhost 下载"""
     for name in (
+        "video_motion_muse_api_key",
+        "video_motion_muse_config_file",
+        "video_motion_muse_base_url",
         "video_motion_xai_api_key",
         "video_motion_gemini_api_key",
         "video_motion_openai_api_key",
@@ -126,7 +129,7 @@ def test_registry_lists_local_and_remote_providers():
     capabilities = list_provider_capabilities()
     ids = [item["id"] for item in capabilities]
     assert ids[0] == "local_ffmpeg"
-    for expected in ("xai_grok_imagine", "google_veo", "openai_compatible"):
+    for expected in ("xai_grok_imagine", "google_veo", "openai_compatible", "muse_tool"):
         assert expected in ids
     assert is_known_provider("google_veo")
     assert not is_known_provider("not-a-provider")

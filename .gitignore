@@ -129,6 +129,7 @@ data/
 # Keep MCP agent docs in git; ignore other local docs under this folder.
 docs/*
 !docs/mcp-agent-guide.md
+!docs/muse-tool-video.md
 !docs/mcp-server-implementation.md
 !docs/mcp-configs/
 !docs/mcp-configs/**

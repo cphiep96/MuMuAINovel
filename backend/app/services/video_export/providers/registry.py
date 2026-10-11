@@ -15,6 +15,7 @@ from app.services.video_export.providers.base import (
     ProviderConfigState,
 )
 from app.services.video_export.providers.errors import MotionConfigError
+from app.services.video_export.providers.muse_tool import MuseToolVideoProvider
 from app.services.video_export.providers.google_veo import GoogleVeoProvider
 from app.services.video_export.providers.local_ffmpeg import LocalFFmpegProvider
 from app.services.video_export.providers.openai_compatible import OpenAICompatibleVideoProvider
@@ -27,6 +28,7 @@ PROVIDER_ORDER: tuple[str, ...] = (
     XaiGrokImagineProvider.name,
     GoogleVeoProvider.name,
     OpenAICompatibleVideoProvider.name,
+    MuseToolVideoProvider.name,
 )
 
 _FACTORIES: dict[str, Callable[..., MotionProvider]] = {
@@ -34,6 +36,7 @@ _FACTORIES: dict[str, Callable[..., MotionProvider]] = {
     XaiGrokImagineProvider.name: XaiGrokImagineProvider,
     GoogleVeoProvider.name: GoogleVeoProvider,
     OpenAICompatibleVideoProvider.name: OpenAICompatibleVideoProvider,
+    MuseToolVideoProvider.name: MuseToolVideoProvider,
 }
 
 

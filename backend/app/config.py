@@ -207,6 +207,11 @@ class Settings(BaseSettings):
     video_motion_openai_base_url: Optional[str] = None
     video_motion_openai_model: str = "sora-2"
 
+    # Muse Tool: authenticated localhost API; credentials remain backend-only.
+    video_motion_muse_api_key: Optional[str] = None
+    video_motion_muse_base_url: Optional[str] = None
+    video_motion_muse_config_file: Optional[str] = None
+
     # 场景图片生成（image provider）：为每个分镜生成画面，再交给 motion provider 作为参考图
     video_image_enabled: bool = True  # 总开关：false 时 UI/API 都不允许开启 tạo ảnh
     video_image_provider: Optional[str] = None  # 默认图片 provider（为空时取第一个已配置的）

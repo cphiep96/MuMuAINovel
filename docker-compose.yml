@@ -168,6 +168,10 @@ services:
       - VIDEO_MOTION_OPENAI_API_KEY=${VIDEO_MOTION_OPENAI_API_KEY:-}
       - VIDEO_MOTION_OPENAI_BASE_URL=${VIDEO_MOTION_OPENAI_BASE_URL:-}
       - VIDEO_MOTION_OPENAI_MODEL=${VIDEO_MOTION_OPENAI_MODEL:-sora-2}
+      # Muse Tool runs on the backend host; Docker localhost is isolated.
+      - VIDEO_MOTION_MUSE_API_KEY=${VIDEO_MOTION_MUSE_API_KEY:-}
+      - VIDEO_MOTION_MUSE_BASE_URL=${VIDEO_MOTION_MUSE_BASE_URL:-}
+      - VIDEO_MOTION_MUSE_CONFIG_FILE=${VIDEO_MOTION_MUSE_CONFIG_FILE:-}
 
       # 场景图生成（Meta Muse Image 1.0）：默认关闭 tạo ảnh，key 只从环境/.env 注入
       - VIDEO_IMAGE_ENABLED=${VIDEO_IMAGE_ENABLED:-true}
