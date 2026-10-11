@@ -344,6 +344,7 @@ export default function SettingsPage() {
     tts_model: 'female',
   };
   const ttsProviders = [
+    { value: 'opencodex_live', label: 'OpenCodex Live (gpt-live)', defaultUrl: '', defaultModel: 'cove' },
     { value: 'omnivoice', label: 'OmniVoice (k2-fsa)', defaultUrl: '', defaultModel: 'female' },
     { value: 'deepgram', label: 'Deepgram Flux (chỉ tiếng Anh)', defaultUrl: 'https://api.deepgram.com', defaultModel: 'flux-hannah-en' },
     { value: 'openai_compatible', label: 'OpenAI Compatible', defaultUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o-mini-tts' },
@@ -516,7 +517,7 @@ export default function SettingsPage() {
     const ttsApiBaseUrl = form.getFieldValue('tts_api_base_url');
     const ttsModel = form.getFieldValue('tts_model');
 
-    if (!ttsApiProvider || (ttsApiProvider !== 'omnivoice' && ttsApiProvider !== 'edge' && !ttsApiKey)) {
+    if (!ttsApiProvider || (ttsApiProvider !== 'omnivoice' && ttsApiProvider !== 'edge' && ttsApiProvider !== 'opencodex_live' && !ttsApiKey)) {
       message.warning(
         ttsApiProvider === 'omnivoice' || ttsApiProvider === 'edge'
           ? 'Chọn giọng OmniVoice rồi kiểm tra'
@@ -530,7 +531,7 @@ export default function SettingsPage() {
     try {
       const result = await settingsApi.testTtsConnection({
         tts_api_provider: ttsApiProvider,
-        tts_api_key: ttsApiKey,
+        tts_api_key: ttsApiKey || '',
         tts_api_base_url: ttsApiBaseUrl,
         tts_model: ttsModel,
       });
@@ -2065,7 +2066,7 @@ export default function SettingsPage() {
                           </Select>
                         </Form.Item>
 
-                        {selectedTtsProvider !== 'omnivoice' && selectedTtsProvider !== 'edge' && (
+                        {selectedTtsProvider !== 'omnivoice' && selectedTtsProvider !== 'edge' && selectedTtsProvider !== 'opencodex_live' && (
                           <>
                         <Form.Item label={selectedTtsProvider === 'deepgram' ? 'API Key Deepgram' : 'API Key'} name="tts_api_key">
                           <Input.Password size={isMobile ? 'middle' : 'large'} placeholder="Token API" autoComplete="new-password" />
@@ -2084,6 +2085,8 @@ export default function SettingsPage() {
                               options={omnivoiceTtsModels}
                               onChange={() => setTtsTestResult(null)}
                             />
+                          ) : selectedTtsProvider === 'opencodex_live' ? (
+                            <Select options={['cove','juniper','maple','spruce','ember','vale','breeze','arbor','sol'].map(value => ({value,label:value}))} onChange={() => setTtsTestResult(null)} />
                           ) : selectedTtsProvider === 'deepgram' ? (
                             <Select
                               size={isMobile ? 'middle' : 'large'}

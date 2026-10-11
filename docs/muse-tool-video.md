@@ -43,3 +43,17 @@ Với Muse Tool, tạo phim mới dùng storyboard theo đoạn/sự kiện, gi�
 Các ràng buộc chỉ bằng chữ, không có frame tham chiếu/seed. Không bảo đảm nhân vật/ánh sáng khớp tuyệt đối. Storyboard tự chia theo cấu trúc văn bản, chưa tự hiểu mọi trạng thái hành động; cần duyệt, đặc biệt ở chỗ đến/rời bến và đổi thời gian. Khi TTS/hậu kỳ lỗi, tác vụ báo lỗi; nếu clip Muse đã hoàn tất thì thử lại tiếp tục tải clip cũ, không tự tạo clip mới.
 
 Phim và tác vụ cũ giữ options trước đây. Muốn áp dụng storyboard/audio mới cần tạo job mới; chưa tự dựng lại hay tiêu hao thêm hạn mức từ thay đổi code.
+## OpenCodex Live — giọng giống Lingua Desk
+
+Provider `opencodex_live` đọc văn bản qua `/v1/live` WebRTC + WebSocket `session.context.append`, giống runtime Lingua Desk. Không gọi `/audio/speech`, không cần API key trong UI cho proxy loopback. Backend cần Node, Lingua `resources/live-dub.cjs`, Playwright-core và browser executable:
+
+```dotenv
+VIDEO_TTS_LIVE_BASE_URL=http://127.0.0.1:10100
+VIDEO_TTS_LIVE_LINGUA_DIR=D:/project/tool/languagereactor
+VIDEO_TTS_LIVE_BROWSER=C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
+VIDEO_TTS_LIVE_TIMEOUT_SECONDS=60
+```
+
+Chọn **OpenCodex Live (gpt-live)** khi xuất phim; chọn giọng Cove, Juniper, Maple, Spruce, Ember, Vale, Breeze, Arbor hoặc Sol. Đây là voice profile, không phải tên model mới; model gửi thật là `gpt-live-1-codex`.
+
+Mỗi đoạn nhận audio và transcript, chỉ lưu nếu transcript khớp nguyên văn và WAV không im lặng. Không tự đổi provider khi Live lỗi, không retry mù sau timeout. Provider dùng WebRTC input im lặng do browser tạo; không xin micro. Các dependency/path là cấu hình local, cần cài/cấu hình riêng trên máy khác. Proxy phải đang chạy và tài khoản upstream còn dùng được; configured không phải kiểm chứng dịch vụ khỏe.

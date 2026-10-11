@@ -172,6 +172,10 @@ class Settings(BaseSettings):
     video_tts_omnivoice_model_id: str = "k2-fsa/OmniVoice"
     video_tts_omnivoice_device: Optional[str] = None  # auto: cuda / mps / cpu
     video_tts_omnivoice_num_step: int = 16
+    video_tts_live_base_url: str = "http://127.0.0.1:10100"
+    video_tts_live_lingua_dir: Optional[str] = None
+    video_tts_live_browser: Optional[str] = None
+    video_tts_live_timeout_seconds: int = 60
 
     # 视频转场 Provider（motion video）：local = FFmpeg 兜底，remote = 远端 image-to-video，hybrid = 优先远端并可按策略回落 local
     video_motion_mode: str = "local"  # local/remote/hybrid（客户端可覆盖，受 capabilities 约束）

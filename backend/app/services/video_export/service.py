@@ -108,6 +108,7 @@ from app.services.video_export.tts import (
     TTS_PROVIDERS,
     NullTTSEngine,
     build_tts_engine,
+    resolve_tts_config,
     default_tts_model,
     default_tts_provider_name,
     list_tts_provider_capabilities,
@@ -237,7 +238,7 @@ def normalize_options(
         raise HTTPException(status_code=400, detail="Tốc độ đọc không hợp lệ") from exc
 
     tts_enabled = bool(data.get("tts_enabled", False))
-    if tts_enabled and not tts_configured(user_settings=user_settings):
+    if tts_enabled and not resolve_tts_config(user_settings, provider=data.get("tts_provider"), model=data.get("tts_model")):
         raise HTTPException(
             status_code=400,
             detail=missing_tts_config_hint(),

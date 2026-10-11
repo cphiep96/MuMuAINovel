@@ -24,12 +24,14 @@ from app.logger import get_logger
 
 logger = get_logger(__name__)
 
+from app.services.video_export.opencodex_live import (OpenCodexLiveTTSEngine, PROVIDER as LIVE_PROVIDER, VOICES as LIVE_VOICES, configured as live_configured)
+
 OMNIVOICE_PROVIDER = "omnivoice"
 # Cài đặt cũ từng dùng Microsoft Edge; map sang OmniVoice, không còn gọi Edge.
 EDGE_PROVIDER = OMNIVOICE_PROVIDER
 DEEPGRAM_PROVIDER = "deepgram"
 OPENAI_PROVIDER = "openai_compatible"
-TTS_PROVIDERS = (OMNIVOICE_PROVIDER, DEEPGRAM_PROVIDER, OPENAI_PROVIDER)
+TTS_PROVIDERS = (OMNIVOICE_PROVIDER, DEEPGRAM_PROVIDER, OPENAI_PROVIDER, LIVE_PROVIDER)
 
 DEFAULT_DEEPGRAM_BASE_URL = "https://api.deepgram.com"
 DEFAULT_DEEPGRAM_MODEL = "flux-hannah-en"
@@ -466,6 +468,13 @@ def resolve_tts_config(
     model: Optional[str] = None,
 ) -> Optional[dict[str, Any]]:
     """Ưu tiên Cài đặt của user, sau đó mới tới biến môi trường máy chủ."""
+    explicit = _normalize_provider(provider)
+    saved = _normalize_provider(getattr(user_settings, "tts_api_provider", "")) if getattr(user_settings, "tts_enabled", False) else ""
+    if explicit == LIVE_PROVIDER or (not explicit and (saved == LIVE_PROVIDER or settings.video_tts_provider == LIVE_PROVIDER)):
+        if not live_configured(): return None
+        voice = _clean(model) or (_clean(getattr(user_settings, "tts_model", "")) if saved == LIVE_PROVIDER else "") or "cove"
+        if voice not in LIVE_VOICES: return None
+        return {"provider": LIVE_PROVIDER, "api_key": "", "base_url": settings.video_tts_live_base_url, "model": voice, "voice": voice, "source": "local-live"}
     user_cfg = _config_from_user_settings(user_settings)
     env_cfg = _config_from_env()
     chosen = user_cfg or env_cfg or _omnivoice_config()
@@ -590,6 +599,8 @@ def build_tts_engine(
     cfg = resolve_tts_config(user_settings, provider=provider, model=model)
     if cfg is None:
         return NullTTSEngine()
+    if cfg["provider"] == LIVE_PROVIDER:
+        return OpenCodexLiveTTSEngine(model=cfg.get("model") or "cove")
     if cfg["provider"] == OMNIVOICE_PROVIDER:
         return OmniVoiceTTSEngine(model=cfg.get("model") or DEFAULT_OMNIVOICE_MODEL)
     if cfg["provider"] == DEEPGRAM_PROVIDER:
@@ -615,6 +626,10 @@ def list_tts_provider_capabilities(user_settings: Any = None) -> list[dict[str, 
     openai_ready = resolve_tts_config(user_settings, provider=OPENAI_PROVIDER) is not None
     openai_cfg = resolve_tts_config(user_settings, provider=OPENAI_PROVIDER) if openai_ready else None
     return [
+        {"id": LIVE_PROVIDER, "label": "OpenCodex Live (gpt-live)", "kind": "tts",
+         "description": "Đọc nguyên văn tiếng Việt qua WebRTC giống Lingua Desk; không dùng /audio/speech.",
+         "configured": live_configured(), "missing_config": [] if live_configured() else ["VIDEO_TTS_LIVE_LINGUA_DIR", "VIDEO_TTS_LIVE_BROWSER"],
+         "models": list(LIVE_VOICES), "default_model": "cove", "languages": ["vi", "en"]},
         {
             "id": OMNIVOICE_PROVIDER,
             "label": "OmniVoice (k2-fsa)",
@@ -654,6 +669,8 @@ def list_tts_provider_capabilities(user_settings: Any = None) -> list[dict[str, 
 
 
 def default_tts_provider_name(user_settings: Any = None) -> str:
+    selected = resolve_tts_config(user_settings)
+    if selected and selected["provider"] == LIVE_PROVIDER: return LIVE_PROVIDER
     if omnivoice_available():
         return OMNIVOICE_PROVIDER
     cfg = resolve_tts_config(user_settings)
@@ -663,6 +680,8 @@ def default_tts_provider_name(user_settings: Any = None) -> str:
 
 
 def default_tts_model(user_settings: Any = None) -> str:
+    selected = resolve_tts_config(user_settings)
+    if selected and selected["provider"] == LIVE_PROVIDER: return str(selected["model"])
     if omnivoice_available():
         cfg = resolve_tts_config(user_settings, provider=OMNIVOICE_PROVIDER)
         if cfg and cfg.get("model") in OMNIVOICE_MODEL_IDS:
@@ -692,7 +711,13 @@ async def test_tts_settings(
         else ""
     )
     sample = "This is a short narration test for video export."
-    if name == OMNIVOICE_PROVIDER:
+    if name == LIVE_PROVIDER:
+        if not live_configured():
+            return {"success": False, "message": "Thiếu runtime OpenCodex Live", "provider": name}
+        chosen_model = _clean(model) or "cove"
+        engine = OpenCodexLiveTTSEngine(model=chosen_model)
+        sample = "Xin chào, đây là bài kiểm tra giọng kể tiếng Việt của OpenCodex Live."
+    elif name == OMNIVOICE_PROVIDER:
         if not omnivoice_available():
             return {
                 "success": False,
