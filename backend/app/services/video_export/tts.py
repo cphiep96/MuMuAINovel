@@ -116,6 +116,8 @@ class OmniVoiceTTSEngine:
     def __init__(self, *, model: str, timeout: Optional[int] = None) -> None:
         self.model = normalize_omnivoice_voice(model)
         self.timeout = timeout or max(int(settings.video_tts_timeout_seconds), 600)
+        self._narrator_prompt = None
+        self._narrator_lock = threading.Lock()
 
     async def synthesize(self, *, text: str, out_path: Path) -> Optional[Path]:
         clean = (text or "").strip()
@@ -144,12 +146,19 @@ class OmniVoiceTTSEngine:
         if looks_like_vietnamese(text):
             kwargs["language"] = "vi"
         instruct = OMNIVOICE_INSTRUCT.get(self.model)
-        if instruct:
-            kwargs["instruct"] = instruct
-        audio = model.generate(**kwargs)
-        if isinstance(audio, list):
-            return audio[0] if audio else None
-        return audio
+        with self._narrator_lock:
+            if self._narrator_prompt is not None:
+                kwargs["voice_clone_prompt"] = self._narrator_prompt
+            elif instruct:
+                kwargs["instruct"] = instruct
+            audio = model.generate(**kwargs)
+            samples = audio[0] if isinstance(audio, list) and audio else audio
+            if self._narrator_prompt is None and samples is not None and len(samples):
+                # Anchor subsequent scenes to our first synthetic voice, never to a real person.
+                self._narrator_prompt = model.create_voice_clone_prompt(
+                    ref_audio=(samples, OMNIVOICE_SAMPLE_RATE), ref_text=text, preprocess_prompt=False
+                )
+            return samples
 
 
 EdgeTTSEngine = OmniVoiceTTSEngine
