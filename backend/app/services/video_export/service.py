@@ -1035,7 +1035,7 @@ class VideoExportService:
             job.progress = max(0, min(int(progress), 100))
         if message is not None:
             job.status_message = message[:500]
-        if error is not None:
+        if error is not None or status == "completed":
             job.error_message = error
         if started:
             job.started_at = job.started_at or now
@@ -1051,7 +1051,7 @@ class VideoExportService:
                 task.progress = job.progress
             if message is not None:
                 task.status_message = job.status_message
-            if error is not None:
+            if error is not None or status == "completed":
                 task.error_message = error
             if started:
                 task.started_at = task.started_at or now

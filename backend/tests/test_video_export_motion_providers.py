@@ -2247,3 +2247,16 @@ async def test_preview_api_does_not_enqueue_video(session,sample_project,monkeyp
     assert response.json()['scene_count']>0
     assert spawned==[]
     assert (await session.execute(VideoExportJob.__table__.select())).all()==[]
+
+@pytest.mark.asyncio
+async def test_success_clears_previous_job_and_background_task_error(session, sample_project, monkeypatch):
+    _stub_spawn(monkeypatch)
+    chapter=(await session.execute(Chapter.__table__.select())).first()
+    job=await video_export_service.create_job(db=session,user_id='user-1',project_id=sample_project.id,chapter_ids=[chapter.id])
+    job.error_message='Old failure'
+    task=await session.get(BackgroundTask,job.id)
+    task.error_message='Old failure'
+    await session.commit()
+    await video_export_service._apply_state(session,job,status='completed',error=None)
+    await session.refresh(job);await session.refresh(task)
+    assert job.error_message is None and task.error_message is None
