@@ -512,12 +512,37 @@ async def concat_clips(
     *,
     workdir: Path,
     fps: int,
+    normalize_timestamps: bool = False,
     cancel_check: Optional[CancelCheck] = None,
     timeout: Optional[float] = None,
 ) -> None:
     """按顺序合并片段，优先流拷贝，失败时重新编码"""
     if not clip_paths:
         raise FFmpegExecutionError("Không có phân cảnh nào để ghép thành phim")
+
+    if normalize_timestamps:
+        # A concat filter aligns decoded streams; avoid MP4/AAC per-file start offsets
+        # producing a hold or quiet gap at every splice.
+        inputs=[]
+        filters=[]
+        for index,path in enumerate(clip_paths):
+            inputs += ["-i", _as_ff_path(path)]
+            filters += [f"[{index}:v:0]setpts=PTS-STARTPTS,fps={fps},setsar=1[v{index}]",
+                        f"[{index}:a:0]asetpts=PTS-STARTPTS,aresample=48000[a{index}]"]
+        pairs="".join(f"[v{i}][a{i}]" for i in range(len(clip_paths)))
+        filters.append(f"{pairs}concat=n={len(clip_paths)}:v=1:a=1[v][a]")
+        try:
+            await run_ffmpeg([*inputs,"-filter_complex",";".join(filters),"-map","[v]","-map","[a]",
+                "-c:v","libx264","-preset","veryfast","-crf","20","-pix_fmt","yuv420p",
+                "-r",str(fps),"-c:a","aac","-b:a","160k","-ar","48000","-ac","2",
+                "-movflags","+faststart","-y",_as_ff_path(out_path)],
+                timeout=timeout,cancel_check=cancel_check)
+        except BaseException:
+            out_path.unlink(missing_ok=True)
+            raise
+        if not out_path.is_file() or out_path.stat().st_size==0:
+            raise FFmpegExecutionError("Ghép phim không tạo được tệp")
+        return
 
     list_file = workdir / "clips.txt"
     lines = [f"file '{_as_ff_path(path)}'" for path in clip_paths]

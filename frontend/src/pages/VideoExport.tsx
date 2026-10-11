@@ -1149,7 +1149,7 @@ const VideoExport: React.FC = () => {
                     title={
                       !narrationSupported
                         ? 'Provider này chưa hỗ trợ ghép giọng kể riêng'
-                        : museSelected ? 'Thay âm thanh Muse bằng một giọng kể cố định; giữ trọn lời kể, kéo dài hình nếu cần.'
+                        : museSelected ? 'Thay âm thanh Muse bằng một giọng kể cố định; giữ trọn lời kể, điều chỉnh tốc độ chuyển động thay vì giữ khung cuối.'
                         : capabilities?.tts_available
                           ? 'Bật để đọc lời thoại từng phân cảnh. Truyện tiếng Việt hãy chọn OmniVoice (Nữ / Nam).'
                           : capabilities?.tts_hint || 'TTS chưa sẵn sàng. Cài OmniVoice (pip install torch torchaudio omnivoice) hoặc vào Cài đặt → Giọng đọc video.'

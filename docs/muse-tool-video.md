@@ -13,7 +13,7 @@ MuMuAINovel gọi API Muse Tool từ backend chạy native trên cùng máy Wind
 3. Khởi động lại backend. Mở **Xuất video**, chọn chế độ **remote** và provider **Muse Tool (local)**, model `muse-video`.
 4. Chọn tỉ lệ, tạo storyboard/video như bình thường. Provider chọn thời lượng gần nhất trong 5, 10, 15 giây theo độ dài phân cảnh. Độ phân giải chọn **Theo Muse**.
 
-Provider tạo video từ prompt. Ảnh bìa và ảnh phân cảnh không được gửi sang Muse; có thể tắt tạo ảnh phân cảnh để tránh tạo ảnh không cần thiết. Không bắt buộc có ảnh bìa. Muse hỗ trợ ghép một giọng kể TTS riêng sau khi tải clip: audio Muse được thay hoàn toàn; nếu lời kể dài hơn clip thì hình cuối kéo dài để không cắt lời. Các provider remote khác vẫn chưa ghép TTS. Muse quyết định độ phân giải và thời lượng thực tế; phụ đề dùng độ dài clip tải về.
+Provider tạo video từ prompt. Ảnh bìa và ảnh phân cảnh không được gửi sang Muse; có thể tắt tạo ảnh phân cảnh để tránh tạo ảnh không cần thiết. Không bắt buộc có ảnh bìa. Muse hỗ trợ ghép một giọng kể TTS riêng sau khi tải clip: audio Muse được thay hoàn toàn; nếu lời kể dài hơn clip thì chuyển động cả clip được giảm tốc; nếu ngắn hơn thì cắt clip theo lời kể, không lặp khung cuối. Các provider remote khác vẫn chưa ghép TTS. Muse quyết định độ phân giải và thời lượng thực tế; phụ đề dùng độ dài clip tải về.
 
 Muse Tool cần mở trong suốt quá trình xử lý. Hủy trong MuMuAINovel dừng theo dõi/tải, chưa hủy được tác vụ trong Muse. Có thể thử lại để tiếp tục cùng tác vụ. Nếu Muse Tool báo lỗi sau khi prompt đã gửi, kiểm tra chat Muse trước khi yêu cầu tạo lại vì Muse có thể vẫn xử lý.
 

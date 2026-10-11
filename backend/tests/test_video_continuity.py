@@ -71,7 +71,7 @@ async def test_narration_replaces_generated_audio_and_is_not_cut(tmp_path):
         '-f','lavfi','-i','sine=frequency=1000:duration=1','-c:v','libx264','-c:a','aac','-shortest','-y',str(clip)],check=True)
     subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-f','lavfi','-i','sine=frequency=200:duration=2','-y',str(voice)],check=True)
     await replace_scene_audio(clip,audio_path=voice,timeout=20)
-    assert (await ffmpeg_runner.probe_duration(clip))>=2.2
+    assert 2.0 <= (await ffmpeg_runner.probe_duration(clip)) <= 2.2
     assert not clip.with_name('clip_audio.mp4').exists()
     probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_streams','-of','json',str(clip)]))
     assert len([s for s in probe['streams'] if s['codec_type']=='audio'])==1
@@ -89,3 +89,42 @@ async def test_audio_failure_retains_original_and_cleans_temp(tmp_path,monkeypat
         await replace_scene_audio(clip)
     assert clip.read_bytes()==b'original'
     assert not clip.with_name('clip_audio.mp4').exists()
+
+@pytest.mark.asyncio
+@pytest.mark.skipif(not shutil.which('ffmpeg'),reason='FFmpeg unavailable')
+async def test_voice_longer_than_video_keeps_motion_through_tail(tmp_path):
+    clip=tmp_path/'moving.mp4';voice=tmp_path/'voice.wav'
+    subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-f','lavfi','-i','testsrc2=s=320x180:r=24:d=1',
+        '-f','lavfi','-i','sine=frequency=1000:duration=1','-c:v','libx264','-c:a','aac','-shortest','-y',str(clip)],check=True)
+    subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-f','lavfi','-i','sine=frequency=200:duration=2','-y',str(voice)],check=True)
+    await replace_scene_audio(clip,audio_path=voice,timeout=20)
+    analysis=subprocess.run(['ffmpeg','-hide_banner','-i',str(clip),'-vf','freezedetect=n=-55dB:d=0.3','-an','-f','null','-'],capture_output=True,text=True)
+    assert 'freeze_start' not in analysis.stderr
+    assert 2.0 <= await ffmpeg_runner.probe_duration(clip) <= 2.2
+
+
+@pytest.mark.asyncio
+@pytest.mark.skipif(not shutil.which('ffmpeg'),reason='FFmpeg unavailable')
+async def test_narration_shorter_than_video_does_not_keep_silent_tail(tmp_path):
+    clip=tmp_path/'moving.mp4';voice=tmp_path/'voice.wav'
+    subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-f','lavfi','-i','testsrc2=s=320x180:r=24:d=3',
+        '-f','lavfi','-i','sine=frequency=1000:duration=3','-c:v','libx264','-c:a','aac','-shortest','-y',str(clip)],check=True)
+    subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-f','lavfi','-i','sine=frequency=200:duration=1','-y',str(voice)],check=True)
+    await replace_scene_audio(clip,audio_path=voice,timeout=20)
+    assert 1.0 <= await ffmpeg_runner.probe_duration(clip) <= 1.2
+
+
+@pytest.mark.asyncio
+@pytest.mark.skipif(not shutil.which('ffmpeg'),reason='FFmpeg unavailable')
+async def test_timestamp_concat_keeps_continuous_decodable_picture_and_audio(tmp_path):
+    clips=[]
+    for i in range(2):
+        clip=tmp_path/f'clip{i}.mp4'
+        subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-f','lavfi','-i',f'testsrc2=s=320x180:r=24:d=1',
+            '-f','lavfi','-i',f'sine=frequency={200+i*200}:duration=1','-c:v','libx264','-c:a','aac','-shortest','-y',str(clip)],check=True)
+        clips.append(clip)
+    out=tmp_path/'joined.mp4'
+    await ffmpeg_runner.concat_clips(clips,out,workdir=tmp_path,fps=24,normalize_timestamps=True,timeout=20)
+    assert 1.95 <= await ffmpeg_runner.probe_duration(out) <= 2.1
+    decoded=subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-i',str(out),'-map','0:v','-map','0:a','-f','null','-'],capture_output=True,text=True)
+    assert decoded.returncode==0 and not decoded.stderr

@@ -1789,7 +1789,7 @@ class VideoExportService:
                     on_operation=self._operation_hook(db=db, job=job, scene=scene, provider=provider),
                 )
                 if provider.name == "muse_tool" and (audio_path or options.get("muse_audio_mode") == "silent"):
-                    await replace_scene_audio(clip_path, audio_path=audio_path, cancel_check=cancel_check, timeout=step_timeout())
+                    await replace_scene_audio(clip_path, audio_path=audio_path, cancel_check=cancel_check, timeout=step_timeout(), fps=fps)
                 await self._finish_scene(scene=scene, asset=asset, clip_path=clip_path, result=result)
                 ready_clips.append(clip_path)
             except (MotionCancelledError, FFmpegCancelledError):
@@ -1836,6 +1836,7 @@ class VideoExportService:
             video_path,
             workdir=workdir,
             fps=fps,
+            normalize_timestamps=bool(job.motion_provider == "muse_tool" and options.get("tts_enabled")),
             cancel_check=cancel_check,
             timeout=step_timeout(),
         )
